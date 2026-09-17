@@ -39,4 +39,4 @@ npm run test:e2e
 - [User guide](docs/user-guide.md)
 - [Repository ADR](docs/adr.establish-web-repository.md)
 
-Routing and role split live in `projectkoios-bootstrap/docs/agent-charter.md`.
+Repository routing is documented in `projectkoios-bootstrap/maps/repositories.md`.
