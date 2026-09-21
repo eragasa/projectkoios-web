@@ -55,52 +55,426 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/citation-reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Queue */
+        get: operations["queue_citation_reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/citation-reviews/sources/{source_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Source */
+        get: operations["source_citation_reviews_sources__source_name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/citation-reviews/{claim_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_citation_reviews__claim_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/citation-reviews/{claim_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Decide */
+        put: operations["decide_citation_reviews__claim_id__decision_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/literature-review/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Progress */
+        get: operations["progress_literature_review_progress_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/literature-review/references": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** References */
+        get: operations["references_literature_review_references_get"];
+        put?: never;
+        /** Provide Reference */
+        post: operations["provide_reference_literature_review_references_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Body_provide_reference_literature_review_references_post */
+        Body_provide_reference_literature_review_references_post: {
+            /** Claim Id */
+            claim_id: string;
+            /** Citation Label */
+            citation_label: string;
+            /** Reference Pdf */
+            reference_pdf: string;
+            /** Doi Or Url */
+            doi_or_url?: string | null;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /** CitationCandidateResponse */
+        CitationCandidateResponse: {
+            /** Rank */
+            rank: number;
+            /** Citation Key */
+            citation_key: string | null;
+            /** Bibtex Entry Present */
+            bibtex_entry_present: boolean;
+            /** Score */
+            score: number;
+            /** File */
+            file: string;
+            /** Physical Page */
+            physical_page: number;
+            /** Printed Page */
+            printed_page: string;
+            /** Passage Id */
+            passage_id: string;
+            /** Passage */
+            passage: string;
+        };
+        /**
+         * CitationDecisionDisposition
+         * @enum {string}
+         */
+        CitationDecisionDisposition: "ACCEPT_CITATION" | "REJECT_CANDIDATES" | "PARTIAL_SUPPORT" | "CORPUS_GAP" | "NO_CITATION_REQUIRED";
+        /** CitationDecisionRequest */
+        CitationDecisionRequest: {
+            disposition: components["schemas"]["CitationDecisionDisposition"];
+            /** Selected Citation Keys */
+            selected_citation_keys?: string[];
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /** CitationDecisionResponse */
+        CitationDecisionResponse: {
+            /** Claim Id */
+            claim_id: string;
+            disposition: components["schemas"]["CitationDecisionDisposition"];
+            /** Selected Citation Keys */
+            selected_citation_keys: string[];
+            /** Note */
+            note: string;
+            /** Revision */
+            revision: number;
+            /** Updated At Utc */
+            updated_at_utc: string;
+        };
+        /** CitationReviewDetailResponse */
+        CitationReviewDetailResponse: {
+            /** Claim Id */
+            claim_id: string;
+            /** Lines */
+            lines: string;
+            /** Claim */
+            claim: string;
+            /** Recommendation Relationship */
+            recommendation_relationship: string;
+            /** Recommended Keys */
+            recommended_keys: string[];
+            /** Evaluation Status */
+            evaluation_status: string;
+            decision: components["schemas"]["CitationDecisionResponse"] | null;
+            /** Query */
+            query: string;
+            /** Manuscript Excerpt Latex */
+            manuscript_excerpt_latex: string;
+            /** Manuscript Equations */
+            manuscript_equations: components["schemas"]["ManuscriptEquationResponse"][];
+            /** Expected Keys */
+            expected_keys: string[];
+            /** Expected Keys Available */
+            expected_keys_available: string[];
+            /** Expected Outcome */
+            expected_outcome: string;
+            /** Recommendation */
+            recommendation: string;
+            /** Candidates */
+            candidates: components["schemas"]["CitationCandidateResponse"][];
+        };
+        /** CitationReviewQueueResponse */
+        CitationReviewQueueResponse: {
+            /** Assessment */
+            assessment: string;
+            /** Manuscript Sha256 */
+            manuscript_sha256: string;
+            /** Total */
+            total: number;
+            /** Decided */
+            decided: number;
+            /** Items */
+            items: components["schemas"]["CitationReviewSummaryResponse"][];
+        };
+        /** CitationReviewSummaryResponse */
+        CitationReviewSummaryResponse: {
+            /** Claim Id */
+            claim_id: string;
+            /** Lines */
+            lines: string;
+            /** Claim */
+            claim: string;
+            /** Recommendation Relationship */
+            recommendation_relationship: string;
+            /** Recommended Keys */
+            recommended_keys: string[];
+            /** Evaluation Status */
+            evaluation_status: string;
+            decision: components["schemas"]["CitationDecisionResponse"] | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** LiteratureClaimProgressResponse */
+        LiteratureClaimProgressResponse: {
+            /** Claim Id */
+            claim_id: string;
+            /** Section */
+            section: string;
+            /** Claim */
+            claim: string;
+            /** Evidence Count */
+            evidence_count: number;
+            status: components["schemas"]["LiteratureClaimStatus"] | null;
+            /** Summary */
+            summary: string | null;
+            /** Corrected Claim */
+            corrected_claim: string | null;
+            /** Assumptions */
+            assumptions: string[];
+            /** Evidence */
+            evidence: components["schemas"]["LiteratureEvidenceReferenceResponse"][];
+            /** Source Requests */
+            source_requests: string[];
+            validation_frame: components["schemas"]["LiteratureValidationFrameResponse"] | null;
+        };
+        /**
+         * LiteratureClaimStatus
+         * @enum {string}
+         */
+        LiteratureClaimStatus: "SUPPORTED" | "QUALIFIED" | "CONTRADICTED" | "UNRESOLVED";
+        /** LiteratureEquationResponse */
+        LiteratureEquationResponse: {
+            /** Label */
+            label: string;
+            /** Latex */
+            latex: string;
+            /** Interpretation */
+            interpretation: string;
+        };
+        /** LiteratureEvidenceReferenceResponse */
+        LiteratureEvidenceReferenceResponse: {
+            /** Label */
+            label: string;
+            /** Citation Key */
+            citation_key: string | null;
+            /** Physical Page */
+            physical_page: number;
+            /** Quote */
+            quote: string;
+        };
+        /**
+         * LiteratureReviewPhase
+         * @enum {string}
+         */
+        LiteratureReviewPhase: "PENDING" | "RETRIEVING" | "ASSESSING" | "COMPLETE";
+        /** LiteratureReviewProgressResponse */
+        LiteratureReviewProgressResponse: {
+            /** Run Id */
+            run_id: string;
+            phase: components["schemas"]["LiteratureReviewPhase"];
+            /** Assessment Status */
+            assessment_status: string;
+            /** Claim Count */
+            claim_count: number;
+            /** Evidence Ready Count */
+            evidence_ready_count: number;
+            /** Assessment Count */
+            assessment_count: number;
+            /** Completion Percent */
+            completion_percent: number;
+            status_counts: components["schemas"]["LiteratureStatusCountResponse"];
+            /** Human Disposition */
+            human_disposition: string | null;
+            /** Classifier Implementation Authorized */
+            classifier_implementation_authorized: boolean;
+            /** Scientific Calculation Authorized */
+            scientific_calculation_authorized: boolean;
+            /** Original Submission Markdown */
+            original_submission_markdown: string;
+            /** Claims */
+            claims: components["schemas"]["LiteratureClaimProgressResponse"][];
+        };
+        /** LiteratureStatusCountResponse */
+        LiteratureStatusCountResponse: {
+            /** Supported */
+            supported: number;
+            /** Qualified */
+            qualified: number;
+            /** Contradicted */
+            contradicted: number;
+            /** Unresolved */
+            unresolved: number;
+        };
+        /** LiteratureValidationFrameResponse */
+        LiteratureValidationFrameResponse: {
+            /** Assessment Status */
+            assessment_status: string;
+            /** Finding */
+            finding: string;
+            /** Conclusion */
+            conclusion: string;
+            /** Evidence Labels */
+            evidence_labels: string[];
+            /** Equations */
+            equations: components["schemas"]["LiteratureEquationResponse"][];
+        };
+        /** ManuscriptEquationResponse */
+        ManuscriptEquationResponse: {
+            /** Latex */
+            latex: string;
+            /** Display */
+            display: boolean;
+        };
+        /** ProvidedReferenceListResponse */
+        ProvidedReferenceListResponse: {
+            /** Items */
+            items: components["schemas"]["ProvidedReferenceResponse"][];
+        };
+        /** ProvidedReferenceResponse */
+        ProvidedReferenceResponse: {
+            /** Receipt Id */
+            receipt_id: string;
+            /** Claim Id */
+            claim_id: string;
+            /** Citation Label */
+            citation_label: string;
+            /** Doi Or Url */
+            doi_or_url: string | null;
+            /** Note */
+            note: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            /** Byte Length */
+            byte_length: number;
+            status: components["schemas"]["ProvidedReferenceStatus"];
+            /** Received At Utc */
+            received_at_utc: string;
+            /** Latest Generation */
+            latest_generation: string | null;
+            /** Duplicate */
+            duplicate: boolean;
+        };
+        /**
+         * ProvidedReferenceStatus
+         * @enum {string}
+         */
+        ProvidedReferenceStatus: "RECEIVED_NOT_INGESTED" | "INGESTED_AUTOMATED_UNREVIEWED";
         /** SearchRequest */
         SearchRequest: {
+            /** Query */
+            query: string;
             /**
              * Limit
              * @default 10
              */
             limit: number;
-            /** Object Types */
-            object_types?: string[] | null;
-            /** Query */
-            query: string;
         };
         /** SearchResult */
         SearchResult: {
-            /** Object Type */
-            object_type: string;
-            /** Path */
-            path: string;
-            /** Score */
-            score: number;
-            /** Snippet */
-            snippet: string;
             /** Title */
             title: string;
+            /** Path */
+            path: string;
+            /** Snippet */
+            snippet: string;
+            /** Score */
+            score: number;
+            /** Object Type */
+            object_type: string;
         };
         /** ValidationError */
         ValidationError: {
-            /** Context */
-            ctx?: Record<string, never>;
-            /** Input */
-            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
             msg: string;
             /** Error Type */
             type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
     };
     responses: never;
@@ -175,6 +549,194 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchResult"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_citation_reviews_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationReviewQueueResponse"];
+                };
+            };
+        };
+    };
+    source_citation_reviews_sources__source_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_citation_reviews__claim_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                claim_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationReviewDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_citation_reviews__claim_id__decision_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                claim_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CitationDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDecisionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    progress_literature_review_progress_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiteratureReviewProgressResponse"];
+                };
+            };
+        };
+    };
+    references_literature_review_references_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvidedReferenceListResponse"];
+                };
+            };
+        };
+    };
+    provide_reference_literature_review_references_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_provide_reference_literature_review_references_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvidedReferenceResponse"];
                 };
             };
             /** @description Validation Error */

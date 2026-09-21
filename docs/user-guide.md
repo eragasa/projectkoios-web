@@ -61,8 +61,9 @@ If the API is already managed separately:
 npm run dev
 ```
 
-Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/search`, `/docs`, and
-`/openapi.json` to the local API, avoiding a development CORS dependency.
+Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/search`,
+`/citation-reviews`, `/docs`, and `/openapi.json` to the local API, avoiding a
+development CORS dependency.
 
 The header reports whether the API is available.
 
@@ -96,6 +97,31 @@ process supervision should use the deployment platform's service manager.
 
 An empty result is distinct from an unavailable API. The current backend uses an
 in-memory index, so results depend on how the API process was initialized.
+
+## Citation review
+
+Open **Citation review** to inspect the configured private review bundle. Each
+claim shows its manuscript context with locally rendered equations, the exact
+TeX excerpt, the automated recommendation, and reference-only candidate
+passages. Use **Preview PDF page** to inspect equations and notation in the
+original source, or open the source PDF at its physical page in a separate tab.
+
+Choose a human disposition, select citation keys when accepting or recording
+partial support, and optionally add a note. Saving updates the private local
+decision store only; it never edits the manuscript or accepts a citation
+implicitly.
+
+The API defaults to these private paths:
+
+```text
+~/.local/share/projectkoios/citation-review/bundle.json
+~/.local/share/projectkoios/citation-review/decisions.sqlite3
+~/projectkoios/assets/references/ksdft2effmass/
+```
+
+The decision database is created with user-only (`0600`) permissions. The web
+application receives evidence through the API and does not read those paths
+directly.
 
 ## Configure another API endpoint
 

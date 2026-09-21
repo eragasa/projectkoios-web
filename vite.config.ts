@@ -13,6 +13,9 @@ export default defineConfig({
       "/docs": apiTarget,
       "/health": apiTarget,
       "/openapi.json": apiTarget,
+      "/citation-reviews": apiTarget,
+      "/literature-review/progress": apiTarget,
+      "/literature-review/references": apiTarget,
       "/search": {
         target: apiTarget,
         bypass: (request) => (request.method === "GET" ? "/index.html" : undefined),
