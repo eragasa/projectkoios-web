@@ -21,6 +21,8 @@ export function AppShell() {
             Overview
           </NavLink>
           <NavLink to="/search">Search</NavLink>
+          <NavLink to="/citation-review">Citation review</NavLink>
+          <NavLink to="/literature-review">Literature review</NavLink>
         </nav>
 
         <HealthIndicator />

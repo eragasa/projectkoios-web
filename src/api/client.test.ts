@@ -47,6 +47,101 @@ test("search sends the API request contract", async () => {
   );
 });
 
+test("citation decisions use the private review endpoint", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        claim_id: "appendix-g-001",
+        disposition: "CORPUS_GAP",
+        selected_citation_keys: [],
+        note: "Source missing.",
+        revision: 1,
+        updated_at_utc: "2026-09-20T22:00:00+00:00",
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await client.saveCitationDecision("appendix-g-001", {
+    disposition: "CORPUS_GAP",
+    selected_citation_keys: [],
+    note: "Source missing.",
+  });
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/citation-reviews/appendix-g-001/decision",
+    expect.objectContaining({
+      method: "PUT",
+      body: JSON.stringify({
+        disposition: "CORPUS_GAP",
+        selected_citation_keys: [],
+        note: "Source missing.",
+      }),
+    }),
+  );
+});
+
+test("literature review requests the private progress endpoint", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(JSON.stringify({ phase: "ASSESSING" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await client.literatureReviewProgress();
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/literature-review/progress",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
+test("provided references send a PDF with bounded metadata", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        receipt_id: "provided-reference:sha256:abc",
+        status: "RECEIVED_NOT_INGESTED",
+      }),
+      {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+  const file = new File(["%PDF-1.7"], "example.pdf", {
+    type: "application/pdf",
+  });
+
+  await client.provideLiteratureReference({
+    claimId: "C-001",
+    citationLabel: "ExampleAuthor2024",
+    doiOrUrl: "10.0000/example",
+    note: "Author copy",
+    file,
+  });
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/literature-review/references",
+    expect.objectContaining({
+      method: "POST",
+      body: expect.any(FormData),
+    }),
+  );
+  const request = fetchMock.mock.calls[0][1];
+  const body = request?.body as FormData;
+  expect(body.get("claim_id")).toBe("C-001");
+  expect(body.get("citation_label")).toBe("ExampleAuthor2024");
+  expect(body.get("reference_pdf")).toBe(file);
+});
+
 test("API errors preserve status and detail", async () => {
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify({ detail: "Invalid query" }), {
