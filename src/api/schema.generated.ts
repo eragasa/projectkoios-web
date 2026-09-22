@@ -226,6 +226,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/organizer/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Status */
+        get: operations["read_status_organizer_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizer/control": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Control */
+        put: operations["update_control_organizer_control_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizer/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Proposals */
+        get: operations["read_proposals_organizer_proposals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizer/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Events */
+        get: operations["read_events_organizer_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizer/events/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream Events */
+        get: operations["stream_events_organizer_events_stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -481,6 +566,11 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /**
+         * LifeDomain
+         * @enum {string}
+         */
+        LifeDomain: "research" | "teaching" | "software" | "business" | "personal" | "administration" | "finance" | "health" | "media" | "other";
         /** LiteratureClaimProgressResponse */
         LiteratureClaimProgressResponse: {
             /** Claim Id */
@@ -591,6 +681,116 @@ export interface components {
             latex: string;
             /** Display */
             display: boolean;
+        };
+        /** OrganizerControlRequest */
+        OrganizerControlRequest: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "on" | "pause" | "off";
+        };
+        /** OrganizerEventListResponse */
+        OrganizerEventListResponse: {
+            /** Events */
+            events: components["schemas"]["OrganizerEventResponse"][];
+        };
+        /** OrganizerEventResponse */
+        OrganizerEventResponse: {
+            /** Sequence */
+            sequence: number;
+            /** Occurred At */
+            occurred_at: string;
+            /** Kind */
+            kind: string;
+            /** Message */
+            message: string;
+            /** Root Id */
+            root_id: string | null;
+            /** File Id */
+            file_id: string | null;
+        };
+        /** OrganizerProposalListResponse */
+        OrganizerProposalListResponse: {
+            /** Proposals */
+            proposals: components["schemas"]["OrganizerProposalResponse"][];
+            /** Total */
+            total: number;
+            /** Complete */
+            complete: boolean;
+        };
+        /** OrganizerProposalResponse */
+        OrganizerProposalResponse: {
+            /** File Id */
+            file_id: string;
+            /** Root Id */
+            root_id: string;
+            /** Relative Path */
+            relative_path: string;
+            /** Name */
+            name: string;
+            /** Extension */
+            extension: string;
+            /** Byte Size */
+            byte_size: number;
+            /**
+             * Availability
+             * @enum {string}
+             */
+            availability: "local" | "cloud_placeholder" | "inaccessible";
+            /**
+             * Para Category
+             * @enum {string}
+             */
+            para_category: "project" | "area" | "resource" | "archive" | "inbox";
+            /**
+             * Life Domain
+             * @enum {string}
+             */
+            life_domain: "research" | "teaching" | "software" | "business" | "personal" | "administration" | "finance" | "health" | "media" | "other";
+            /** Confidence */
+            confidence: number;
+            /** Suggested Group */
+            suggested_group: string;
+            /** Rationale */
+            rationale: string;
+            /** Model */
+            model: string;
+            /** Model Digest */
+            model_digest: string;
+            /** Proposed At */
+            proposed_at: string;
+        };
+        /** OrganizerStatusResponse */
+        OrganizerStatusResponse: {
+            /**
+             * Desired Mode
+             * @enum {string}
+             */
+            desired_mode: "on" | "pause" | "off";
+            /**
+             * Activity
+             * @enum {string}
+             */
+            activity: "off" | "paused" | "idle" | "discovering" | "scanning" | "classifying" | "failed";
+            /** Discovered Roots */
+            discovered_roots: number;
+            /** Observed Files */
+            observed_files: number;
+            /** Local Files */
+            local_files: number;
+            /** Placeholder Files */
+            placeholder_files: number;
+            /** Proposed Files */
+            proposed_files: number;
+            /** Last Event Sequence */
+            last_event_sequence: number;
+            /** Current Root Id */
+            current_root_id: string | null;
+            /** Current Relative Path */
+            current_relative_path: string | null;
+            /** Last Error */
+            last_error: string | null;
         };
         /** ProvidedReferenceListResponse */
         ProvidedReferenceListResponse: {
@@ -1252,6 +1452,151 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProvidedReferenceResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_status_organizer_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerStatusResponse"];
+                };
+            };
+        };
+    };
+    update_control_organizer_control_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizerControlRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_proposals_organizer_proposals_get: {
+        parameters: {
+            query?: {
+                life_domain?: components["schemas"]["LifeDomain"];
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerProposalListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_events_organizer_events_get: {
+        parameters: {
+            query?: {
+                after?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerEventListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_events_organizer_events_stream_get: {
+        parameters: {
+            query?: {
+                after?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

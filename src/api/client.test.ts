@@ -117,6 +117,26 @@ test("GitHub tasks request the live control projection", async () => {
   );
 });
 
+test("organizer proposals request bounded teaching metadata", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(JSON.stringify({ proposals: [], total: 0, complete: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await expect(client.organizerProposals("teaching", 100)).resolves.toEqual({
+    proposals: [],
+    total: 0,
+    complete: true,
+  });
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/organizer/proposals?life_domain=teaching&limit=100",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
 test("search sends the API request contract", async () => {
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify([]), {

@@ -1776,6 +1776,223 @@ a {
   margin-top: 0.7rem;
 }
 
+.organizer-page,
+.course-review-page {
+  display: grid;
+  gap: 2rem;
+}
+
+.organizer-controls,
+.course-review-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.organizer-controls button,
+.course-review-links a,
+.course-review-links button {
+  min-height: 42px;
+  padding: 0.65rem 0.95rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  color: var(--green);
+  background: var(--surface);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.organizer-controls button:disabled,
+.course-review-links button:disabled {
+  color: var(--muted);
+  background: rgb(24 34 30 / 5%);
+  cursor: not-allowed;
+}
+
+.organizer-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.organizer-metrics article {
+  min-height: 110px;
+  padding: 1rem;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: rgb(251 250 246 / 70%);
+}
+
+.organizer-metrics span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+.organizer-metrics strong {
+  display: block;
+  margin-top: 0.8rem;
+  color: var(--green);
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.organizer-events,
+.course-review-queue,
+.unmatched-teaching-proposals {
+  display: grid;
+  gap: 1rem;
+}
+
+.organizer-events .section-heading,
+.course-review-queue .section-heading,
+.unmatched-teaching-proposals .section-heading {
+  display: flex;
+  gap: 2rem;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.organizer-events .section-heading h2,
+.course-review-queue .section-heading h2,
+.unmatched-teaching-proposals .section-heading h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.organizer-events .section-heading > span,
+.course-review-queue .section-heading > span,
+.unmatched-teaching-proposals .section-heading > span {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.organizer-events ol,
+.course-proposal-list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.organizer-events li {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.35fr) minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  background: rgb(255 255 255 / 55%);
+  font-size: 0.7rem;
+}
+
+.organizer-events time {
+  color: var(--muted);
+  font-family: "DM Mono", monospace;
+}
+
+.course-review-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.course-review-card {
+  padding: 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgb(251 250 246 / 78%);
+}
+
+.course-review-card > header {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.course-review-card h3 {
+  margin: 0.35rem 0 0;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+
+.course-review-card header p,
+.course-review-card__empty,
+.course-review-card__boundary {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.course-review-card__boundary {
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.course-review-card > header > span {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  color: #7b5a20;
+  background: rgb(200 153 77 / 15%);
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.course-proposal-list {
+  margin-top: 1rem;
+}
+
+.course-proposal-list li {
+  padding: 0.9rem;
+  border-left: 2px solid var(--green-bright);
+  background: rgb(45 122 91 / 5%);
+}
+
+.course-proposal-list li > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.course-proposal-list li > div span {
+  color: var(--muted);
+  font-size: 0.62rem;
+}
+
+.course-proposal-list code {
+  display: block;
+  margin-top: 0.55rem;
+  overflow-wrap: anywhere;
+  color: var(--green);
+  font-size: 0.66rem;
+}
+
+.course-proposal-list p {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.course-proposal-list footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-top: 0.65rem;
+  color: var(--muted);
+  font-family: "DM Mono", monospace;
+  font-size: 0.56rem;
+}
+
 .control-heading {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
@@ -2286,6 +2503,22 @@ a {
 
   .control-notice,
   .github-sequence__metadata {
+    grid-template-columns: 1fr;
+  }
+
+  .organizer-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .organizer-events .section-heading,
+  .course-review-queue .section-heading,
+  .unmatched-teaching-proposals .section-heading,
+  .course-review-card > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .organizer-events li {
     grid-template-columns: 1fr;
   }
 

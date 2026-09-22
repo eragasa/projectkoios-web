@@ -10,16 +10,21 @@ API_REPO="${KOIOS_API_REPO:-$REPOS_ROOT/projectkoios-api}"
 CORE_REPO="${KOIOS_CORE_REPO:-$REPOS_ROOT/projectkoios}"
 SEARCH_REPO="${KOIOS_SEARCH_REPO:-$REPOS_ROOT/projectkoios-search}"
 OBSIDIAN_REPO="${KOIOS_OBSIDIAN_REPO:-$REPOS_ROOT/projectkoios-obsidian}"
+AGENT_REPO="${KOIOS_AGENT_REPO:-$REPOS_ROOT/projectkoios-agent}"
 API_HOST="${KOIOS_API_HOST:-127.0.0.1}"
 API_PORT="${KOIOS_API_PORT:-8000}"
 WEB_HOST="${KOIOS_WEB_HOST:-127.0.0.1}"
 WEB_PORT="${KOIOS_WEB_PORT:-5173}"
 API_PID_FILE="$RUN_DIR/api.pid"
 WEB_PID_FILE="$RUN_DIR/web.pid"
+ORGANIZER_PID_FILE="$RUN_DIR/organizer.pid"
 API_LOG="$RUN_DIR/api.log"
 WEB_LOG="$RUN_DIR/web.log"
+ORGANIZER_LOG="$RUN_DIR/organizer.log"
+ORGANIZER_CATALOG="${KOIOS_ORGANIZER_CATALOG:-$HOME/projectkoios/.koios/store-v1/state/organizer/catalog.sqlite3}"
 STARTED_API=0
 STARTED_WEB=0
+STARTED_ORGANIZER=0
 
 is_running() {
   local pid_file="$1"
@@ -73,6 +78,10 @@ cleanup_on_error() {
     kill "$(cat "$API_PID_FILE")" 2>/dev/null || true
     rm -f "$API_PID_FILE"
   fi
+  if [ "$STARTED_ORGANIZER" -eq 1 ] && is_running "$ORGANIZER_PID_FILE"; then
+    kill "$(cat "$ORGANIZER_PID_FILE")" 2>/dev/null || true
+    rm -f "$ORGANIZER_PID_FILE"
+  fi
   exit "$status"
 }
 
@@ -99,7 +108,7 @@ if [ ! -x "$VITE" ]; then
   exit 1
 fi
 
-for directory in "$CORE_REPO" "$SEARCH_REPO" "$OBSIDIAN_REPO"; do
+for directory in "$CORE_REPO" "$SEARCH_REPO" "$OBSIDIAN_REPO" "$AGENT_REPO"; do
   if [ ! -d "$directory/src/python" ]; then
     echo "Required Project Koios source tree not found: $directory" >&2
     exit 1
@@ -117,7 +126,7 @@ else
     exit 1
   fi
 
-  API_PYTHONPATH="$API_REPO/src/python:$CORE_REPO/src/python:$SEARCH_REPO/src/python:$OBSIDIAN_REPO/src/python"
+  API_PYTHONPATH="$API_REPO/src/python:$CORE_REPO/src/python:$SEARCH_REPO/src/python:$OBSIDIAN_REPO/src/python:$AGENT_REPO/src/python"
   (
     cd "$API_REPO"
     nohup env PYTHONPATH="$API_PYTHONPATH" \
@@ -125,6 +134,7 @@ else
       KOIOS_COURSE_CATALOG="${KOIOS_COURSE_CATALOG:-$CORE_REPO/public/course-catalog.json}" \
       KOIOS_PROJECT_CATALOG="${KOIOS_PROJECT_CATALOG:-$CORE_REPO/public/project-catalog.json}" \
       KOIOS_GITHUB_REPOSITORIES="${KOIOS_GITHUB_REPOSITORIES:-eragasa/projectkoios-api,eragasa/projectkoios-web}" \
+      KOIOS_ORGANIZER_CATALOG="$ORGANIZER_CATALOG" \
       "$API_PYTHON" -m uvicorn projectkoios.api.main:app \
       --host "$API_HOST" --port "$API_PORT" \
       >>"$API_LOG" 2>&1 </dev/null &
@@ -134,6 +144,39 @@ else
   wait_for_url "Project Koios API" \
     "http://$API_HOST:$API_PORT/health" "$API_PID_FILE"
   echo "Project Koios API started (PID $(cat "$API_PID_FILE"))."
+fi
+
+if [ "${KOIOS_ORGANIZER_ENABLED:-0}" = "1" ]; then
+  if [ -z "${KOIOS_ORGANIZER_MODEL_DIGEST:-}" ]; then
+    echo "KOIOS_ORGANIZER_MODEL_DIGEST is required when the organizer is enabled." >&2
+    exit 1
+  fi
+  if is_running "$ORGANIZER_PID_FILE"; then
+    echo "Project Koios organizer already running (PID $(cat "$ORGANIZER_PID_FILE"))."
+  else
+    rm -f "$ORGANIZER_PID_FILE"
+    API_PYTHONPATH="$API_REPO/src/python:$CORE_REPO/src/python:$SEARCH_REPO/src/python:$OBSIDIAN_REPO/src/python:$AGENT_REPO/src/python"
+    (
+      cd "$AGENT_REPO"
+      nohup env PYTHONPATH="$API_PYTHONPATH" \
+        KOIOS_ORGANIZER_CATALOG="$ORGANIZER_CATALOG" \
+        KOIOS_ORGANIZER_MODEL="${KOIOS_ORGANIZER_MODEL:-qwen3.5:9b}" \
+        KOIOS_ORGANIZER_MODEL_DIGEST="$KOIOS_ORGANIZER_MODEL_DIGEST" \
+        "$API_PYTHON" -c \
+        'from projectkoios.agent.organizer.cli import daemon_main; daemon_main()' \
+        >>"$ORGANIZER_LOG" 2>&1 </dev/null &
+      echo $! >"$ORGANIZER_PID_FILE"
+    )
+    STARTED_ORGANIZER=1
+    sleep 0.5
+    if ! is_running "$ORGANIZER_PID_FILE"; then
+      echo "Project Koios organizer stopped during startup." >&2
+      exit 1
+    fi
+    echo "Project Koios organizer started (PID $(cat "$ORGANIZER_PID_FILE"))."
+  fi
+else
+  echo "Project Koios organizer disabled; set KOIOS_ORGANIZER_ENABLED=1 to start it."
 fi
 
 if is_running "$WEB_PID_FILE"; then

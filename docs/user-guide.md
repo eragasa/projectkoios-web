@@ -24,7 +24,9 @@ npm run start:local
 It starts:
 
 - `projectkoios-api` on <http://127.0.0.1:8000>;
-- the Vite web server on <http://127.0.0.1:5173>.
+- the Vite web server on <http://127.0.0.1:5173>;
+- optionally, the metadata-only organization worker when
+  `KOIOS_ORGANIZER_ENABLED=1` and a pinned model digest is provided.
 
 It waits for both services to become ready and stores PID files and logs in
 `.run/`. Repeating the command is safe: already managed processes are reused.
@@ -42,7 +44,8 @@ KOIOS_OPEN_BROWSER=1 npm run start:local
 npm run stop:local
 ```
 
-Shutdown occurs in reverse order: web first, then API. The script validates each
+Shutdown occurs in reverse order: web first, then the optional organizer worker,
+then API. The script validates each
 PID's command before sending a signal, waits up to ten seconds, and only then
 uses a forced stop.
 
@@ -50,6 +53,7 @@ Logs remain available after shutdown:
 
 ```text
 .run/api.log
+.run/organizer.log
 .run/web.log
 ```
 
@@ -68,8 +72,9 @@ npm run dev:control
 ```
 
 Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/courses`,
-`/api/projects`, `/api/publications`, `/github/tasks`, `/search`, `/citation-reviews`,
-`/literature-review`, `/docs`, and `/openapi.json` to the local API, avoiding a
+`/api/projects`, `/api/publications`, `/github/tasks`, `/search`, `/organizer`,
+`/citation-reviews`, `/literature-review`, `/docs`, and `/openapi.json` to the local
+API, avoiding a
 development CORS dependency.
 
 The control header reports whether the API is available. The public profile does not
@@ -79,21 +84,26 @@ display operational health.
 
 The scripts accept these optional environment variables:
 
-| Variable                    | Default                         |
-| --------------------------- | ------------------------------- |
-| `KOIOS_API_HOST`            | `127.0.0.1`                     |
-| `KOIOS_API_PORT`            | `8000`                          |
-| `KOIOS_WEB_HOST`            | `127.0.0.1`                     |
-| `KOIOS_WEB_PORT`            | `5173`                          |
-| `KOIOS_RUN_DIR`             | `.run` inside this repository   |
-| `KOIOS_API_REPO`            | sibling `projectkoios-api`      |
-| `KOIOS_CORE_REPO`           | sibling `projectkoios`          |
-| `KOIOS_COURSE_CATALOG`      | core public-safe course catalog |
-| `KOIOS_PROJECT_CATALOG`     | core public project catalog     |
-| `KOIOS_SEARCH_REPO`         | sibling `projectkoios-search`   |
-| `KOIOS_OBSIDIAN_REPO`       | sibling `projectkoios-obsidian` |
-| `KOIOS_GITHUB_REPOSITORIES` | API and web repositories        |
-| `KOIOS_OPEN_BROWSER`        | `0`                             |
+| Variable                       | Default                         |
+| ------------------------------ | ------------------------------- |
+| `KOIOS_API_HOST`               | `127.0.0.1`                     |
+| `KOIOS_API_PORT`               | `8000`                          |
+| `KOIOS_WEB_HOST`               | `127.0.0.1`                     |
+| `KOIOS_WEB_PORT`               | `5173`                          |
+| `KOIOS_RUN_DIR`                | `.run` inside this repository   |
+| `KOIOS_API_REPO`               | sibling `projectkoios-api`      |
+| `KOIOS_CORE_REPO`              | sibling `projectkoios`          |
+| `KOIOS_COURSE_CATALOG`         | core public-safe course catalog |
+| `KOIOS_PROJECT_CATALOG`        | core public project catalog     |
+| `KOIOS_SEARCH_REPO`            | sibling `projectkoios-search`   |
+| `KOIOS_OBSIDIAN_REPO`          | sibling `projectkoios-obsidian` |
+| `KOIOS_AGENT_REPO`             | sibling `projectkoios-agent`    |
+| `KOIOS_GITHUB_REPOSITORIES`    | API and web repositories        |
+| `KOIOS_ORGANIZER_CATALOG`      | private local SQLite catalog    |
+| `KOIOS_ORGANIZER_ENABLED`      | `0`                             |
+| `KOIOS_ORGANIZER_MODEL`        | `qwen3.5:9b`                    |
+| `KOIOS_ORGANIZER_MODEL_DIGEST` | required when enabled           |
+| `KOIOS_OPEN_BROWSER`           | `0`                             |
 
 The shell scripts target macOS and Unix-like development systems. They explicitly
 start both processes in the `control` profile and bind them to loopback by default.
@@ -125,6 +135,33 @@ The control profile adds `/control` routes for the single operator. The first lo
 deployment relies on loopback/private-network isolation and is not approved for
 direct public-internet exposure. The public build has no control routes, and the
 public API profile independently omits all control endpoints.
+
+## Organization agent and course review
+
+From **Control center**, open **Life organizer** to inspect the local organization
+agent's requested mode, activity, metadata counts, and event stream. Start, pause, and
+off controls update the agent's desired-mode record. They do not move, rename, delete,
+or publish files and do not create a GitHub task.
+
+Open **Course review** to compare organizer proposals labeled `teaching` with the
+separately reviewed public-safe course inventory. Matching is limited to course-code
+tokens in private relative paths and agent-suggested groups. Matched and unmatched
+records are candidates for human review only. The page does not poll in the
+background; use **Refresh review evidence** for a new bounded read. It exposes no
+approve or publish action and does not establish course identity, privacy clearance, authorship,
+ownership, copyright, or publication rights.
+
+The organizer worker is a separate local process supplied by `projectkoios-agent`.
+Start it under the existing local PID-management boundary with a pinned model digest:
+
+```bash
+KOIOS_ORGANIZER_ENABLED=1 \
+KOIOS_ORGANIZER_MODEL_DIGEST=<sha256-digest> \
+npm run start:local
+```
+
+The API and web application only read its catalog and record desired mode. GitHubTask
+is not used as a scheduler, queue, worker, or process supervisor.
 
 ## GitHub tasks
 
@@ -208,7 +245,7 @@ npm run generate:api
 This writes `src/api/schema.generated.ts`. Generated files must be reviewed when
 API contracts change. The API client consumes the generated publication and control contracts. Generate
 from a control-profile OpenAPI document so the schema contains the full typed
-superset.
+superset, including organizer status, event, and proposal records.
 
 ## Run checks
 

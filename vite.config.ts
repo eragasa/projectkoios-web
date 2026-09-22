@@ -20,6 +20,7 @@ export default defineConfig({
       "/github/tasks": apiTarget,
       "/literature-review/progress": apiTarget,
       "/literature-review/references": apiTarget,
+      "/organizer": apiTarget,
       "/search": {
         target: apiTarget,
         bypass: (request) => (request.method === "GET" ? "/index.html" : undefined),

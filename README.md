@@ -14,11 +14,12 @@ npm install
 npm run start:local
 ```
 
-This starts both `projectkoios-api` and the web development server. The web
-interface runs at <http://127.0.0.1:5173> and proxies API requests to
+This starts both `projectkoios-api` and the web development server. Set
+`KOIOS_ORGANIZER_ENABLED=1` with `KOIOS_ORGANIZER_MODEL_DIGEST` to add the
+PID-managed metadata-only organization worker. The web interface runs at <http://127.0.0.1:5173> and proxies API requests to
 <http://127.0.0.1:8000>.
 
-Stop both managed processes with:
+Stop all managed processes with:
 
 ```bash
 npm run stop:local
