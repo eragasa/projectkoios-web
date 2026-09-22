@@ -15,6 +15,7 @@ export default defineConfig({
       "/openapi.json": apiTarget,
       "/api/publications": apiTarget,
       "/citation-reviews": apiTarget,
+      "/github/tasks": apiTarget,
       "/literature-review/progress": apiTarget,
       "/literature-review/references": apiTarget,
       "/search": {

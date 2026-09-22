@@ -2,6 +2,14 @@ import { Link } from "react-router-dom";
 
 const workspaces = [
   {
+    eyebrow: "Repositories",
+    title: "Inspect GitHub tasks",
+    description:
+      "Read live pull requests, workflow runs, and ordered CI tasks without exposing mutation controls.",
+    action: "Open GitHub tasks",
+    to: "/control/github",
+  },
+  {
     eyebrow: "Knowledge",
     title: "Search the workspace",
     description:

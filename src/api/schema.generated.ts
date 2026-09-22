@@ -72,6 +72,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/github/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Github Tasks */
+        get: operations["read_github_tasks_github_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/citation-reviews": {
         parameters: {
             query?: never;
@@ -306,6 +323,119 @@ export interface components {
             /** Evaluation Status */
             evaluation_status: string;
             decision: components["schemas"]["CitationDecisionResponse"] | null;
+        };
+        /** GitHubPullRequestSummary */
+        GitHubPullRequestSummary: {
+            /** Number */
+            number: number;
+            /** Title */
+            title: string;
+            /**
+             * Url
+             * Format: uri
+             */
+            url: string;
+            /** Is Draft */
+            is_draft: boolean;
+            /** Head Branch */
+            head_branch: string;
+            /** Head Sha */
+            head_sha: string;
+            /** Base Branch */
+            base_branch: string;
+        };
+        /** GitHubRepositoryTaskProjection */
+        GitHubRepositoryTaskProjection: {
+            /** Repository */
+            repository: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "ok" | "error";
+            /** Error Kind */
+            error_kind?: string | null;
+            /** Default Branch */
+            default_branch?: string | null;
+            /**
+             * Open Pull Requests
+             * @default []
+             */
+            open_pull_requests: components["schemas"]["GitHubPullRequestSummary"][];
+            /**
+             * Open Pull Requests Complete
+             * @default true
+             */
+            open_pull_requests_complete: boolean;
+            latest_sequence?: components["schemas"]["GitHubTaskSequence"] | null;
+        };
+        /** GitHubTask */
+        GitHubTask: {
+            /** Sequence Index */
+            sequence_index: number;
+            /** Job Name */
+            job_name: string;
+            /** Name */
+            name: string;
+            /** Status */
+            status: string;
+            /** Conclusion */
+            conclusion?: string | null;
+            /** Started At */
+            started_at?: string | null;
+            /** Completed At */
+            completed_at?: string | null;
+        };
+        /** GitHubTaskDashboard */
+        GitHubTaskDashboard: {
+            /**
+             * Source
+             * @default github-live
+             * @constant
+             */
+            source: "github-live";
+            /**
+             * Repositories
+             * @default []
+             */
+            repositories: components["schemas"]["GitHubRepositoryTaskProjection"][];
+        };
+        /** GitHubTaskSequence */
+        GitHubTaskSequence: {
+            /** Run Id */
+            run_id: number;
+            /** Workflow Name */
+            workflow_name: string;
+            /** Event */
+            event: string;
+            /** Status */
+            status: string;
+            /** Conclusion */
+            conclusion?: string | null;
+            /** Branch */
+            branch: string;
+            /** Commit Sha */
+            commit_sha: string;
+            /**
+             * Url
+             * Format: uri
+             */
+            url: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Tasks
+             * @default []
+             */
+            tasks: components["schemas"]["GitHubTask"][];
+            /**
+             * Tasks Complete
+             * @default true
+             */
+            tasks_complete: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -667,6 +797,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_github_tasks_github_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubTaskDashboard"];
                 };
             };
         };

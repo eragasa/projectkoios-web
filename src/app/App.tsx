@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 
 import { CitationReviewPage } from "../features/citation-review/CitationReviewPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
+import { GitHubTasksPage } from "../features/github-tasks/GitHubTasksPage";
 import { LiteratureReviewPage } from "../features/literature-review/LiteratureReviewPage";
 import { NotFoundPage } from "../features/publishing/NotFoundPage";
 import { PublicHomePage } from "../features/publishing/PublicHomePage";
@@ -21,6 +22,7 @@ export function App({ profile = deploymentProfile }: { profile?: DeploymentProfi
         {isControl ? (
           <>
             <Route path="control" element={<DashboardPage />} />
+            <Route path="control/github" element={<GitHubTasksPage />} />
             <Route path="control/search" element={<SearchPage />} />
             <Route path="control/citation-review" element={<CitationReviewPage />} />
             <Route

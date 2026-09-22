@@ -68,6 +68,10 @@ test("control profile opens the single-operator dashboard", async () => {
 
   expect(screen.getByRole("heading", { name: "Control center" })).toBeInTheDocument();
   expect(screen.getByText("One human operator")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Open GitHub tasks/ })).toHaveAttribute(
+    "href",
+    "/control/github",
+  );
   expect(screen.getByRole("link", { name: /Open search/ })).toHaveAttribute(
     "href",
     "/control/search",
