@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
 import { apiClient, type PublicationRecord } from "../../api/client";
+import { usePageMetadata } from "../../app/usePageMetadata";
 
 function publicationDate(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
@@ -80,6 +82,10 @@ function PublicationCard({ publication }: { publication: PublicationRecord }) {
 }
 
 export function PublicationsPage() {
+  usePageMetadata(
+    "Publications",
+    "Reviewed software, papers, datasets, and technical reports published through Project Koios.",
+  );
   const publications = useQuery({
     queryKey: ["publications"],
     queryFn: ({ signal }) => apiClient.publications(signal),
@@ -113,6 +119,14 @@ export function PublicationsPage() {
         <div className="empty-state">
           <h2>No public records yet</h2>
           <p>Draft and internal work is never displayed as published output.</p>
+          <div className="empty-state__actions">
+            <Link className="button button--primary" to="/projects">
+              Inspect project evidence
+            </Link>
+            <Link className="button button--secondary" to="/courses">
+              Browse course inventory
+            </Link>
+          </div>
         </div>
       ) : null}
 

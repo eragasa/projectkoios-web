@@ -1,5 +1,20 @@
 import { expect, test } from "@playwright/test";
 
+test("offers useful public next actions and page metadata", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page).toHaveTitle("Project Koios");
+  await expect(page.getByRole("link", { name: "Browse courses" })).toHaveAttribute(
+    "href",
+    "/courses",
+  );
+  await expect(page.getByRole("link", { name: /Follow development/ })).toHaveAttribute(
+    "href",
+    "https://github.com/eragasa/projectkoios/issues",
+  );
+  await expect(page.getByRole("link", { name: /Apache-2.0 license/ })).toBeVisible();
+});
+
 test("presents course identities without publishing course materials", async ({
   page,
 }) => {

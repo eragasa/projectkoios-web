@@ -150,6 +150,48 @@ a {
   padding: 4.5rem 0 6rem;
 }
 
+.site-footer {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto auto;
+  width: min(1180px, 92vw);
+  gap: 2rem;
+  align-items: end;
+  margin: 0 auto;
+  padding: 2rem 0 2.5rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.site-footer strong {
+  color: var(--ink);
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.site-footer p {
+  max-width: 430px;
+  margin: 0.4rem 0 0;
+}
+
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.site-footer a {
+  color: var(--green);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.site-footer > span {
+  font-family: "DM Mono", monospace;
+  white-space: nowrap;
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(250px, 0.55fr);
@@ -482,6 +524,14 @@ a {
 
 .empty-state p {
   color: var(--muted);
+}
+
+.empty-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  justify-content: center;
+  margin-top: 1.4rem;
 }
 
 .citation-review-page {
@@ -2188,6 +2238,7 @@ a {
   .courses-heading,
   .course-boundary,
   .course-tools,
+  .site-footer,
   .control-heading {
     grid-template-columns: 1fr;
   }

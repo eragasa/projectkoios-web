@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { apiClient, type PublicProjectRecord } from "../../api/client";
+import { usePageMetadata } from "../../app/usePageMetadata";
 
 function capabilityTone(status: string): string {
   if (status === "available") return "available";
@@ -154,6 +155,10 @@ function ProjectRecord({ project }: { project: PublicProjectRecord }) {
 }
 
 export function ProjectsPage() {
+  usePageMetadata(
+    "Projects",
+    "Reviewed Project Koios scope, capabilities, evidence, and explicit limitations.",
+  );
   const projects = useQuery({
     queryKey: ["projects"],
     queryFn: ({ signal }) => apiClient.projects(signal),

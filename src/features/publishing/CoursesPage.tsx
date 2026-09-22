@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 import { apiClient, type PublicCourseInstitution } from "../../api/client";
+import { usePageMetadata } from "../../app/usePageMetadata";
 
 function statusLabel(status: string): string {
   if (status === "review-candidate") return "Review candidate";
@@ -10,6 +11,10 @@ function statusLabel(status: string): string {
 }
 
 export function CoursesPage() {
+  usePageMetadata(
+    "Courses",
+    "A public-safe inventory of identified Project Koios course collections and their review status.",
+  );
   const courses = useQuery({
     queryKey: ["courses"],
     queryFn: ({ signal }) => apiClient.courses(signal),

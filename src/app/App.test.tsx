@@ -63,6 +63,15 @@ test("public profile presents publishing without control routes", () => {
   expect(
     screen.queryByRole("link", { name: "Control center" }),
   ).not.toBeInTheDocument();
+  expect(document.title).toBe("Project Koios");
+  expect(document.querySelector('meta[name="description"]')).toHaveAttribute(
+    "content",
+    expect.stringContaining("course inventories"),
+  );
+  expect(screen.getByRole("link", { name: /Architecture/ })).toHaveAttribute(
+    "href",
+    "https://github.com/eragasa/projectkoios/blob/main/docs/architecture.md",
+  );
 });
 
 test("public profile exposes the project catalog route", async () => {
@@ -72,6 +81,7 @@ test("public profile exposes the project catalog route", async () => {
   await user.click(screen.getByRole("link", { name: "Projects" }));
 
   expect(screen.getByRole("heading", { name: "Projects" })).toBeInTheDocument();
+  expect(document.title).toBe("Projects · Project Koios");
   expect(
     await screen.findByRole("heading", { name: "No public project records yet" }),
   ).toBeInTheDocument();
@@ -84,6 +94,7 @@ test("public profile exposes public-safe course metadata", async () => {
   await user.click(screen.getByRole("link", { name: "Courses" }));
 
   expect(screen.getByRole("heading", { name: "Courses" })).toBeInTheDocument();
+  expect(document.title).toBe("Courses · Project Koios");
   expect(
     await screen.findByRole("heading", { name: "No public course metadata yet" }),
   ).toBeInTheDocument();

@@ -41,6 +41,31 @@ export function AppShell({ profile }: { profile: DeploymentProfile }) {
       <main className="page-shell">
         <Outlet />
       </main>
+
+      <footer className="site-footer">
+        <div>
+          <strong>Project Koios</strong>
+          <p>Evidence-connected infrastructure for scientific teaching and research.</p>
+        </div>
+        <nav aria-label="Project information">
+          <a href="https://github.com/eragasa/projectkoios" rel="noreferrer">
+            Source ↗
+          </a>
+          <a
+            href="https://github.com/eragasa/projectkoios/blob/main/docs/architecture.md"
+            rel="noreferrer"
+          >
+            Architecture ↗
+          </a>
+          <a
+            href="https://github.com/eragasa/projectkoios/blob/main/LICENSE"
+            rel="noreferrer"
+          >
+            Apache-2.0 license ↗
+          </a>
+        </nav>
+        <span>{isControl ? "Private control profile" : "Public profile"}</span>
+      </footer>
     </div>
   );
 }

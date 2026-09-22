@@ -114,7 +114,10 @@ content. Each publication can expose a type, version, authors, publication date,
 citation, topics, reviewed claims, explicit limitations, and public links.
 
 An empty catalog is displayed honestly as no public records. An unavailable catalog
-is distinct from an empty one.
+is distinct from an empty one. Empty publication results direct visitors to project
+evidence and the course inventory rather than ending the public journey. Public pages
+also provide route-specific titles and descriptions plus shared source, architecture,
+and license links.
 
 ## Control center
 
