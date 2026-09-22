@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  github-tasks:
+    name: Node.js 22 task sequence
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - name: GitHubTask 01 · Check out web candidate
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: GitHubTask 02 · Install Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22"
+
+      - name: GitHubTask 03 · Install locked dependencies
+        run: npm ci
+
+      - name: GitHubTask 04 · Check formatting
+        run: npm run format:check
+
+      - name: GitHubTask 05 · Type-check application
+        run: npm run typecheck
+
+      - name: GitHubTask 06 · Run component tests
+        run: npm test
+
+      - name: GitHubTask 07 · Build public deployment
+        run: npm run build:public
+
+      - name: GitHubTask 08 · Build control deployment
+        run: npm run build:control
+
+      - name: GitHubTask 09 · Install Chromium runtime
+        run: npx playwright install --with-deps chromium
+
+      - name: GitHubTask 10 · Run browser acceptance tests
+        run: npm run test:e2e
