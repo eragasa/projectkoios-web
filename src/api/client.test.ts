@@ -46,6 +46,25 @@ test("publications request the public catalog", async () => {
   );
 });
 
+test("GitHub tasks request the live control projection", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(JSON.stringify({ source: "github-live", repositories: [] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await expect(client.githubTasks()).resolves.toEqual({
+    source: "github-live",
+    repositories: [],
+  });
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/github/tasks",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
 test("search sends the API request contract", async () => {
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify([]), {

@@ -1348,6 +1348,304 @@ a {
   margin-top: 1rem;
 }
 
+.github-tasks-page {
+  width: min(1320px, 96vw);
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+.github-authority-card {
+  display: grid;
+  min-width: 210px;
+  gap: 0.45rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.github-authority-card > span {
+  color: var(--muted);
+  font-family: "DM Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.github-authority-card strong {
+  font-family: "Newsreader", serif;
+  font-size: 1.35rem;
+}
+
+.github-authority-card .button {
+  margin-top: 0.45rem;
+}
+
+.github-repository-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.github-repository-card {
+  padding: clamp(1.2rem, 3vw, 2rem);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 14px 45px rgb(24 34 30 / 5%);
+}
+
+.github-repository-card > header,
+.github-sequence > header {
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.github-repository-card h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: "Newsreader", serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 500;
+}
+
+.github-status {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 24px;
+  padding: 0.22rem 0.48rem;
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgb(24 34 30 / 6%);
+  font-family: "DM Mono", monospace;
+  font-size: 0.59rem;
+  text-transform: uppercase;
+}
+
+.github-status--success {
+  color: var(--green);
+  background: rgb(45 122 91 / 11%);
+}
+
+.github-status--failure {
+  color: var(--error);
+  background: rgb(163 58 50 / 10%);
+}
+
+.github-status--active {
+  color: #7b5b24;
+  background: rgb(200 153 77 / 15%);
+}
+
+.github-repository-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-top: 1.2rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.github-repository-summary code,
+.github-sequence__metadata code {
+  color: var(--ink);
+  font-family: "DM Mono", monospace;
+}
+
+.github-repository-error {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.2rem;
+  padding: 1rem;
+  border: 1px solid rgb(163 58 50 / 25%);
+  border-radius: 8px;
+  color: var(--error);
+  background: rgb(163 58 50 / 5%);
+  font-size: 0.74rem;
+}
+
+.github-repository-error span {
+  font-family: "DM Mono", monospace;
+}
+
+.github-collection-boundary {
+  margin: 1rem 0 0;
+  padding: 0.65rem 0.8rem;
+  border-left: 2px solid var(--gold);
+  color: #705426;
+  background: rgb(200 153 77 / 7%);
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.github-pull-requests {
+  margin-top: 1.5rem;
+}
+
+.github-pull-requests h3 {
+  font-size: 0.78rem;
+}
+
+.github-pull-requests ul {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0;
+  list-style: none;
+}
+
+.github-pull-requests li {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+}
+
+.github-pull-requests a {
+  display: flex;
+  gap: 0.7rem;
+  color: var(--ink);
+  font-size: 0.76rem;
+  text-decoration: none;
+}
+
+.github-pull-requests a span,
+.github-pull-requests small {
+  color: var(--muted);
+  font-family: "DM Mono", monospace;
+  font-size: 0.62rem;
+}
+
+.github-sequence {
+  margin-top: 1.5rem;
+  padding: 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 58%);
+}
+
+.github-sequence h3 {
+  margin: 0;
+  font-family: "Newsreader", serif;
+  font-size: 1.55rem;
+}
+
+.github-sequence__metadata {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 1rem 0;
+}
+
+.github-sequence__metadata div {
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+}
+
+.github-sequence__metadata dt {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.github-sequence__metadata dd {
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+  font-size: 0.7rem;
+}
+
+.github-task-list {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  list-style: none;
+}
+
+.github-task-list li {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+  min-height: 52px;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.github-task-list li:last-child {
+  border-bottom: 0;
+}
+
+.github-task-marker {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #909995;
+}
+
+.github-task-marker--success {
+  background: var(--green-bright);
+}
+
+.github-task-marker--failure {
+  background: var(--error);
+}
+
+.github-task-marker--active {
+  background: var(--gold);
+}
+
+.github-task-index {
+  color: var(--muted);
+  font-family: "DM Mono", monospace;
+  font-size: 0.62rem;
+}
+
+.github-task-list strong,
+.github-task-list small {
+  display: block;
+}
+
+.github-task-list strong {
+  font-size: 0.72rem;
+}
+
+.github-task-list small {
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.58rem;
+}
+
+.github-run-link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--green);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.github-sequence__empty {
+  padding: 1rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
 @media (max-width: 800px) {
   .topbar {
     grid-template-columns: 1fr auto;
@@ -1408,8 +1706,32 @@ a {
     margin: 0;
   }
 
-  .control-notice {
+  .control-notice,
+  .github-sequence__metadata {
     grid-template-columns: 1fr;
+  }
+
+  .github-tasks-page {
+    width: 100%;
+    margin-left: 0;
+    transform: none;
+  }
+
+  .github-repository-card > header,
+  .github-sequence > header,
+  .github-repository-error,
+  .github-pull-requests li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .github-task-list li {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
+  .github-task-list .github-status {
+    grid-column: 3;
+    justify-self: start;
   }
 
   .search-form {

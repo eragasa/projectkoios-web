@@ -134,8 +134,9 @@ GET /api/publications
 GET /openapi.json
 ```
 
-The control API additionally exposes private search, citation-review, and
-literature-review contracts. `src/api/schema.generated.ts` is generated from the
+The control API additionally exposes a live read-only GitHubTask projection plus
+private search, citation-review, and literature-review contracts.
+`src/api/schema.generated.ts` is generated from the
 control OpenAPI document so one typed client can support the superset while profile
 routing prevents public UI access.
 
@@ -151,6 +152,7 @@ mapping rather than a named health model.
 /                            public home
 /publications                public publication catalog
 /control                     private single-operator dashboard
+/control/github              live read-only GitHubTask projection
 /control/search              private retrieval UI
 /control/citation-review     private citation-review workspace
 /control/literature-review   private literature-review workspace
@@ -223,7 +225,10 @@ requires explicit sanitization and policy review.
 
 The first control deployment is single-operator and local/private. It is not an
 internet authentication system: the API and web server bind to loopback during local
-startup, and the public deployment uses a separate public-profile API. A future
+startup, and the public deployment uses a separate public-profile API. The GitHubTask
+view reads a bounded projection from the locally authenticated API process; the browser
+never receives a GitHub credential and exposes no dispatch, retry, merge, or other
+mutation control. A future
 remote control deployment requires an explicit authentication, session, CSRF, CORS,
 and audit design before exposure.
 

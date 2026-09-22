@@ -68,7 +68,7 @@ npm run dev:control
 ```
 
 Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/publications`,
-`/search`, `/citation-reviews`, `/literature-review`, `/docs`, and
+`/github/tasks`, `/search`, `/citation-reviews`, `/literature-review`, `/docs`, and
 `/openapi.json` to the local API, avoiding a development CORS dependency.
 
 The control header reports whether the API is available. The public profile does not
@@ -78,18 +78,19 @@ display operational health.
 
 The scripts accept these optional environment variables:
 
-| Variable              | Default                         |
-| --------------------- | ------------------------------- |
-| `KOIOS_API_HOST`      | `127.0.0.1`                     |
-| `KOIOS_API_PORT`      | `8000`                          |
-| `KOIOS_WEB_HOST`      | `127.0.0.1`                     |
-| `KOIOS_WEB_PORT`      | `5173`                          |
-| `KOIOS_RUN_DIR`       | `.run` inside this repository   |
-| `KOIOS_API_REPO`      | sibling `projectkoios-api`      |
-| `KOIOS_CORE_REPO`     | sibling `projectkoios`          |
-| `KOIOS_SEARCH_REPO`   | sibling `projectkoios-search`   |
-| `KOIOS_OBSIDIAN_REPO` | sibling `projectkoios-obsidian` |
-| `KOIOS_OPEN_BROWSER`  | `0`                             |
+| Variable                    | Default                         |
+| --------------------------- | ------------------------------- |
+| `KOIOS_API_HOST`            | `127.0.0.1`                     |
+| `KOIOS_API_PORT`            | `8000`                          |
+| `KOIOS_WEB_HOST`            | `127.0.0.1`                     |
+| `KOIOS_WEB_PORT`            | `5173`                          |
+| `KOIOS_RUN_DIR`             | `.run` inside this repository   |
+| `KOIOS_API_REPO`            | sibling `projectkoios-api`      |
+| `KOIOS_CORE_REPO`           | sibling `projectkoios`          |
+| `KOIOS_SEARCH_REPO`         | sibling `projectkoios-search`   |
+| `KOIOS_OBSIDIAN_REPO`       | sibling `projectkoios-obsidian` |
+| `KOIOS_GITHUB_REPOSITORIES` | API and web repositories        |
+| `KOIOS_OPEN_BROWSER`        | `0`                             |
 
 The shell scripts target macOS and Unix-like development systems. They explicitly
 start both processes in the `control` profile and bind them to loopback by default.
@@ -112,6 +113,28 @@ The control profile adds `/control` routes for the single operator. The first lo
 deployment relies on loopback/private-network isolation and is not approved for
 direct public-internet exposure. The public build has no control routes, and the
 public API profile independently omits all control endpoints.
+
+## GitHub tasks
+
+From **Control center**, open **GitHub tasks** to inspect each configured repository's
+open pull requests and latest ordered CI sequence. The view reads live GitHub authority
+through the local API and does not store a task queue or workflow history.
+
+Only steps explicitly named `GitHubTask …` appear in the sequence. Repository failures
+are isolated and shown using bounded categories such as `authentication`,
+`rate_limited`, or `not_found`; raw CLI output is not sent to the browser. The view has
+no merge, retry, dispatch, deployment, or publication action.
+
+The managed local startup configures the API and web repositories by default. Override
+the comma-separated allowlist when needed:
+
+```bash
+KOIOS_GITHUB_REPOSITORIES=eragasa/projectkoios-api,eragasa/projectkoios-web \
+  npm run start:local
+```
+
+The local API process uses the existing authenticated `gh` CLI. GitHub credentials are
+never placed in `VITE_*` variables or returned to the browser.
 
 ## Search
 
