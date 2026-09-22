@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/publications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Publications */
+        get: operations["list_publications_api_publications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/search": {
         parameters: {
             query?: never;
@@ -440,6 +457,78 @@ export interface components {
          * @enum {string}
          */
         ProvidedReferenceStatus: "RECEIVED_NOT_INGESTED" | "INGESTED_AUTOMATED_UNREVIEWED";
+        /** PublicationCatalog */
+        PublicationCatalog: {
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: "1";
+            /**
+             * Publications
+             * @default []
+             */
+            publications: components["schemas"]["PublicationRecord"][];
+        };
+        /**
+         * PublicationKind
+         * @enum {string}
+         */
+        PublicationKind: "software" | "article" | "dataset" | "report";
+        /** PublicationLink */
+        PublicationLink: {
+            /** Label */
+            label: string;
+            /**
+             * Url
+             * Format: uri
+             */
+            url: string;
+        };
+        /** PublicationRecord */
+        PublicationRecord: {
+            /** Id */
+            id: string;
+            /** Slug */
+            slug: string;
+            kind: components["schemas"]["PublicationKind"];
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+            /** Authors */
+            authors: string[];
+            /**
+             * Published On
+             * Format: date
+             */
+            published_on: string;
+            /** Version */
+            version?: string | null;
+            /** Citation */
+            citation?: string | null;
+            /**
+             * Topics
+             * @default []
+             */
+            topics: string[];
+            /**
+             * Claims
+             * @default []
+             */
+            claims: string[];
+            /**
+             * Limitations
+             * @default []
+             */
+            limitations: string[];
+            /**
+             * Links
+             * @default []
+             */
+            links: components["schemas"]["PublicationLink"][];
+        };
         /** SearchRequest */
         SearchRequest: {
             /** Query */
@@ -525,6 +614,26 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    list_publications_api_publications_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicationCatalog"];
                 };
             };
         };

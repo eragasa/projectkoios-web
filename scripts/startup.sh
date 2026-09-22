@@ -121,6 +121,7 @@ else
   (
     cd "$API_REPO"
     nohup env PYTHONPATH="$API_PYTHONPATH" \
+      KOIOS_DEPLOYMENT_PROFILE=control \
       "$API_PYTHON" -m uvicorn projectkoios.api.main:app \
       --host "$API_HOST" --port "$API_PORT" \
       >>"$API_LOG" 2>&1 </dev/null &
@@ -143,7 +144,8 @@ else
 
   (
     cd "$WEB_ROOT"
-    nohup "$VITE" --host "$WEB_HOST" --port "$WEB_PORT" \
+    nohup env VITE_KOIOS_DEPLOYMENT_PROFILE=control \
+      "$VITE" --host "$WEB_HOST" --port "$WEB_PORT" \
       >>"$WEB_LOG" 2>&1 </dev/null &
     echo $! >"$WEB_PID_FILE"
   )

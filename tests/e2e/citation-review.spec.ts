@@ -69,7 +69,7 @@ test("reviews citation evidence without editing the manuscript", async ({ page }
     });
   });
 
-  await page.goto("/citation-review");
+  await page.goto("/control/citation-review");
   await expect(
     page.getByText("Evidence supporting the manuscript claim."),
   ).toBeVisible();

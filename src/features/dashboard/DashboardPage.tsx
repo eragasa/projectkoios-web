@@ -1,68 +1,66 @@
 import { Link } from "react-router-dom";
 
-const capabilities = [
+const workspaces = [
   {
-    eyebrow: "Available now",
-    title: "Search your indexed knowledge",
+    eyebrow: "Knowledge",
+    title: "Search the workspace",
     description:
-      "Query Project Koios through the local API and inspect source paths, types, and relevance scores.",
+      "Query indexed private sources and inspect paths, object types, relevance, and provenance cues.",
     action: "Open search",
-    to: "/search",
+    to: "/control/search",
   },
   {
-    eyebrow: "Next",
-    title: "Trace every answer to its source",
+    eyebrow: "Human review",
+    title: "Review citation claims",
     description:
-      "Provenance views will connect retrieved passages to documents, pages, equations, and figures.",
+      "Compare manuscript claims with candidate evidence and save explicit operator decisions.",
+    action: "Open citation review",
+    to: "/control/citation-review",
   },
   {
-    eyebrow: "Planned",
-    title: "Review ingestion and vault changes",
+    eyebrow: "Research operations",
+    title: "Monitor literature review",
     description:
-      "JIT extraction and vault migrations will remain inspectable and require explicit approval.",
+      "Inspect review progress and provide missing references without silently changing manuscripts.",
+    action: "Open literature review",
+    to: "/control/literature-review",
   },
 ];
 
 export function DashboardPage() {
   return (
-    <div className="dashboard-page">
-      <section className="hero">
+    <div className="control-dashboard">
+      <header className="control-heading">
         <div>
-          <p className="eyebrow">Research · Teaching · Technical work</p>
-          <h1>Knowledge that remains connected to its evidence.</h1>
-          <p className="hero__summary">
-            Project Koios is a local-first workspace for finding, preparing, and reusing
-            technical knowledge without losing provenance.
+          <p className="eyebrow">Private workspace · Single operator</p>
+          <h1>Control center</h1>
+          <p>
+            Inspect Project Koios, resolve review queues, and initiate bounded work from
+            one private operational surface.
           </p>
-          <div className="hero__actions">
-            <Link className="button button--primary" to="/search">
-              Search the workspace
-            </Link>
-            <a className="button button--secondary" href="/docs">
-              View API
-            </a>
-          </div>
         </div>
-        <div className="hero__signal" aria-label="Project Koios workflow">
-          <span>Sources</span>
-          <i aria-hidden="true" />
-          <span>Evidence</span>
-          <i aria-hidden="true" />
-          <span>Knowledge</span>
+        <div className="operator-card" aria-label="Access boundary">
+          <span className="operator-card__status">Local control profile</span>
+          <strong>One human operator</strong>
+          <p>Protected capabilities are unavailable from the public deployment.</p>
         </div>
+      </header>
+
+      <section className="control-notice" aria-label="Control boundary">
+        <strong>Human authority remains explicit.</strong>
+        <span>
+          Review decisions and protected operations require visible targets, validation,
+          and confirmation. Agent output is never publication authority.
+        </span>
       </section>
 
-      <section className="capability-grid" aria-label="Capabilities">
-        {capabilities.map((capability) => (
-          <article className="capability-card" key={capability.title}>
-            <p className="eyebrow">{capability.eyebrow}</p>
-            <h2>{capability.title}</h2>
-            <p>{capability.description}</p>
-            {capability.to ? (
-              <Link to={capability.to}>{capability.action} →</Link>
-            ) : (
-              <span className="muted-link">In development</span>
-            )}
+      <section className="control-grid" aria-label="Control workspaces">
+        {workspaces.map((workspace) => (
+          <article className="control-card" key={workspace.title}>
+            <p className="eyebrow">{workspace.eyebrow}</p>
+            <h2>{workspace.title}</h2>
+            <p>{workspace.description}</p>
+            <Link to={workspace.to}>{workspace.action} →</Link>
           </article>
         ))}
       </section>

@@ -3,17 +3,33 @@ import { Route, Routes } from "react-router-dom";
 import { CitationReviewPage } from "../features/citation-review/CitationReviewPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { LiteratureReviewPage } from "../features/literature-review/LiteratureReviewPage";
+import { NotFoundPage } from "../features/publishing/NotFoundPage";
+import { PublicHomePage } from "../features/publishing/PublicHomePage";
+import { PublicationsPage } from "../features/publishing/PublicationsPage";
 import { SearchPage } from "../features/search/SearchPage";
 import { AppShell } from "./AppShell";
+import { deploymentProfile, type DeploymentProfile } from "./deploymentProfile";
 
-export function App() {
+export function App({ profile = deploymentProfile }: { profile?: DeploymentProfile }) {
+  const isControl = profile === "control";
+
   return (
     <Routes>
-      <Route element={<AppShell />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="search" element={<SearchPage />} />
-        <Route path="citation-review" element={<CitationReviewPage />} />
-        <Route path="literature-review" element={<LiteratureReviewPage />} />
+      <Route element={<AppShell profile={profile} />}>
+        <Route index element={<PublicHomePage />} />
+        <Route path="publications" element={<PublicationsPage />} />
+        {isControl ? (
+          <>
+            <Route path="control" element={<DashboardPage />} />
+            <Route path="control/search" element={<SearchPage />} />
+            <Route path="control/citation-review" element={<CitationReviewPage />} />
+            <Route
+              path="control/literature-review"
+              element={<LiteratureReviewPage />}
+            />
+          </>
+        ) : null}
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );

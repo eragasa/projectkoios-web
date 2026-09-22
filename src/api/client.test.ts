@@ -27,6 +27,25 @@ test("health requests the configured API", async () => {
   );
 });
 
+test("publications request the public catalog", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(JSON.stringify({ schema_version: "1", publications: [] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await expect(client.publications()).resolves.toEqual({
+    schema_version: "1",
+    publications: [],
+  });
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/api/publications",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
 test("search sends the API request contract", async () => {
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify([]), {

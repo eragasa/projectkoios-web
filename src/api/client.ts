@@ -7,6 +7,8 @@ export type HealthResponse = GeneratedHealthResponse & {
   status: string;
 };
 
+export type PublicationCatalog = components["schemas"]["PublicationCatalog"];
+export type PublicationRecord = components["schemas"]["PublicationRecord"];
 export type SearchRequest = components["schemas"]["SearchRequest"];
 export type SearchResult = components["schemas"]["SearchResult"];
 export type CitationDecisionDisposition =
@@ -50,6 +52,10 @@ export class ProjectKoiosApiClient {
 
   async health(signal?: AbortSignal): Promise<HealthResponse> {
     return this.request<HealthResponse>("/health", { signal });
+  }
+
+  async publications(signal?: AbortSignal): Promise<PublicationCatalog> {
+    return this.request<PublicationCatalog>("/api/publications", { signal });
   }
 
   async search(request: SearchRequest, signal?: AbortSignal): Promise<SearchResult[]> {

@@ -1,10 +1,11 @@
 # projectkoios-web
 
-Reusable browser interface for Project Koios.
+Reusable publishing and control interface for Project Koios.
 
-The application provides a local-first UI over `projectkoios-api`. It does not
-read vaults, databases, or ingestion caches directly and does not contain
-user-specific layout policy.
+The application has a public publishing profile and a local/private,
+single-operator control profile over `projectkoios-api`. It does not read vaults,
+databases, or ingestion caches directly and does not contain user-specific layout
+policy.
 
 ## Start
 
@@ -23,13 +24,31 @@ Stop both managed processes with:
 npm run stop:local
 ```
 
+## Build profiles
+
+The fail-closed default build is public:
+
+```bash
+npm run build:public
+```
+
+Build the private control interface separately:
+
+```bash
+npm run build:control
+```
+
+The public API deployment must also use its public profile; browser route omission
+alone is not authorization.
+
 ## Checks
 
 ```bash
 npm run format:check
 npm run typecheck
 npm test
-npm run build
+npm run build:public
+npm run build:control
 npm run test:e2e
 ```
 
