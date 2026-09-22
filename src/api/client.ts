@@ -30,6 +30,14 @@ export type CitationReviewDetail =
 export type CitationReviewQueue = components["schemas"]["CitationReviewQueueResponse"];
 export type LiteratureReviewProgress =
   components["schemas"]["LiteratureReviewProgressResponse"];
+export type OrganizerControlRequest = components["schemas"]["OrganizerControlRequest"];
+export type OrganizerEvent = components["schemas"]["OrganizerEventResponse"];
+export type OrganizerEventList = components["schemas"]["OrganizerEventListResponse"];
+export type OrganizerProposal = components["schemas"]["OrganizerProposalResponse"];
+export type OrganizerProposalList =
+  components["schemas"]["OrganizerProposalListResponse"];
+export type OrganizerLifeDomain = OrganizerProposal["life_domain"];
+export type OrganizerStatus = components["schemas"]["OrganizerStatusResponse"];
 export type ProvidedReference = components["schemas"]["ProvidedReferenceResponse"];
 export type ProvidedReferenceList =
   components["schemas"]["ProvidedReferenceListResponse"];
@@ -77,6 +85,50 @@ export class ProjectKoiosApiClient {
 
   async githubTasks(signal?: AbortSignal): Promise<GitHubTaskDashboard> {
     return this.request<GitHubTaskDashboard>("/github/tasks", { signal });
+  }
+
+  async organizerStatus(signal?: AbortSignal): Promise<OrganizerStatus> {
+    return this.request<OrganizerStatus>("/organizer/status", { signal });
+  }
+
+  async setOrganizerMode(
+    request: OrganizerControlRequest,
+    signal?: AbortSignal,
+  ): Promise<OrganizerStatus> {
+    return this.request<OrganizerStatus>("/organizer/control", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+      signal,
+    });
+  }
+
+  async organizerProposals(
+    lifeDomain: OrganizerLifeDomain = "teaching",
+    limit = 200,
+    signal?: AbortSignal,
+  ): Promise<OrganizerProposalList> {
+    const parameters = new URLSearchParams({
+      life_domain: lifeDomain,
+      limit: String(limit),
+    });
+    return this.request<OrganizerProposalList>(
+      `/organizer/proposals?${parameters.toString()}`,
+      { signal },
+    );
+  }
+
+  async organizerEvents(
+    after: number,
+    signal?: AbortSignal,
+  ): Promise<OrganizerEventList> {
+    return this.request<OrganizerEventList>(`/organizer/events?after=${after}`, {
+      signal,
+    });
+  }
+
+  organizerEventStreamUrl(after: number): string {
+    return `${this.baseUrl}/organizer/events/stream?after=${after}`;
   }
 
   async search(request: SearchRequest, signal?: AbortSignal): Promise<SearchResult[]> {

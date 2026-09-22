@@ -122,4 +122,12 @@ test("control profile opens the single-operator dashboard", async () => {
     "href",
     "/control/search",
   );
+  expect(screen.getByRole("link", { name: /Open life organizer/ })).toHaveAttribute(
+    "href",
+    "/control/organizer",
+  );
+  expect(screen.getByRole("link", { name: /Open course review/ })).toHaveAttribute(
+    "href",
+    "/control/courses",
+  );
 });

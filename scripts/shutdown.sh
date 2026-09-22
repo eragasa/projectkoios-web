@@ -7,6 +7,7 @@ WEB_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 RUN_DIR="${KOIOS_RUN_DIR:-$WEB_ROOT/.run}"
 API_PID_FILE="$RUN_DIR/api.pid"
 WEB_PID_FILE="$RUN_DIR/web.pid"
+ORGANIZER_PID_FILE="$RUN_DIR/organizer.pid"
 
 stop_process() {
   local name="$1"
@@ -59,6 +60,7 @@ stop_process() {
 }
 
 stop_process "Project Koios web" "$WEB_PID_FILE" "vite"
+stop_process "Project Koios organizer" "$ORGANIZER_PID_FILE" "daemon_main"
 stop_process "Project Koios API" "$API_PID_FILE" "uvicorn"
 
 if [ -d "$RUN_DIR" ] && ! find "$RUN_DIR" -mindepth 1 -print -quit | grep -q .; then

@@ -18,6 +18,22 @@ const workspaces = [
     to: "/control/search",
   },
   {
+    eyebrow: "Local agent",
+    title: "Organize cloud drives",
+    description:
+      "Watch the read-only catalog and local categorization agent before approving any organization plan.",
+    action: "Open life organizer",
+    to: "/control/organizer",
+  },
+  {
+    eyebrow: "Teaching archive",
+    title: "Review course candidates",
+    description:
+      "Compare organization-agent teaching proposals with known course identities without publishing private materials.",
+    action: "Open course review",
+    to: "/control/courses",
+  },
+  {
     eyebrow: "Human review",
     title: "Review citation claims",
     description:

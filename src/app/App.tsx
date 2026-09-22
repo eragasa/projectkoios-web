@@ -4,6 +4,8 @@ import { CitationReviewPage } from "../features/citation-review/CitationReviewPa
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { GitHubTasksPage } from "../features/github-tasks/GitHubTasksPage";
 import { LiteratureReviewPage } from "../features/literature-review/LiteratureReviewPage";
+import { CourseReviewPage } from "../features/organizer/CourseReviewPage";
+import { OrganizerPage } from "../features/organizer/OrganizerPage";
 import { NotFoundPage } from "../features/publishing/NotFoundPage";
 import { PublicHomePage } from "../features/publishing/PublicHomePage";
 import { CoursesPage } from "../features/publishing/CoursesPage";
@@ -28,6 +30,8 @@ export function App({ profile = deploymentProfile }: { profile?: DeploymentProfi
             <Route path="control" element={<DashboardPage />} />
             <Route path="control/github" element={<GitHubTasksPage />} />
             <Route path="control/search" element={<SearchPage />} />
+            <Route path="control/organizer" element={<OrganizerPage />} />
+            <Route path="control/courses" element={<CourseReviewPage />} />
             <Route path="control/citation-review" element={<CitationReviewPage />} />
             <Route
               path="control/literature-review"

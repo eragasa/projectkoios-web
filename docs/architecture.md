@@ -3,8 +3,8 @@
 ## Status
 
 Dual-surface foundation implemented: public publishing, a local single-operator
-control center, API health status, global search, scientific review workspaces,
-and a typed API client.
+control center, API health status, global search, metadata-only organization and
+course-review workspaces, scientific review workspaces, and a typed API client.
 
 ## Purpose
 
@@ -50,7 +50,8 @@ The frontend has two build-time profiles:
 - `public` is the fail-closed default. It contains the public home and publication
   catalog routes only.
 - `control` contains those public routes plus the single-operator control center,
-  private search, citation review, and literature review.
+  private search, organization-agent observation, course review, citation review,
+  and literature review.
 
 The profiles share a design system and public read models, but they are separate
 deployment artifacts. Route omission in the public bundle is defense in depth, not
@@ -91,6 +92,7 @@ src/
 │   ├── citation-review/
 │   ├── dashboard/
 │   ├── literature-review/
+│   ├── organizer/
 │   ├── publishing/
 │   └── search/
 ├── test/
@@ -103,13 +105,15 @@ not depend on React. Components do not import backend implementation packages.
 ## Local development process management
 
 `scripts/startup.sh` and `scripts/shutdown.sh` supervise the local development
-API and web processes. They keep PID files and append-only logs in ignored
-`.run/` state.
+API and web processes plus the explicitly enabled organization worker. They keep
+PID files and append-only logs in ignored `.run/` state.
 
 The startup script:
 
 - resolves sibling Project Koios repositories or explicit environment overrides;
 - starts the API with an explicit Python namespace path;
+- optionally starts `projectkoios-agent`'s organization worker only when a pinned
+  model digest is supplied;
 - starts Vite directly rather than through an extra npm process;
 - rejects ports occupied by unmanaged processes;
 - waits for health readiness;
@@ -117,7 +121,8 @@ The startup script:
 - cleans up only processes started by a failed invocation.
 
 Shutdown validates the observed command before signaling a stored PID and stops
-web before API. These scripts are development conveniences, not production
+web, optional organization worker, and API in reverse startup order. These scripts
+are development conveniences, not production
 service supervision.
 
 ## API boundary
@@ -137,7 +142,9 @@ GET /openapi.json
 ```
 
 The control API additionally exposes a live read-only GitHubTask projection plus
-private search, citation-review, and literature-review contracts.
+private search, organization-agent, course-review, citation-review, and
+literature-review contracts. Organization and course-review responses are metadata
+projections; the browser does not read course file payloads or publish materials.
 `src/api/schema.generated.ts` is generated from the control OpenAPI document, and
 `src/api/client.ts` consumes its request and response types. One typed client can
 support the superset while profile routing prevents public UI access. The API schema
@@ -155,6 +162,8 @@ mapping rather than a named health model.
 /control                     private single-operator dashboard
 /control/github              live read-only GitHubTask projection
 /control/search              private retrieval UI
+/control/organizer           local metadata-only organization-agent status
+/control/courses             course candidates from teaching proposals
 /control/citation-review     private citation-review workspace
 /control/literature-review   private literature-review workspace
 ```
