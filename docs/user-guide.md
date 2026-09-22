@@ -67,8 +67,8 @@ Run the private control profile explicitly when its API is already managed:
 npm run dev:control
 ```
 
-Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/projects`,
-`/api/publications`, `/github/tasks`, `/search`, `/citation-reviews`,
+Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/courses`,
+`/api/projects`, `/api/publications`, `/github/tasks`, `/search`, `/citation-reviews`,
 `/literature-review`, `/docs`, and `/openapi.json` to the local API, avoiding a
 development CORS dependency.
 
@@ -88,6 +88,7 @@ The scripts accept these optional environment variables:
 | `KOIOS_RUN_DIR`             | `.run` inside this repository   |
 | `KOIOS_API_REPO`            | sibling `projectkoios-api`      |
 | `KOIOS_CORE_REPO`           | sibling `projectkoios`          |
+| `KOIOS_COURSE_CATALOG`      | core public-safe course catalog |
 | `KOIOS_PROJECT_CATALOG`     | core public project catalog     |
 | `KOIOS_SEARCH_REPO`         | sibling `projectkoios-search`   |
 | `KOIOS_OBSIDIAN_REPO`       | sibling `projectkoios-obsidian` |
@@ -100,9 +101,13 @@ Production process supervision should use the deployment platform's service mana
 
 ## Public publishing
 
-The public home, **Projects**, and **Publications** pages are present in both profiles.
-Project records come only from `GET /api/projects`; the configured, product-owned
-catalog distinguishes available capabilities from in-development or planned work and
+The public home, **Projects**, **Courses**, and **Publications** pages are present in
+both profiles. Course records come only from `GET /api/courses`; they expose safe
+identity and migration-status metadata, never course files or private student state.
+`inventory-only`, `review-candidate`, and `published` remain distinct, and a review
+candidate is not publication approval. Project records come only from
+`GET /api/projects`; the configured, product-owned catalog distinguishes available
+capabilities from in-development or planned work, attaches stable review evidence, and
 keeps limitations visible. Publication records come only from
 `GET /api/publications`; drafts and private control state are not inferred as public
 content. Each publication can expose a type, version, authors, publication date,

@@ -6,6 +6,7 @@ import { GitHubTasksPage } from "../features/github-tasks/GitHubTasksPage";
 import { LiteratureReviewPage } from "../features/literature-review/LiteratureReviewPage";
 import { NotFoundPage } from "../features/publishing/NotFoundPage";
 import { PublicHomePage } from "../features/publishing/PublicHomePage";
+import { CoursesPage } from "../features/publishing/CoursesPage";
 import { ProjectsPage } from "../features/publishing/ProjectsPage";
 import { PublicationsPage } from "../features/publishing/PublicationsPage";
 import { SearchPage } from "../features/search/SearchPage";
@@ -19,6 +20,7 @@ export function App({ profile = deploymentProfile }: { profile?: DeploymentProfi
     <Routes>
       <Route element={<AppShell profile={profile} />}>
         <Route index element={<PublicHomePage />} />
+        <Route path="courses" element={<CoursesPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="publications" element={<PublicationsPage />} />
         {isControl ? (

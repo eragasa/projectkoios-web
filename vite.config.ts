@@ -13,6 +13,7 @@ export default defineConfig({
       "/docs": apiTarget,
       "/health": apiTarget,
       "/openapi.json": apiTarget,
+      "/api/courses": apiTarget,
       "/api/projects": apiTarget,
       "/api/publications": apiTarget,
       "/citation-reviews": apiTarget,

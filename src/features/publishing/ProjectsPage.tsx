@@ -20,16 +20,26 @@ function ProjectRecord({ project }: { project: PublicProjectRecord }) {
           <h2>{project.name}</h2>
           <p className="project-record__tagline">{project.tagline}</p>
         </div>
-        {project.links.length > 0 ? (
-          <nav className="project-links" aria-label={`${project.name} links`}>
-            {project.links.map((link) => (
-              <a key={`${link.label}-${link.url}`} href={link.url} rel="noreferrer">
-                {link.label} ↗
-              </a>
-            ))}
-          </nav>
-        ) : null}
       </header>
+
+      <dl className="project-review-metadata">
+        <div>
+          <dt>Record version</dt>
+          <dd>{project.review.record_version}</dd>
+        </div>
+        <div>
+          <dt>Reviewed</dt>
+          <dd>{project.review.reviewed_on}</dd>
+        </div>
+        <div>
+          <dt>Review record</dt>
+          <dd>
+            <a href={project.review.review_url} rel="noreferrer">
+              Inspect review ↗
+            </a>
+          </dd>
+        </div>
+      </dl>
 
       <p className="project-record__summary">{project.summary}</p>
 
@@ -93,6 +103,50 @@ function ProjectRecord({ project }: { project: PublicProjectRecord }) {
               <li key={limitation}>{limitation}</li>
             ))}
           </ul>
+        </section>
+      ) : null}
+
+      <section className="project-evidence" aria-label="Review evidence">
+        <div>
+          <p className="eyebrow">Stable source revisions</p>
+          <ul>
+            {project.source_revisions.map((source) => (
+              <li key={source.repository}>
+                <a href={source.url} rel="noreferrer">
+                  {source.repository}
+                </a>
+                <code>{source.revision.slice(0, 12)}</code>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p className="eyebrow">Verification and review</p>
+          <ul>
+            {project.evidence.map((evidence) => (
+              <li key={evidence.label}>
+                <a href={evidence.url} rel="noreferrer">
+                  {evidence.label} ↗
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {project.links.length > 0 ? (
+        <section className="project-next-actions">
+          <div>
+            <p className="eyebrow">Continue exploring</p>
+            <h3>Inspect the work and follow its development.</h3>
+          </div>
+          <nav aria-label={`${project.name} next actions`}>
+            {project.links.map((link) => (
+              <a key={`${link.label}-${link.url}`} href={link.url} rel="noreferrer">
+                {link.label} ↗
+              </a>
+            ))}
+          </nav>
         </section>
       ) : null}
     </article>

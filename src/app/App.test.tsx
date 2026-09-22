@@ -24,11 +24,20 @@ beforeEach(() => {
     "fetch",
     vi.fn((request: RequestInfo | URL) => {
       const path = String(request);
-      const body = path.endsWith("/api/projects")
-        ? { schema_version: "1", projects: [] }
-        : path.endsWith("/api/publications")
-          ? { schema_version: "1", publications: [] }
-          : { status: "ok" };
+      const body = path.endsWith("/api/courses")
+        ? {
+            schema_version: "1",
+            reviewed_on: null,
+            source: null,
+            publication_boundary: [],
+            institutions: [],
+            unresolved_collections: [],
+          }
+        : path.endsWith("/api/projects")
+          ? { schema_version: "1", projects: [] }
+          : path.endsWith("/api/publications")
+            ? { schema_version: "1", publications: [] }
+            : { status: "ok" };
       return Promise.resolve(
         new Response(JSON.stringify(body), {
           status: 200,
@@ -48,7 +57,7 @@ test("public profile presents publishing without control routes", () => {
 
   expect(
     screen.getByRole("heading", {
-      name: "Work worth publishing. Evidence worth preserving.",
+      name: "Scientific work needs inspectable context.",
     }),
   ).toBeInTheDocument();
   expect(
@@ -65,6 +74,18 @@ test("public profile exposes the project catalog route", async () => {
   expect(screen.getByRole("heading", { name: "Projects" })).toBeInTheDocument();
   expect(
     await screen.findByRole("heading", { name: "No public project records yet" }),
+  ).toBeInTheDocument();
+});
+
+test("public profile exposes public-safe course metadata", async () => {
+  const user = userEvent.setup();
+  renderApp("public");
+
+  await user.click(screen.getByRole("link", { name: "Courses" }));
+
+  expect(screen.getByRole("heading", { name: "Courses" })).toBeInTheDocument();
+  expect(
+    await screen.findByRole("heading", { name: "No public course metadata yet" }),
   ).toBeInTheDocument();
 });
 
