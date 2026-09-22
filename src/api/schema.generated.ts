@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Courses */
+        get: operations["list_courses_api_courses_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects": {
         parameters: {
             query?: never;
@@ -341,6 +358,11 @@ export interface components {
             evaluation_status: string;
             decision: components["schemas"]["CitationDecisionResponse"] | null;
         };
+        /**
+         * CourseMaterialsStatus
+         * @enum {string}
+         */
+        CourseMaterialsStatus: "inventory-only" | "review-candidate" | "published";
         /** GitHubPullRequestSummary */
         GitHubPullRequestSummary: {
             /** Number */
@@ -609,6 +631,64 @@ export interface components {
          * @enum {string}
          */
         PublicCapabilityStatus: "available" | "in-development" | "planned";
+        /** PublicCourseCatalog */
+        PublicCourseCatalog: {
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: "1";
+            /** Reviewed On */
+            reviewed_on?: string | null;
+            source?: components["schemas"]["PublicCourseSource"] | null;
+            /**
+             * Publication Boundary
+             * @default []
+             */
+            publication_boundary: string[];
+            /**
+             * Institutions
+             * @default []
+             */
+            institutions: components["schemas"]["PublicCourseInstitution"][];
+            /**
+             * Unresolved Collections
+             * @default []
+             */
+            unresolved_collections: string[];
+        };
+        /** PublicCourseInstitution */
+        PublicCourseInstitution: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Courses */
+            courses: components["schemas"]["PublicCourseRecord"][];
+        };
+        /** PublicCourseRecord */
+        PublicCourseRecord: {
+            /** Id */
+            id: string;
+            /** Code */
+            code: string;
+            /** Title */
+            title?: string | null;
+            materials_status: components["schemas"]["CourseMaterialsStatus"];
+        };
+        /** PublicCourseSource */
+        PublicCourseSource: {
+            /** Repository */
+            repository: string;
+            /** Revision */
+            revision: string;
+            /**
+             * Url
+             * Format: uri
+             */
+            url: string;
+        };
         /** PublicProjectCapability */
         PublicProjectCapability: {
             /** Name */
@@ -654,6 +734,11 @@ export interface components {
             /** Summary */
             summary: string;
             status: components["schemas"]["PublicProjectStatus"];
+            review: components["schemas"]["PublicProjectReview"];
+            /** Source Revisions */
+            source_revisions: components["schemas"]["PublicProjectSourceRevision"][];
+            /** Evidence */
+            evidence: components["schemas"]["PublicProjectLink"][];
             /**
              * Topics
              * @default []
@@ -684,6 +769,33 @@ export interface components {
              * @default []
              */
             links: components["schemas"]["PublicProjectLink"][];
+        };
+        /** PublicProjectReview */
+        PublicProjectReview: {
+            /** Record Version */
+            record_version: string;
+            /**
+             * Reviewed On
+             * Format: date
+             */
+            reviewed_on: string;
+            /**
+             * Review Url
+             * Format: uri
+             */
+            review_url: string;
+        };
+        /** PublicProjectSourceRevision */
+        PublicProjectSourceRevision: {
+            /** Repository */
+            repository: string;
+            /** Revision */
+            revision: string;
+            /**
+             * Url
+             * Format: uri
+             */
+            url: string;
         };
         /**
          * PublicProjectStatus
@@ -847,6 +959,26 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    list_courses_api_courses_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicCourseCatalog"];
                 };
             };
         };

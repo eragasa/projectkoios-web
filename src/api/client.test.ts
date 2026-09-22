@@ -27,6 +27,39 @@ test("health requests the configured API", async () => {
   );
 });
 
+test("courses request the public-safe course catalog", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        schema_version: "1",
+        reviewed_on: null,
+        source: null,
+        publication_boundary: [],
+        institutions: [],
+        unresolved_collections: [],
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await expect(client.courses()).resolves.toEqual({
+    schema_version: "1",
+    reviewed_on: null,
+    source: null,
+    publication_boundary: [],
+    institutions: [],
+    unresolved_collections: [],
+  });
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/api/courses",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
 test("projects request the public project catalog", async () => {
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify({ schema_version: "1", projects: [] }), {

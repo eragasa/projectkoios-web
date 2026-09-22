@@ -34,6 +34,24 @@ test("renders a bounded public project overview", async () => {
                 tagline: "Evidence-connected scientific work.",
                 summary: "A local-first platform under active development.",
                 status: "active-development",
+                review: {
+                  record_version: "1.0.0",
+                  reviewed_on: "2026-09-22",
+                  review_url: "https://github.com/eragasa/projectkoios/pull/6",
+                },
+                source_revisions: [
+                  {
+                    repository: "eragasa/projectkoios",
+                    revision: "fc551cf841199c219df76f672e37f2c5e494b282",
+                    url: "https://github.com/eragasa/projectkoios/commit/fc551cf841199c219df76f672e37f2c5e494b282",
+                  },
+                ],
+                evidence: [
+                  {
+                    label: "Public overview review",
+                    url: "https://github.com/eragasa/projectkoios/pull/6",
+                  },
+                ],
                 topics: ["research software"],
                 purposes: ["Keep outputs connected to evidence."],
                 principles: ["Explicit provenance"],
@@ -77,6 +95,12 @@ test("renders a bounded public project overview", async () => {
   expect(screen.getByText("available")).toBeInTheDocument();
   expect(screen.getByText("in-development")).toBeInTheDocument();
   expect(screen.getByText("No scientific validation is implied.")).toBeInTheDocument();
+  expect(screen.getByText("1.0.0")).toBeInTheDocument();
+  expect(screen.getByText("fc551cf84119")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Public overview review/ })).toHaveAttribute(
+    "href",
+    "https://github.com/eragasa/projectkoios/pull/6",
+  );
   expect(screen.getByRole("link", { name: /Project repository/ })).toHaveAttribute(
     "href",
     "https://github.com/eragasa/projectkoios",

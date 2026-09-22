@@ -130,6 +130,7 @@ The public API contracts are:
 
 ```text
 GET /health
+GET /api/courses
 GET /api/projects
 GET /api/publications
 GET /openapi.json
@@ -148,6 +149,7 @@ mapping rather than a named health model.
 
 ```text
 /                            public home
+/courses                     public-safe course inventory
 /projects                    public project catalog
 /publications                public publication catalog
 /control                     private single-operator dashboard

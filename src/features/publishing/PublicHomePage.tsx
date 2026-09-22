@@ -2,19 +2,19 @@ import { Link } from "react-router-dom";
 
 const principles = [
   {
-    title: "Claims stay bounded",
+    title: "Scope stays bounded",
     description:
-      "Every published record separates demonstrated capabilities from provisional work and explicit exclusions.",
+      "Each record separates available capabilities, review candidates, development work, and explicit exclusions.",
+  },
+  {
+    title: "Status stays visible",
+    description:
+      "Projects and courses report their current review state instead of implying that identified work is published work.",
   },
   {
     title: "Evidence stays attached",
     description:
-      "Software, papers, datasets, and reports retain links to their sources, citations, versions, and review records.",
-  },
-  {
-    title: "Publication is deliberate",
-    description:
-      "Draft work remains private. Public records appear only after a human-controlled publication decision.",
+      "Public records retain stable source revisions, review dates, verification links, and limitations.",
   },
 ];
 
@@ -23,26 +23,31 @@ export function PublicHomePage() {
     <div className="public-home-page">
       <section className="hero hero--public">
         <div>
-          <p className="eyebrow">Open research · Software · Evidence</p>
-          <h1>Work worth publishing. Evidence worth preserving.</h1>
+          <p className="eyebrow">Research infrastructure · Courses · Evidence</p>
+          <h1>Scientific work needs inspectable context.</h1>
           <p className="hero__summary">
-            Project Koios publishes reviewed research outputs without separating them
-            from the provenance, limitations, and citations needed to understand them.
+            Project Koios is building evidence-connected infrastructure for scientific
+            teaching and research. This public record shows what exists, what remains in
+            development, and the evidence behind each reviewed claim.
           </p>
           <div className="hero__actions">
             <Link className="button button--primary" to="/projects">
-              Explore projects
+              Explore Project Koios
             </Link>
-            <Link className="button button--secondary" to="/publications">
-              Browse publications
+            <Link className="button button--secondary" to="/courses">
+              Browse courses
             </Link>
-            <a className="button button--secondary" href="#standards">
-              How publication works
+            <a
+              className="button button--secondary"
+              href="https://github.com/eragasa/projectkoios/issues"
+              rel="noreferrer"
+            >
+              Follow development ↗
             </a>
           </div>
         </div>
         <div className="publication-signal" aria-label="Publication lifecycle">
-          <span>Prepare</span>
+          <span>Identify</span>
           <i aria-hidden="true" />
           <span>Review</span>
           <i aria-hidden="true" />
@@ -56,8 +61,8 @@ export function PublicHomePage() {
         aria-labelledby="standards-title"
       >
         <header className="section-intro">
-          <p className="eyebrow">Publication standard</p>
-          <h2 id="standards-title">Readable conclusions, inspectable boundaries.</h2>
+          <p className="eyebrow">Public record standard</p>
+          <h2 id="standards-title">Readable scope, inspectable evidence.</h2>
         </header>
         <div className="capability-grid">
           {principles.map((principle) => (
