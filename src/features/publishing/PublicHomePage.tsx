@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 
+import { usePageMetadata } from "../../app/usePageMetadata";
+
 const principles = [
   {
     title: "Scope stays bounded",
@@ -19,6 +21,11 @@ const principles = [
 ];
 
 export function PublicHomePage() {
+  usePageMetadata(
+    "Project Koios",
+    "Evidence-connected scientific software, course inventories, and reviewed research records.",
+  );
+
   return (
     <div className="public-home-page">
       <section className="hero hero--public">

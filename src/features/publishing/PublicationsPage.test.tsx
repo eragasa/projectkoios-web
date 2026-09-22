@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 import { PublicationsPage } from "./PublicationsPage";
 
@@ -9,7 +10,9 @@ function renderPage() {
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <PublicationsPage />
+      <MemoryRouter>
+        <PublicationsPage />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -36,6 +39,14 @@ test("renders an explicit empty publication state", async () => {
   expect(
     await screen.findByRole("heading", { name: "No public records yet" }),
   ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Inspect project evidence" }),
+  ).toHaveAttribute("href", "/projects");
+  expect(screen.getByRole("link", { name: "Browse course inventory" })).toHaveAttribute(
+    "href",
+    "/courses",
+  );
+  expect(document.title).toBe("Publications · Project Koios");
 });
 
 test("renders reviewed scope and limitations from a public record", async () => {

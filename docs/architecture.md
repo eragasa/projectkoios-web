@@ -159,6 +159,10 @@ mapping rather than a named health model.
 /control/literature-review   private literature-review workspace
 ```
 
+Public routes set route-specific document titles and descriptions. The shared footer
+links source, architecture, and license authority without adding a browser-side
+mutation capability.
+
 The `/control` routes exist only in the control build. Planned control routes include
 repository health, tasks, decisions, agent runs, workflows, and release operations.
 A route should be added only when its backend contract exists or when it is explicitly
