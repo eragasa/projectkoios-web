@@ -30,7 +30,10 @@ export function PublicHomePage() {
             from the provenance, limitations, and citations needed to understand them.
           </p>
           <div className="hero__actions">
-            <Link className="button button--primary" to="/publications">
+            <Link className="button button--primary" to="/projects">
+              Explore projects
+            </Link>
+            <Link className="button button--secondary" to="/publications">
               Browse publications
             </Link>
             <a className="button button--secondary" href="#standards">

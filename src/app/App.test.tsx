@@ -24,9 +24,11 @@ beforeEach(() => {
     "fetch",
     vi.fn((request: RequestInfo | URL) => {
       const path = String(request);
-      const body = path.endsWith("/api/publications")
-        ? { schema_version: "1", publications: [] }
-        : { status: "ok" };
+      const body = path.endsWith("/api/projects")
+        ? { schema_version: "1", projects: [] }
+        : path.endsWith("/api/publications")
+          ? { schema_version: "1", publications: [] }
+          : { status: "ok" };
       return Promise.resolve(
         new Response(JSON.stringify(body), {
           status: 200,
@@ -52,6 +54,18 @@ test("public profile presents publishing without control routes", () => {
   expect(
     screen.queryByRole("link", { name: "Control center" }),
   ).not.toBeInTheDocument();
+});
+
+test("public profile exposes the project catalog route", async () => {
+  const user = userEvent.setup();
+  renderApp("public");
+
+  await user.click(screen.getByRole("link", { name: "Projects" }));
+
+  expect(screen.getByRole("heading", { name: "Projects" })).toBeInTheDocument();
+  expect(
+    await screen.findByRole("heading", { name: "No public project records yet" }),
+  ).toBeInTheDocument();
 });
 
 test("public profile rejects a control-center route", () => {

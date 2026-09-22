@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Projects */
+        get: operations["list_projects_api_projects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/publications": {
         parameters: {
             query?: never;
@@ -587,6 +604,92 @@ export interface components {
          * @enum {string}
          */
         ProvidedReferenceStatus: "RECEIVED_NOT_INGESTED" | "INGESTED_AUTOMATED_UNREVIEWED";
+        /**
+         * PublicCapabilityStatus
+         * @enum {string}
+         */
+        PublicCapabilityStatus: "available" | "in-development" | "planned";
+        /** PublicProjectCapability */
+        PublicProjectCapability: {
+            /** Name */
+            name: string;
+            status: components["schemas"]["PublicCapabilityStatus"];
+            /** Summary */
+            summary: string;
+        };
+        /** PublicProjectCatalog */
+        PublicProjectCatalog: {
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: "1";
+            /**
+             * Projects
+             * @default []
+             */
+            projects: components["schemas"]["PublicProjectRecord"][];
+        };
+        /** PublicProjectLink */
+        PublicProjectLink: {
+            /** Label */
+            label: string;
+            /**
+             * Url
+             * Format: uri
+             */
+            url: string;
+        };
+        /** PublicProjectRecord */
+        PublicProjectRecord: {
+            /** Id */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Tagline */
+            tagline: string;
+            /** Summary */
+            summary: string;
+            status: components["schemas"]["PublicProjectStatus"];
+            /**
+             * Topics
+             * @default []
+             */
+            topics: string[];
+            /**
+             * Purposes
+             * @default []
+             */
+            purposes: string[];
+            /**
+             * Principles
+             * @default []
+             */
+            principles: string[];
+            /**
+             * Capabilities
+             * @default []
+             */
+            capabilities: components["schemas"]["PublicProjectCapability"][];
+            /**
+             * Limitations
+             * @default []
+             */
+            limitations: string[];
+            /**
+             * Links
+             * @default []
+             */
+            links: components["schemas"]["PublicProjectLink"][];
+        };
+        /**
+         * PublicProjectStatus
+         * @enum {string}
+         */
+        PublicProjectStatus: "active-development" | "maintained" | "archived";
         /** PublicationCatalog */
         PublicationCatalog: {
             /**
@@ -744,6 +847,26 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    list_projects_api_projects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicProjectCatalog"];
                 };
             };
         };

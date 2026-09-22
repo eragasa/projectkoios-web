@@ -67,9 +67,10 @@ Run the private control profile explicitly when its API is already managed:
 npm run dev:control
 ```
 
-Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/publications`,
-`/github/tasks`, `/search`, `/citation-reviews`, `/literature-review`, `/docs`, and
-`/openapi.json` to the local API, avoiding a development CORS dependency.
+Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/projects`,
+`/api/publications`, `/github/tasks`, `/search`, `/citation-reviews`,
+`/literature-review`, `/docs`, and `/openapi.json` to the local API, avoiding a
+development CORS dependency.
 
 The control header reports whether the API is available. The public profile does not
 display operational health.
@@ -87,6 +88,7 @@ The scripts accept these optional environment variables:
 | `KOIOS_RUN_DIR`             | `.run` inside this repository   |
 | `KOIOS_API_REPO`            | sibling `projectkoios-api`      |
 | `KOIOS_CORE_REPO`           | sibling `projectkoios`          |
+| `KOIOS_PROJECT_CATALOG`     | core public project catalog     |
 | `KOIOS_SEARCH_REPO`         | sibling `projectkoios-search`   |
 | `KOIOS_OBSIDIAN_REPO`       | sibling `projectkoios-obsidian` |
 | `KOIOS_GITHUB_REPOSITORIES` | API and web repositories        |
@@ -98,11 +100,13 @@ Production process supervision should use the deployment platform's service mana
 
 ## Public publishing
 
-The public home and **Publications** page are present in both profiles. Publication
-records come only from `GET /api/publications`; drafts and private control state are
-not inferred as publications. Each record can expose a type, version, authors,
-publication date, citation, topics, reviewed claims, explicit limitations, and public
-links.
+The public home, **Projects**, and **Publications** pages are present in both profiles.
+Project records come only from `GET /api/projects`; the configured, product-owned
+catalog distinguishes available capabilities from in-development or planned work and
+keeps limitations visible. Publication records come only from
+`GET /api/publications`; drafts and private control state are not inferred as public
+content. Each publication can expose a type, version, authors, publication date,
+citation, topics, reviewed claims, explicit limitations, and public links.
 
 An empty catalog is displayed honestly as no public records. An unavailable catalog
 is distinct from an empty one.

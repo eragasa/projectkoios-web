@@ -1,5 +1,44 @@
 import { expect, test } from "@playwright/test";
 
+test("presents a bounded public project overview", async ({ page }) => {
+  await page.route("**/health", (route) => route.fulfill({ json: { status: "ok" } }));
+  await page.route("**/api/projects", (route) =>
+    route.fulfill({
+      json: {
+        schema_version: "1",
+        projects: [
+          {
+            id: "projectkoios",
+            slug: "projectkoios",
+            name: "Project Koios",
+            tagline: "Evidence-connected scientific work.",
+            summary: "A local-first platform under active development.",
+            status: "active-development",
+            topics: ["research software"],
+            purposes: ["Keep outputs connected to evidence."],
+            principles: ["Explicit provenance"],
+            capabilities: [
+              {
+                name: "Public publishing foundation",
+                status: "available",
+                summary: "Presents explicitly configured public records.",
+              },
+            ],
+            limitations: ["No scientific validation is implied."],
+            links: [],
+          },
+        ],
+      },
+    }),
+  );
+
+  await page.goto("/projects");
+
+  await expect(page.getByRole("heading", { name: "Project Koios" })).toBeVisible();
+  await expect(page.getByText("Public publishing foundation")).toBeVisible();
+  await expect(page.getByText("No scientific validation is implied.")).toBeVisible();
+});
+
 test("presents a bounded public publication record", async ({ page }) => {
   await page.route("**/health", (route) => route.fulfill({ json: { status: "ok" } }));
   await page.route("**/api/publications", (route) =>
