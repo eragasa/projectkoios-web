@@ -130,18 +130,16 @@ The public API contracts are:
 
 ```text
 GET /health
+GET /api/projects
 GET /api/publications
 GET /openapi.json
 ```
 
 The control API additionally exposes a live read-only GitHubTask projection plus
 private search, citation-review, and literature-review contracts.
-`src/api/schema.generated.ts` is generated from the
-control OpenAPI document so one typed client can support the superset while profile
-routing prevents public UI access.
-
-`src/api/schema.generated.ts` is generated from the backend OpenAPI document,
-and `src/api/client.ts` consumes its request and response types. The API schema
+`src/api/schema.generated.ts` is generated from the control OpenAPI document, and
+`src/api/client.ts` consumes its request and response types. One typed client can
+support the superset while profile routing prevents public UI access. The API schema
 remains authoritative; browser types are projections. A small refinement is
 used for `/health` because the current backend schema exposes a generic string
 mapping rather than a named health model.
@@ -150,6 +148,7 @@ mapping rather than a named health model.
 
 ```text
 /                            public home
+/projects                    public project catalog
 /publications                public publication catalog
 /control                     private single-operator dashboard
 /control/github              live read-only GitHubTask projection

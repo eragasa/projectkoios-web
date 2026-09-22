@@ -122,6 +122,7 @@ else
     cd "$API_REPO"
     nohup env PYTHONPATH="$API_PYTHONPATH" \
       KOIOS_DEPLOYMENT_PROFILE=control \
+      KOIOS_PROJECT_CATALOG="${KOIOS_PROJECT_CATALOG:-$CORE_REPO/public/project-catalog.json}" \
       KOIOS_GITHUB_REPOSITORIES="${KOIOS_GITHUB_REPOSITORIES:-eragasa/projectkoios-api,eragasa/projectkoios-web}" \
       "$API_PYTHON" -m uvicorn projectkoios.api.main:app \
       --host "$API_HOST" --port "$API_PORT" \

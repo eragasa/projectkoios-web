@@ -1239,6 +1239,180 @@ a {
   text-decoration: none;
 }
 
+.projects-page,
+.project-record-list {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.project-record {
+  padding: clamp(1.5rem, 4vw, 3rem);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% 4%, rgb(200 153 77 / 12%), transparent 24rem),
+    rgb(251 250 246 / 90%);
+  box-shadow: 0 18px 55px rgb(24 34 30 / 6%);
+}
+
+.project-record__header {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.project-record__identity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.project-status,
+.capability-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-family: "DM Mono", monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-status {
+  color: #7b5a20;
+  background: rgb(200 153 77 / 15%);
+}
+
+.project-record h2 {
+  margin: 1.3rem 0 0;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(2.7rem, 6vw, 5.2rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+}
+
+.project-record__tagline {
+  max-width: 700px;
+  margin: 0.85rem 0 0;
+  color: var(--green);
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(1.25rem, 2.5vw, 1.7rem);
+  line-height: 1.25;
+}
+
+.project-links {
+  display: grid;
+  min-width: 170px;
+  gap: 0.45rem;
+}
+
+.project-links a {
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--green);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.project-record__summary {
+  max-width: 900px;
+  margin: 2.2rem 0 1.4rem;
+  color: #3f4b45;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.project-record__columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 2rem;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.project-record__columns section {
+  padding: 1.35rem;
+  background: rgb(255 255 255 / 62%);
+}
+
+.project-record__columns ul,
+.project-limitations ul {
+  margin: 0.8rem 0 0;
+  padding-left: 1.1rem;
+  color: #4f5b55;
+  font-size: 0.8rem;
+  line-height: 1.65;
+}
+
+.project-record__columns li + li,
+.project-limitations li + li {
+  margin-top: 0.45rem;
+}
+
+.project-capabilities {
+  margin-top: 2.5rem;
+}
+
+.project-capabilities > header h3 {
+  margin: 0.25rem 0 1.2rem;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.project-capabilities > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.project-capabilities article {
+  min-height: 150px;
+  padding: 1.2rem;
+  border-top: 2px solid var(--green-bright);
+  background: rgb(45 122 91 / 5%);
+}
+
+.project-capabilities h4 {
+  margin: 0.9rem 0 0.45rem;
+  font-size: 0.88rem;
+}
+
+.project-capabilities article > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.capability-status--available {
+  color: var(--green);
+  background: rgb(45 122 91 / 12%);
+}
+
+.capability-status--development {
+  color: #7b5a20;
+  background: rgb(200 153 77 / 15%);
+}
+
+.capability-status--planned {
+  color: var(--muted);
+  background: rgb(24 34 30 / 7%);
+}
+
+.project-limitations {
+  margin-top: 2rem;
+  padding: 1.3rem;
+  border-left: 3px solid var(--gold);
+  background: rgb(200 153 77 / 8%);
+}
+
 .control-heading {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
@@ -1685,8 +1859,18 @@ a {
   .capability-grid,
   .control-grid,
   .publication-boundaries,
+  .project-record__columns,
+  .project-capabilities > div,
   .control-heading {
     grid-template-columns: 1fr;
+  }
+
+  .project-record__header {
+    flex-direction: column;
+  }
+
+  .project-links {
+    width: 100%;
   }
 
   .hero--public {

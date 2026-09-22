@@ -11,6 +11,8 @@ export type GitHubTaskDashboard = components["schemas"]["GitHubTaskDashboard"];
 export type GitHubRepositoryTaskProjection =
   components["schemas"]["GitHubRepositoryTaskProjection"];
 export type GitHubTaskSequence = components["schemas"]["GitHubTaskSequence"];
+export type PublicProjectCatalog = components["schemas"]["PublicProjectCatalog"];
+export type PublicProjectRecord = components["schemas"]["PublicProjectRecord"];
 export type PublicationCatalog = components["schemas"]["PublicationCatalog"];
 export type PublicationRecord = components["schemas"]["PublicationRecord"];
 export type SearchRequest = components["schemas"]["SearchRequest"];
@@ -56,6 +58,10 @@ export class ProjectKoiosApiClient {
 
   async health(signal?: AbortSignal): Promise<HealthResponse> {
     return this.request<HealthResponse>("/health", { signal });
+  }
+
+  async projects(signal?: AbortSignal): Promise<PublicProjectCatalog> {
+    return this.request<PublicProjectCatalog>("/api/projects", { signal });
   }
 
   async publications(signal?: AbortSignal): Promise<PublicationCatalog> {

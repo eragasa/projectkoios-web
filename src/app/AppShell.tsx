@@ -25,6 +25,7 @@ export function AppShell({ profile }: { profile: DeploymentProfile }) {
           <NavLink to="/" end>
             Home
           </NavLink>
+          <NavLink to="/projects">Projects</NavLink>
           <NavLink to="/publications">Publications</NavLink>
           {isControl ? <NavLink to="/control">Control center</NavLink> : null}
         </nav>
