@@ -4,7 +4,7 @@
 
 - Node.js 22 or later
 - npm
-- a Project Koios API available for live search
+- a Project Koios API for live publications or control workspaces
 
 ## Install
 
@@ -55,17 +55,24 @@ Logs remain available after shutdown:
 
 ## Run only the web application
 
-If the API is already managed separately:
+The default development profile is public:
 
 ```bash
 npm run dev
 ```
 
-Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/search`,
-`/citation-reviews`, `/docs`, and `/openapi.json` to the local API, avoiding a
-development CORS dependency.
+Run the private control profile explicitly when its API is already managed:
 
-The header reports whether the API is available.
+```bash
+npm run dev:control
+```
+
+Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/publications`,
+`/search`, `/citation-reviews`, `/literature-review`, `/docs`, and
+`/openapi.json` to the local API, avoiding a development CORS dependency.
+
+The control header reports whether the API is available. The public profile does not
+display operational health.
 
 ## Startup configuration
 
@@ -84,12 +91,31 @@ The scripts accept these optional environment variables:
 | `KOIOS_OBSIDIAN_REPO` | sibling `projectkoios-obsidian` |
 | `KOIOS_OPEN_BROWSER`  | `0`                             |
 
-The shell scripts target macOS and Unix-like development systems. Production
-process supervision should use the deployment platform's service manager.
+The shell scripts target macOS and Unix-like development systems. They explicitly
+start both processes in the `control` profile and bind them to loopback by default.
+Production process supervision should use the deployment platform's service manager.
+
+## Public publishing
+
+The public home and **Publications** page are present in both profiles. Publication
+records come only from `GET /api/publications`; drafts and private control state are
+not inferred as publications. Each record can expose a type, version, authors,
+publication date, citation, topics, reviewed claims, explicit limitations, and public
+links.
+
+An empty catalog is displayed honestly as no public records. An unavailable catalog
+is distinct from an empty one.
+
+## Control center
+
+The control profile adds `/control` routes for the single operator. The first local
+deployment relies on loopback/private-network isolation and is not approved for
+direct public-internet exposure. The public build has no control routes, and the
+public API profile independently omits all control endpoints.
 
 ## Search
 
-1. Open **Search**.
+1. Open **Control center**, then **Search**.
 2. Enter a concept, source, or technical term.
 3. Choose a result limit.
 4. Submit the search.
@@ -100,7 +126,8 @@ in-memory index, so results depend on how the API process was initialized.
 
 ## Citation review
 
-Open **Citation review** to inspect the configured private review bundle. Each
+From **Control center**, open **Citation review** to inspect the configured private
+review bundle. Each
 claim shows its manuscript context with locally rendered equations, the exact
 TeX excerpt, the automated recommendation, and reference-only candidate
 passages. Use **Preview PDF page** to inspect equations and notation in the
@@ -144,7 +171,9 @@ npm run generate:api
 ```
 
 This writes `src/api/schema.generated.ts`. Generated files must be reviewed when
-API contracts change. The API client consumes the generated search contracts.
+API contracts change. The API client consumes the generated publication and control contracts. Generate
+from a control-profile OpenAPI document so the schema contains the full typed
+superset.
 
 ## Run checks
 
@@ -152,7 +181,8 @@ API contracts change. The API client consumes the generated search contracts.
 npm run format:check
 npm run typecheck
 npm test
-npm run build
+npm run build:public
+npm run build:control
 ```
 
 Install the Playwright browser once:
@@ -172,14 +202,25 @@ private vault.
 
 ## Production preview
 
+Public deployment:
+
 ```bash
-npm run build
+npm run build:public
 npm run preview
 ```
 
-The static build is written to `dist/`. A production server must route API
-requests appropriately or the build must be created with a suitable
-`VITE_KOIOS_API_BASE_URL`.
+Private control deployment:
+
+```bash
+npm run build:control
+npm run preview
+```
+
+Each static build is written to `dist/`; building one profile replaces the other.
+A production server must route API requests appropriately or the build must use a
+suitable `VITE_KOIOS_API_BASE_URL`. A public web build must connect only to a
+public-profile API. A control build must remain on loopback or a separately protected
+private network until remote authentication is designed and reviewed.
 
 ## Privacy
 

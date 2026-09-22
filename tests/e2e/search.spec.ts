@@ -19,7 +19,7 @@ test("searches through the Project Koios interface", async ({ page }) => {
     });
   });
 
-  await page.goto("/search");
+  await page.goto("/control/search");
   await page
     .getByPlaceholder("Search concepts, equations, sources…")
     .fill("Bloch theorem");

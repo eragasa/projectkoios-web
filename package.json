@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev:control": "vite --mode control",
+    "build": "npm run build:public",
+    "build:public": "tsc -b && vite build --mode public",
+    "build:control": "tsc -b && vite build --mode control",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",

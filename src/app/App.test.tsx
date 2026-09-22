@@ -4,15 +4,16 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
 import { App } from "./App";
+import type { DeploymentProfile } from "./deploymentProfile";
 
-function renderApp() {
+function renderApp(profile: DeploymentProfile, initialEntry = "/") {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <App />
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <App profile={profile} />
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -21,14 +22,18 @@ function renderApp() {
 beforeEach(() => {
   vi.stubGlobal(
     "fetch",
-    vi.fn(() =>
-      Promise.resolve(
-        new Response(JSON.stringify({ status: "ok" }), {
+    vi.fn((request: RequestInfo | URL) => {
+      const path = String(request);
+      const body = path.endsWith("/api/publications")
+        ? { schema_version: "1", publications: [] }
+        : { status: "ok" };
+      return Promise.resolve(
+        new Response(JSON.stringify(body), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         }),
-      ),
-    ),
+      );
+    }),
   );
 });
 
@@ -36,21 +41,35 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("renders the overview and navigates to search", async () => {
+test("public profile presents publishing without control routes", () => {
+  renderApp("public");
+
+  expect(
+    screen.getByRole("heading", {
+      name: "Work worth publishing. Evidence worth preserving.",
+    }),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("link", { name: "Control center" }),
+  ).not.toBeInTheDocument();
+});
+
+test("public profile rejects a control-center route", () => {
+  renderApp("public", "/control");
+
+  expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
+});
+
+test("control profile opens the single-operator dashboard", async () => {
   const user = userEvent.setup();
-  renderApp();
+  renderApp("control");
 
-  expect(
-    screen.getByRole("heading", {
-      name: "Knowledge that remains connected to its evidence.",
-    }),
-  ).toBeInTheDocument();
+  await user.click(screen.getByRole("link", { name: "Control center" }));
 
-  await user.click(screen.getByRole("link", { name: "Search" }));
-
-  expect(
-    screen.getByRole("heading", {
-      name: "Search the knowledge workspace",
-    }),
-  ).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Control center" })).toBeInTheDocument();
+  expect(screen.getByText("One human operator")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Open search/ })).toHaveAttribute(
+    "href",
+    "/control/search",
+  );
 });

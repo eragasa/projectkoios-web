@@ -2,8 +2,9 @@
 
 ## Status
 
-Initial vertical slice implemented: application shell, API health status, global
-search, source metadata display, and typed API client.
+Dual-surface foundation implemented: public publishing, a local single-operator
+control center, API health status, global search, scientific review workspaces,
+and a typed API client.
 
 ## Purpose
 
@@ -35,12 +36,27 @@ The repository owns:
 
 It does not own:
 
-- search, ingestion, workflow, or vault semantics;
+- search, ingestion, publication, workflow, or vault semantics;
 - direct filesystem access;
 - backend persistence;
 - deployment-specific directory names or lecture policy;
 - canonical API schemas;
 - authentication policy beyond implementing API contracts.
+
+## Deployment profiles
+
+The frontend has two build-time profiles:
+
+- `public` is the fail-closed default. It contains the public home and publication
+  catalog routes only.
+- `control` contains those public routes plus the single-operator control center,
+  private search, citation review, and literature review.
+
+The profiles share a design system and public read models, but they are separate
+deployment artifacts. Route omission in the public bundle is defense in depth, not
+a substitute for the API boundary. The public API profile independently omits every
+control endpoint and must be deployed separately from the loopback/private control
+API.
 
 ## Technology
 
@@ -67,11 +83,15 @@ src/
 ├── app/
 │   ├── App.tsx
 │   ├── AppProviders.tsx
-│   └── AppShell.tsx
+│   ├── AppShell.tsx
+│   └── deploymentProfile.ts
 ├── components/
 │   └── HealthIndicator.tsx
 ├── features/
+│   ├── citation-review/
 │   ├── dashboard/
+│   ├── literature-review/
+│   ├── publishing/
 │   └── search/
 ├── test/
 └── main.tsx
@@ -106,13 +126,18 @@ The development server proxies relative API paths to
 `http://127.0.0.1:8000`. Production deployments should provide the API through
 the same origin or configure `VITE_KOIOS_API_BASE_URL` at build time.
 
-The initial API contracts are:
+The public API contracts are:
 
 ```text
 GET /health
-POST /search
+GET /api/publications
 GET /openapi.json
 ```
+
+The control API additionally exposes private search, citation-review, and
+literature-review contracts. `src/api/schema.generated.ts` is generated from the
+control OpenAPI document so one typed client can support the superset while profile
+routing prevents public UI access.
 
 `src/api/schema.generated.ts` is generated from the backend OpenAPI document,
 and `src/api/client.ts` consumes its request and response types. The API schema
@@ -123,13 +148,18 @@ mapping rather than a named health model.
 ## Routing
 
 ```text
-/          overview and system entry points
-/search    global retrieval UI
+/                            public home
+/publications                public publication catalog
+/control                     private single-operator dashboard
+/control/search              private retrieval UI
+/control/citation-review     private citation-review workspace
+/control/literature-review   private literature-review workspace
 ```
 
-Planned routes include source documents, ingestion runs, provenance, workflows,
-and vault-layout review. A route should be added only when its backend contract
-exists or when it is explicitly a read-only prototype using fixtures.
+The `/control` routes exist only in the control build. Planned control routes include
+repository health, tasks, decisions, agent runs, workflows, and release operations.
+A route should be added only when its backend contract exists or when it is explicitly
+a read-only prototype using fixtures.
 
 ## Local-first behavior
 
@@ -191,6 +221,11 @@ The web application must treat API content as untrusted data. React escaping is
 retained by default. Rendering raw HTML, Markdown, PDF links, or local paths
 requires explicit sanitization and policy review.
 
-Authentication, authorization, CSRF, and CORS policies are backend and
-deployment concerns, but the browser must implement their contracts without
-bypasses.
+The first control deployment is single-operator and local/private. It is not an
+internet authentication system: the API and web server bind to loopback during local
+startup, and the public deployment uses a separate public-profile API. A future
+remote control deployment requires an explicit authentication, session, CSRF, CORS,
+and audit design before exposure.
+
+Browser profile checks are not authorization. Backend route omission and deployment
+isolation enforce the current capability boundary.
