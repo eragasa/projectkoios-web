@@ -156,6 +156,19 @@ never placed in `VITE_*` variables or returned to the browser.
 An empty result is distinct from an unavailable API. The current backend uses an
 in-memory index, so results depend on how the API process was initialized.
 
+## Note-review prototype
+
+From **Control center**, open **Note review** to inspect the fixture-backed design for
+reviewing proposed reference and research notes. The queue distinguishes new notes,
+managed-section updates, and precondition conflicts. Each proposal exposes its target
+path, citekey, batch identity, expected content hash, proposed frontmatter,
+machine-managed sections, preserved human-owned sections, and a line-oriented diff.
+
+Review dispositions remain browser-local and disappear when the page reloads. The
+prototype cannot create, edit, approve, or apply a vault note. A future integration must
+consume the note-owning domain's catalog, keep review from apply, and revalidate the
+precondition hash immediately before any explicit materializer write.
+
 ## Citation review
 
 From **Control center**, open **Citation review** to inspect the configured private

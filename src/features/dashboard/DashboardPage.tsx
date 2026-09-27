@@ -18,6 +18,22 @@ const workspaces = [
     to: "/control/search",
   },
   {
+    eyebrow: "Local agent",
+    title: "Organize cloud drives",
+    description:
+      "Watch the read-only catalog and local categorization agent before approving any organization plan.",
+    action: "Open life organizer",
+    to: "/control/organizer",
+  },
+  {
+    eyebrow: "Knowledge curation",
+    title: "Review proposed notes",
+    description:
+      "Inspect generated sections, provenance, diffs, and preserved human content before any note is applied.",
+    action: "Open note review",
+    to: "/control/note-review",
+  },
+  {
     eyebrow: "Human review",
     title: "Review citation claims",
     description:

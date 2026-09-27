@@ -111,4 +111,15 @@ test("control profile opens the single-operator dashboard", async () => {
     "href",
     "/control/search",
   );
+  expect(screen.getByRole("link", { name: /Open note review/ })).toHaveAttribute(
+    "href",
+    "/control/note-review",
+  );
+});
+
+test("control profile exposes the note-review prototype", () => {
+  renderApp("control", "/control/note-review");
+
+  expect(screen.getByRole("heading", { name: "Note review" })).toBeInTheDocument();
+  expect(screen.getByText("No write capability")).toBeInTheDocument();
 });

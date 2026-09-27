@@ -91,6 +91,7 @@ src/
 │   ├── citation-review/
 │   ├── dashboard/
 │   ├── literature-review/
+│   ├── note-review/
 │   ├── publishing/
 │   └── search/
 ├── test/
@@ -155,6 +156,7 @@ mapping rather than a named health model.
 /control                     private single-operator dashboard
 /control/github              live read-only GitHubTask projection
 /control/search              private retrieval UI
+/control/note-review         fixture-backed note-review design prototype
 /control/citation-review     private citation-review workspace
 /control/literature-review   private literature-review workspace
 ```
@@ -162,7 +164,12 @@ mapping rather than a named health model.
 The `/control` routes exist only in the control build. Planned control routes include
 repository health, tasks, decisions, agent runs, workflows, and release operations.
 A route should be added only when its backend contract exists or when it is explicitly
-a read-only prototype using fixtures.
+a read-only prototype using fixtures. The note-review route is such a prototype: it
+models proposal queues, provenance, precondition conflicts, managed-section previews,
+diffs, and non-persistent review intent, but exposes no note-write or materializer-apply
+capability. A future integration must consume a contract from the note-owning domain,
+keep review disposition separate from explicit apply, and revalidate the destination
+precondition immediately before writing.
 
 ## Local-first behavior
 
