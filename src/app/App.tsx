@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 
 import { CitationReviewPage } from "../features/citation-review/CitationReviewPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
+import { EquationReviewPage } from "../features/equation-review/EquationReviewPage";
 import { GitHubTasksPage } from "../features/github-tasks/GitHubTasksPage";
 import { LiteratureReviewPage } from "../features/literature-review/LiteratureReviewPage";
 import { NoteReviewPage } from "../features/note-review/NoteReviewPage";
@@ -32,6 +33,7 @@ export function App({ profile = deploymentProfile }: { profile?: DeploymentProfi
             <Route path="control/search" element={<SearchPage />} />
             <Route path="control/organizer" element={<OrganizerPage />} />
             <Route path="control/note-review" element={<NoteReviewPage />} />
+            <Route path="control/equation-review" element={<EquationReviewPage />} />
             <Route path="control/citation-review" element={<CitationReviewPage />} />
             <Route
               path="control/literature-review"

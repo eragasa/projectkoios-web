@@ -16,7 +16,9 @@ npm run start:local
 
 This starts both `projectkoios-api` and the web development server. The web
 interface runs at <http://127.0.0.1:5173> and proxies API requests to
-<http://127.0.0.1:8000>.
+<http://127.0.0.1:8000>. If the optional default course or project catalog is absent,
+startup uses an ignored empty runtime catalog from `.run/`; explicit catalog paths and
+existing files are never overwritten.
 
 Stop both managed processes with:
 

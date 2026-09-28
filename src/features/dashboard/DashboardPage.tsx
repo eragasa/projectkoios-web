@@ -34,6 +34,14 @@ const workspaces = [
     to: "/control/note-review",
   },
   {
+    eyebrow: "Document corpus",
+    title: "Review equation candidates",
+    description:
+      "Inspect source regions, deterministic evidence, and unaccepted assisted transcriptions before recording a human decision.",
+    action: "Open equation review",
+    to: "/control/equation-review",
+  },
+  {
     eyebrow: "Human review",
     title: "Review citation claims",
     description:

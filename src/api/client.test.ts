@@ -175,6 +175,67 @@ test("citation decisions use the private review endpoint", async () => {
   );
 });
 
+test("equation reviews request the provisional document queue contract", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(
+      JSON.stringify({ document_id: "pizzi2020", total: 0, decided: 0, items: [] }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await client.equationReviews("pizzi2020");
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/equation-reviews?document_id=pizzi2020",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
+test("equation review decisions bind acceptance to an assisted proposal", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        candidate_id: "equation:pizzi2020:1",
+        disposition: "ACCEPT_TRANSCRIPTION",
+        assistance_proposal_sha256: "d".repeat(64),
+        note: "Checked.",
+        revision: 1,
+        updated_at_utc: "2026-09-28T18:00:00Z",
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await client.saveEquationReviewDecision("equation:pizzi2020:1", {
+    disposition: "ACCEPT_TRANSCRIPTION",
+    assistance_proposal_sha256: "d".repeat(64),
+    note: "Checked.",
+  });
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/equation-reviews/equation%3Apizzi2020%3A1/decision",
+    expect.objectContaining({
+      method: "PUT",
+      body: JSON.stringify({
+        disposition: "ACCEPT_TRANSCRIPTION",
+        assistance_proposal_sha256: "d".repeat(64),
+        note: "Checked.",
+      }),
+    }),
+  );
+  expect(client.equationRegionImageUrl("equation:pizzi2020:1")).toBe(
+    "/equation-reviews/equation%3Apizzi2020%3A1/region",
+  );
+});
+
 test("literature review requests the private progress endpoint", async () => {
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify({ phase: "ASSESSING" }), {

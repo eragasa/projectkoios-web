@@ -90,6 +90,7 @@ src/
 ├── features/
 │   ├── citation-review/
 │   ├── dashboard/
+│   ├── equation-review/
 │   ├── literature-review/
 │   ├── note-review/
 │   ├── publishing/
@@ -110,6 +111,8 @@ API and web processes. They keep PID files and append-only logs in ignored
 The startup script:
 
 - resolves sibling Project Koios repositories or explicit environment overrides;
+- creates ignored empty runtime catalogs when the optional default course or project
+  catalog is absent, without replacing an explicit path or existing file;
 - starts the API with an explicit Python namespace path;
 - starts Vite directly rather than through an extra npm process;
 - rejects ports occupied by unmanaged processes;
@@ -146,6 +149,12 @@ remains authoritative; browser types are projections. A small refinement is
 used for `/health` because the current backend schema exposes a generic string
 mapping rather than a named health model.
 
+The current API has no equation-review endpoints. The control UI therefore uses the
+provisional browser projection in `src/api/equationReviewContract.ts` and reports the
+capability as unavailable when the queue endpoint returns 404. The minimal proposed
+HTTP boundary is documented in [equation-review-api-contract.md](equation-review-api-contract.md).
+No production fixture or filesystem fallback supplies corpus data.
+
 ## Routing
 
 ```text
@@ -157,6 +166,7 @@ mapping rather than a named health model.
 /control/github              live read-only GitHubTask projection
 /control/search              private retrieval UI
 /control/note-review         fixture-backed note-review design prototype
+/control/equation-review     private equation-review API boundary
 /control/citation-review     private citation-review workspace
 /control/literature-review   private literature-review workspace
 ```
@@ -167,9 +177,13 @@ A route should be added only when its backend contract exists or when it is expl
 a read-only prototype using fixtures. The note-review route is such a prototype: it
 models proposal queues, provenance, precondition conflicts, managed-section previews,
 diffs, and non-persistent review intent, but exposes no note-write or materializer-apply
-capability. A future integration must consume a contract from the note-owning domain,
-keep review disposition separate from explicit apply, and revalidate the destination
-precondition immediately before writing.
+capability. A future note integration must consume a contract from the note-owning
+domain, keep review disposition separate from explicit apply, and revalidate the
+destination precondition immediately before writing.
+
+The equation-review route is not fixture-backed: it requests the typed API contract,
+renders an unavailable state while that capability is absent, and never reads corpus
+files directly.
 
 ## Local-first behavior
 

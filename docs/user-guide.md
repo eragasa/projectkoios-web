@@ -28,7 +28,11 @@ It starts:
 
 It waits for both services to become ready and stores PID files and logs in
 `.run/`. Repeating the command is safe: already managed processes are reused.
-The script refuses to use a port occupied by an unmanaged process.
+When the optional default public course or project catalog is absent, startup creates
+an ignored empty runtime catalog in `.run/` so local control startup can continue.
+Explicit `KOIOS_COURSE_CATALOG` and `KOIOS_PROJECT_CATALOG` paths are never replaced,
+and existing files are never overwritten. The script refuses to use a port occupied by
+an unmanaged process.
 
 To open the browser automatically on macOS:
 
@@ -69,7 +73,7 @@ npm run dev:control
 
 Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/courses`,
 `/api/projects`, `/api/publications`, `/github/tasks`, `/search`, `/citation-reviews`,
-`/literature-review`, `/docs`, and `/openapi.json` to the local API, avoiding a
+`/equation-reviews`, `/literature-review`, `/docs`, and `/openapi.json` to the local API, avoiding a
 development CORS dependency.
 
 The control header reports whether the API is available. The public profile does not
@@ -79,21 +83,21 @@ display operational health.
 
 The scripts accept these optional environment variables:
 
-| Variable                    | Default                         |
-| --------------------------- | ------------------------------- |
-| `KOIOS_API_HOST`            | `127.0.0.1`                     |
-| `KOIOS_API_PORT`            | `8000`                          |
-| `KOIOS_WEB_HOST`            | `127.0.0.1`                     |
-| `KOIOS_WEB_PORT`            | `5173`                          |
-| `KOIOS_RUN_DIR`             | `.run` inside this repository   |
-| `KOIOS_API_REPO`            | sibling `projectkoios-api`      |
-| `KOIOS_CORE_REPO`           | sibling `projectkoios`          |
-| `KOIOS_COURSE_CATALOG`      | core public-safe course catalog |
-| `KOIOS_PROJECT_CATALOG`     | core public project catalog     |
-| `KOIOS_SEARCH_REPO`         | sibling `projectkoios-search`   |
-| `KOIOS_OBSIDIAN_REPO`       | sibling `projectkoios-obsidian` |
-| `KOIOS_GITHUB_REPOSITORIES` | API and web repositories        |
-| `KOIOS_OPEN_BROWSER`        | `0`                             |
+| Variable                    | Default                                 |
+| --------------------------- | --------------------------------------- |
+| `KOIOS_API_HOST`            | `127.0.0.1`                             |
+| `KOIOS_API_PORT`            | `8000`                                  |
+| `KOIOS_WEB_HOST`            | `127.0.0.1`                             |
+| `KOIOS_WEB_PORT`            | `5173`                                  |
+| `KOIOS_RUN_DIR`             | `.run` inside this repository           |
+| `KOIOS_API_REPO`            | sibling `projectkoios-api`              |
+| `KOIOS_CORE_REPO`           | sibling `projectkoios`                  |
+| `KOIOS_COURSE_CATALOG`      | core catalog, or empty runtime fallback |
+| `KOIOS_PROJECT_CATALOG`     | core catalog, or empty runtime fallback |
+| `KOIOS_SEARCH_REPO`         | sibling `projectkoios-search`           |
+| `KOIOS_OBSIDIAN_REPO`       | sibling `projectkoios-obsidian`         |
+| `KOIOS_GITHUB_REPOSITORIES` | API and web repositories                |
+| `KOIOS_OPEN_BROWSER`        | `0`                                     |
 
 The shell scripts target macOS and Unix-like development systems. They explicitly
 start both processes in the `control` profile and bind them to loopback by default.
@@ -168,6 +172,24 @@ Review dispositions remain browser-local and disappear when the page reloads. Th
 prototype cannot create, edit, approve, or apply a vault note. A future integration must
 consume the note-owning domain's catalog, keep review from apply, and revalidate the
 precondition hash immediately before any explicit materializer write.
+
+## Equation review
+
+From **Control center**, open **Equation review** to request equation candidates for
+`pizzi2020`. For each candidate, the UI is prepared to show stable candidate and source
+identity, source and region hashes, PDF coordinates, the API-served region image,
+deterministic detector evidence, assisted status and proposal text, and an existing
+human decision.
+
+Assisted text is always labeled as an unaccepted proposal. Accepting it requires the
+operator to select **Accept this assisted transcription** and save a decision bound to
+the proposal SHA-256. Reject and correction-request dispositions remain separate.
+
+The current API does not implement this capability, so the normal route displays an
+unavailable state and does not invent fixture data, access corpus files, or simulate a
+saved decision. See the [provisional API contract](equation-review-api-contract.md) for
+the exact integration boundary. After the API owner adopts that contract, regenerate
+the OpenAPI types and replace the provisional browser projection.
 
 ## Citation review
 

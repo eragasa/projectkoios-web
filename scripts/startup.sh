@@ -108,6 +108,32 @@ done
 
 mkdir -p "$RUN_DIR"
 
+if [ "${KOIOS_COURSE_CATALOG+x}" = x ]; then
+  COURSE_CATALOG="$KOIOS_COURSE_CATALOG"
+else
+  COURSE_CATALOG="$CORE_REPO/public/course-catalog.json"
+  if [ ! -e "$COURSE_CATALOG" ]; then
+    COURSE_CATALOG="$RUN_DIR/empty-courses.json"
+    if [ ! -e "$COURSE_CATALOG" ]; then
+      printf '%s\n' '{"schema_version":"1"}' >"$COURSE_CATALOG"
+    fi
+    echo "Optional course catalog not found; using empty runtime catalog: $COURSE_CATALOG"
+  fi
+fi
+
+if [ "${KOIOS_PROJECT_CATALOG+x}" = x ]; then
+  PROJECT_CATALOG="$KOIOS_PROJECT_CATALOG"
+else
+  PROJECT_CATALOG="$CORE_REPO/public/project-catalog.json"
+  if [ ! -e "$PROJECT_CATALOG" ]; then
+    PROJECT_CATALOG="$RUN_DIR/empty-projects.json"
+    if [ ! -e "$PROJECT_CATALOG" ]; then
+      printf '%s\n' '{"schema_version":"1","projects":[]}' >"$PROJECT_CATALOG"
+    fi
+    echo "Optional project catalog not found; using empty runtime catalog: $PROJECT_CATALOG"
+  fi
+fi
+
 if is_running "$API_PID_FILE"; then
   echo "Project Koios API already running (PID $(cat "$API_PID_FILE"))."
 else
@@ -122,8 +148,8 @@ else
     cd "$API_REPO"
     nohup env PYTHONPATH="$API_PYTHONPATH" \
       KOIOS_DEPLOYMENT_PROFILE=control \
-      KOIOS_COURSE_CATALOG="${KOIOS_COURSE_CATALOG:-$CORE_REPO/public/course-catalog.json}" \
-      KOIOS_PROJECT_CATALOG="${KOIOS_PROJECT_CATALOG:-$CORE_REPO/public/project-catalog.json}" \
+      KOIOS_COURSE_CATALOG="$COURSE_CATALOG" \
+      KOIOS_PROJECT_CATALOG="$PROJECT_CATALOG" \
       KOIOS_GITHUB_REPOSITORIES="${KOIOS_GITHUB_REPOSITORIES:-eragasa/projectkoios-api,eragasa/projectkoios-web}" \
       "$API_PYTHON" -m uvicorn projectkoios.api.main:app \
       --host "$API_HOST" --port "$API_PORT" \

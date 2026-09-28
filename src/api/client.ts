@@ -1,4 +1,17 @@
+import type {
+  EquationReviewDecisionRequest,
+  EquationReviewDecisionResponse,
+  EquationReviewQueueResponse,
+} from "./equationReviewContract";
 import type { components, paths } from "./schema.generated";
+
+export type {
+  EquationReviewCandidate,
+  EquationReviewDecisionRequest,
+  EquationReviewDecisionResponse,
+  EquationReviewDisposition,
+  EquationReviewQueueResponse,
+} from "./equationReviewContract";
 
 type GeneratedHealthResponse =
   paths["/health"]["get"]["responses"][200]["content"]["application/json"];
@@ -123,6 +136,38 @@ export class ProjectKoiosApiClient {
 
   async citationReviews(signal?: AbortSignal): Promise<CitationReviewQueue> {
     return this.request<CitationReviewQueue>("/citation-reviews", { signal });
+  }
+
+  async equationReviews(
+    documentId: string,
+    signal?: AbortSignal,
+  ): Promise<EquationReviewQueueResponse> {
+    const query = new URLSearchParams({ document_id: documentId });
+    return this.request<EquationReviewQueueResponse>(
+      `/equation-reviews?${query.toString()}`,
+      { signal },
+    );
+  }
+
+  async saveEquationReviewDecision(
+    candidateId: string,
+    request: EquationReviewDecisionRequest,
+    signal?: AbortSignal,
+  ): Promise<EquationReviewDecisionResponse> {
+    return this.request<EquationReviewDecisionResponse>(
+      `/equation-reviews/${encodeURIComponent(candidateId)}/decision`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+        signal,
+      },
+    );
+  }
+
+  equationRegionImageUrl(candidateId: string): string {
+    const path = `/equation-reviews/${encodeURIComponent(candidateId)}/region`;
+    return `${this.baseUrl}${path}`;
   }
 
   async literatureReviewProgress(
