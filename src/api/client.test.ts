@@ -214,23 +214,27 @@ test("equation review decisions bind acceptance to an assisted proposal", async 
   );
   const client = new ProjectKoiosApiClient();
 
-  await client.saveEquationReviewDecision("equation:pizzi2020:1", {
-    disposition: "ACCEPT_TRANSCRIPTION",
+  const request = {
+    disposition: "ACCEPT_TRANSCRIPTION" as const,
     assistance_proposal_sha256: "d".repeat(64),
+    reviewer_latex: "E = mc^2",
+    display_mode: "DISPLAY" as const,
+    render_confirmation: {
+      renderer_id: "katex",
+      renderer_version: "0.16.47",
+      rendered_reviewer_latex_sha256: "e".repeat(64),
+      rendered_obsidian_markdown_sha256: "f".repeat(64),
+    },
     note: "Checked.",
     expected_previous_revision: 0,
-  });
+  };
+  await client.saveEquationReviewDecision("equation:pizzi2020:1", request);
 
   expect(fetchMock).toHaveBeenCalledWith(
     "/equation-reviews/equation%3Apizzi2020%3A1/decision",
     expect.objectContaining({
       method: "PUT",
-      body: JSON.stringify({
-        disposition: "ACCEPT_TRANSCRIPTION",
-        assistance_proposal_sha256: "d".repeat(64),
-        note: "Checked.",
-        expected_previous_revision: 0,
-      }),
+      body: JSON.stringify(request),
     }),
   );
   expect(client.equationRegionImageUrl("equation:pizzi2020:1")).toBe(

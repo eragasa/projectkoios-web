@@ -557,6 +557,24 @@ export interface components {
             /** Extracted Text */
             extracted_text: string | null;
         };
+        /**
+         * EquationDisplayMode
+         * @enum {string}
+         */
+        EquationDisplayMode: "INLINE" | "DISPLAY";
+        /** EquationModelProvenanceResponse */
+        EquationModelProvenanceResponse: {
+            /** Model Name */
+            model_name: string;
+            /** Model Sha256 */
+            model_sha256: string;
+            /** Prompt Version */
+            prompt_version: string;
+            /** Request Id */
+            request_id: string;
+            /** Result Id */
+            result_id: string;
+        };
         /** EquationRegionEvidenceResponse */
         EquationRegionEvidenceResponse: {
             /**
@@ -575,41 +593,80 @@ export interface components {
             /** Y */
             y: number;
         };
+        /** EquationRenderConfirmation */
+        EquationRenderConfirmation: {
+            /** Rendered Obsidian Markdown Sha256 */
+            rendered_obsidian_markdown_sha256: string;
+            /** Rendered Reviewer Latex Sha256 */
+            rendered_reviewer_latex_sha256: string;
+            /** Renderer Id */
+            renderer_id: string;
+            /** Renderer Version */
+            renderer_version: string;
+        };
         /** EquationReviewCandidateResponse */
         EquationReviewCandidateResponse: {
             /** Assistance */
             assistance: (components["schemas"]["PendingEquationAssistanceResponse"] | components["schemas"]["ProposedEquationAssistanceResponse"]) | null;
             /** Candidate Id */
             candidate_id: string;
+            /** Current Revision */
+            current_revision: number;
             decision: components["schemas"]["EquationReviewDecision"] | null;
             deterministic_evidence: components["schemas"]["DeterministicEquationEvidenceResponse"];
+            display_mode: components["schemas"]["EquationDisplayMode"];
+            /** Expected Previous Revision */
+            expected_previous_revision: number;
             region: components["schemas"]["EquationRegionEvidenceResponse"];
             source: components["schemas"]["EquationSourceIdentityResponse"];
+            status: components["schemas"]["EquationReviewStatus"];
         };
         /** EquationReviewDecision */
         EquationReviewDecision: {
             /** Assistance Proposal Sha256 */
             assistance_proposal_sha256: string | null;
+            display_mode: components["schemas"]["EquationDisplayMode"] | null;
             disposition: components["schemas"]["EquationReviewDisposition"];
             /** Note */
             note: string;
-            /** Revision */
-            revision: number;
+            /** Obsidian Markdown */
+            obsidian_markdown: string | null;
+            /** Obsidian Markdown Sha256 */
+            obsidian_markdown_sha256: string | null;
             /**
-             * Updated At Utc
+             * Recorded At Utc
              * Format: date-time
              */
-            updated_at_utc: string;
+            recorded_at_utc: string;
+            render_confirmation: components["schemas"]["EquationRenderConfirmation"] | null;
+            /** Reviewer Latex */
+            reviewer_latex: string | null;
+            /** Reviewer Latex Sha256 */
+            reviewer_latex_sha256: string | null;
+            /** Revision */
+            revision: number;
+            /** Revision Id */
+            revision_id: string;
+            /**
+             * Schema Version
+             * @enum {integer}
+             */
+            schema_version: 2 | 3;
+            status: components["schemas"]["EquationReviewStatus"];
         };
         /** EquationReviewDecisionRequest */
         EquationReviewDecisionRequest: {
             /** Assistance Proposal Sha256 */
             assistance_proposal_sha256: string | null;
+            display_mode: components["schemas"]["EquationDisplayMode"] | null;
             disposition: components["schemas"]["EquationReviewDisposition"];
             /** Expected Previous Revision */
             expected_previous_revision: number;
             /** Note */
             note: string;
+            render_confirmation: components["schemas"]["EquationRenderConfirmation"] | null;
+            /** Reviewer Latex */
+            reviewer_latex: string | null;
         };
         /** EquationReviewDecisionResponse */
         EquationReviewDecisionResponse: {
@@ -617,16 +674,34 @@ export interface components {
             assistance_proposal_sha256: string | null;
             /** Candidate Id */
             candidate_id: string;
+            display_mode: components["schemas"]["EquationDisplayMode"] | null;
             disposition: components["schemas"]["EquationReviewDisposition"];
             /** Note */
             note: string;
-            /** Revision */
-            revision: number;
+            /** Obsidian Markdown */
+            obsidian_markdown: string | null;
+            /** Obsidian Markdown Sha256 */
+            obsidian_markdown_sha256: string | null;
             /**
-             * Updated At Utc
+             * Recorded At Utc
              * Format: date-time
              */
-            updated_at_utc: string;
+            recorded_at_utc: string;
+            render_confirmation: components["schemas"]["EquationRenderConfirmation"] | null;
+            /** Reviewer Latex */
+            reviewer_latex: string | null;
+            /** Reviewer Latex Sha256 */
+            reviewer_latex_sha256: string | null;
+            /** Revision */
+            revision: number;
+            /** Revision Id */
+            revision_id: string;
+            /**
+             * Schema Version
+             * @enum {integer}
+             */
+            schema_version: 2 | 3;
+            status: components["schemas"]["EquationReviewStatus"];
         };
         /**
          * EquationReviewDisposition
@@ -637,7 +712,7 @@ export interface components {
          * EquationReviewFailureCode
          * @enum {string}
          */
-        EquationReviewFailureCode: "EQUATION_REVIEW_PROPOSAL_STALE" | "EQUATION_REVIEW_EVIDENCE_STALE" | "EQUATION_REVIEW_REVISION_STALE" | "EQUATION_REVIEW_CONCURRENT_DECISION" | "EQUATION_REVIEW_PARTIAL_OUTPUT" | "EQUATION_REVIEW_OWNER_UNAVAILABLE";
+        EquationReviewFailureCode: "EQUATION_REVIEW_PROPOSAL_STALE" | "EQUATION_REVIEW_EVIDENCE_STALE" | "EQUATION_REVIEW_REVISION_STALE" | "EQUATION_REVIEW_RENDER_STALE" | "EQUATION_REVIEW_EDIT_AFTER_RENDER" | "EQUATION_REVIEW_CONCURRENT_DECISION" | "EQUATION_REVIEW_PARTIAL_OUTPUT" | "EQUATION_REVIEW_OWNER_UNAVAILABLE";
         /** EquationReviewFailureResponse */
         EquationReviewFailureResponse: {
             code: components["schemas"]["EquationReviewFailureCode"];
@@ -655,6 +730,11 @@ export interface components {
             /** Total */
             total: number;
         };
+        /**
+         * EquationReviewStatus
+         * @enum {string}
+         */
+        EquationReviewStatus: "UNREVIEWED" | "LEGACY_ACCEPTANCE" | "ACCEPTED" | "REJECTED" | "REVISION_REQUIRED";
         /** EquationSourceIdentityResponse */
         EquationSourceIdentityResponse: {
             /** Document Id */
@@ -1006,8 +1086,11 @@ export interface components {
         };
         /** ProposedEquationAssistanceResponse */
         ProposedEquationAssistanceResponse: {
+            /** Attempt Id */
+            attempt_id?: string | null;
             /** Method */
             method: string;
+            model_provenance?: components["schemas"]["EquationModelProvenanceResponse"] | null;
             /** Proposal Sha256 */
             proposal_sha256: string;
             /** Proposed Latex */

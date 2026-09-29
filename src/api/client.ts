@@ -39,6 +39,8 @@ export type EquationReviewDecisionResponse =
   paths["/equation-reviews/{candidate_id}/decision"]["put"]["responses"][200]["content"]["application/json"];
 export type EquationReviewDisposition =
   components["schemas"]["EquationReviewDisposition"];
+export type EquationDisplayMode = components["schemas"]["EquationDisplayMode"];
+export type EquationReviewStatus = components["schemas"]["EquationReviewStatus"];
 export type EquationReviewFailureCode =
   components["schemas"]["EquationReviewFailureCode"];
 export type EquationReviewFailureResponse =

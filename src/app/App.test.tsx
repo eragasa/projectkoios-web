@@ -128,9 +128,11 @@ test("control profile exposes the equation-review API boundary", async () => {
   renderApp("control", "/control/equation-review");
 
   expect(
-    await screen.findByRole("heading", { name: "Equation review unavailable" }),
+    await screen.findByRole("heading", { name: "Equation review is unavailable" }),
   ).toBeInTheDocument();
-  expect(screen.getByText("pizzi2020 not loaded")).toBeInTheDocument();
+  expect(
+    screen.getByText("pizzi2020 is not configured for equation review on this API."),
+  ).toBeInTheDocument();
 });
 
 test("public profile rejects the equation-review route", () => {

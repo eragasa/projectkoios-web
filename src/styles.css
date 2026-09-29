@@ -4142,3 +4142,347 @@ a {
     border-left: 0;
   }
 }
+
+/* Confirmed equation transcription review layout. */
+.equation-review-page {
+  width: min(1540px, 96vw);
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+.equation-candidate {
+  gap: 1.35rem;
+}
+
+.equation-region-card,
+.equation-transcription-section {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.equation-region-card > div:first-child h3 {
+  margin: 0;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.35rem;
+}
+
+.equation-region-card img {
+  min-height: 0;
+  max-height: none;
+}
+
+.equation-transcription-section {
+  display: grid;
+  padding: clamp(1rem, 2vw, 1.4rem);
+  gap: 1rem;
+}
+
+.equation-transcription-section > header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.equation-transcription-section > header h3 {
+  margin: 0;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(1.55rem, 2.5vw, 2rem);
+}
+
+.equation-transcription-section > header .eyebrow {
+  margin-bottom: 0.35rem;
+}
+
+.proposal-warning,
+.equation-transcription-section > header > .pending {
+  padding: 0.35rem 0.58rem;
+  border-radius: 999px;
+  color: #76531c;
+  background: rgb(200 153 77 / 16%);
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+
+.equation-source-preview-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fafaf7;
+}
+
+.equation-source-preview-row > label,
+.equation-source-preview-row > div {
+  display: grid;
+  min-width: 0;
+  min-height: 180px;
+  grid-template-rows: auto 1fr;
+}
+
+.equation-source-preview-row > label {
+  border-right: 1px solid var(--line);
+}
+
+.equation-source-preview-row > label > span,
+.equation-source-preview-row > div > span,
+.equation-review-note > span,
+.equation-display-mode > span {
+  padding: 0.7rem 0.8rem;
+  color: var(--muted);
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.equation-source-preview-row textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 1rem;
+  border: 0;
+  border-top: 1px solid var(--line);
+  outline: 0;
+  color: var(--ink);
+  background: #fff;
+  font-family: "DM Mono", monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.equation-source-preview-row textarea:focus {
+  box-shadow: inset 0 0 0 2px var(--green-bright);
+}
+
+.equation-source-preview-row textarea:read-only {
+  color: #48524d;
+  background: #f8f8f5;
+}
+
+.equation-math-preview,
+.equation-preview-placeholder,
+.equation-render-error {
+  display: grid;
+  min-height: 140px;
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  place-items: center;
+  border-top: 1px solid var(--line);
+  background: #fff;
+  text-align: center;
+}
+
+.equation-math-preview .katex-display {
+  margin: 0;
+}
+
+.equation-preview-placeholder {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.equation-render-error {
+  color: var(--error);
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.equation-preview-policy,
+.equation-section-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+
+.equation-display-mode {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.equation-display-mode > span {
+  padding: 0;
+}
+
+.equation-display-mode select {
+  min-height: 38px;
+  padding: 0 2rem 0 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.equation-review-history {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgb(45 122 91 / 5%);
+}
+
+.equation-review-history > div:first-child {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.equation-review-history h4 {
+  margin: 0;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.15rem;
+}
+
+.equation-review-history > div:first-child > span,
+.equation-review-history > p,
+.equation-review-history > p:last-child {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.equation-review-history dl {
+  display: grid;
+  margin: 0.8rem 0 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 1rem;
+}
+
+.equation-review-history dt,
+.equation-debug dt {
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.equation-review-history dd,
+.equation-debug dd {
+  overflow-wrap: anywhere;
+  margin: 0.2rem 0 0;
+  font-family: "DM Mono", monospace;
+  font-size: 0.67rem;
+  line-height: 1.55;
+}
+
+.equation-review-note {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.equation-review-note textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+  resize: vertical;
+}
+
+.equation-review-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.equation-review-controls > span {
+  margin-left: auto;
+  color: var(--muted);
+  font-family: "DM Mono", monospace;
+  font-size: 0.68rem;
+}
+
+.equation-save-success {
+  margin: 0;
+  color: var(--green);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.equation-debug {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.equation-debug > summary {
+  padding: 0.8rem 0 0;
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.equation-debug__content {
+  display: grid;
+  margin-top: 0.8rem;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr);
+  gap: 1rem;
+}
+
+.equation-debug dl {
+  display: grid;
+  margin: 0;
+  gap: 0.7rem;
+}
+
+.equation-debug h4 {
+  margin: 0 0 0.5rem;
+  color: var(--ink);
+}
+
+.equation-debug pre {
+  max-height: 420px;
+  margin: 0;
+  padding: 0.8rem;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: #36423c;
+  background: #f8f8f5;
+  font-family: "DM Mono", monospace;
+  font-size: 0.62rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 900px) {
+  .equation-source-preview-row,
+  .equation-debug__content {
+    grid-template-columns: 1fr;
+  }
+
+  .equation-source-preview-row > label {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 620px) {
+  .equation-transcription-section > header,
+  .equation-review-history > div:first-child {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .equation-review-history dl {
+    grid-template-columns: 1fr;
+  }
+
+  .equation-review-controls > span {
+    width: 100%;
+    margin-left: 0;
+  }
+}

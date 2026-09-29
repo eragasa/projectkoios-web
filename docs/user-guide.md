@@ -176,25 +176,40 @@ precondition hash immediately before any explicit materializer write.
 
 ## Equation review
 
-From **Control center**, open **Equation review** to request equation candidates for
-`pizzi2020`. For each candidate, the UI is prepared to show stable candidate and source
-identity, source and region hashes, PDF coordinates, the API-served region image,
-deterministic detector evidence, assisted status and proposal text, and an existing
-human decision.
+From **Control center**, open **Equation review** to request owner-backed equation
+candidates for `pizzi2020`. The selected candidate shows its full-width source-region
+image first, then a **Proposed** comparison and a **Reviewer** comparison. Each comparison
+places LaTeX and canonical Obsidian Markdown source beside a rendered preview. Assisted
+text is always labeled as an unaccepted proposal.
 
-Assisted text is always labeled as an unaccepted proposal. Accepting it requires the
-operator to select **Accept this assisted transcription** and save a decision bound to
-the proposal SHA-256. Reject and correction-request dispositions remain separate. Every
-write also sends the displayed previous revision (`0` before the first decision), but
-never a browser-generated receipt or review timestamp.
+Reviewer LaTeX starts from the latest accepted schema-3 reviewer source. A legacy schema-2
+acceptance remains visible in stored history but has no accepted source, so the current
+proposal initializes the editor. The canonical reviewer Markdown is derived read-only
+text. KaTeX `0.16.47` renders local previews with trust disabled and strict errors; those
+previews do not replace the canonical Obsidian/MathJax-compatible Markdown.
 
-Only a successful owner-backed response is shown as recorded, with its returned revision
-and UTC time. Stale proposal, evidence, revision, and different concurrent decisions are
-shown as typed conflicts. Partial owner output and owner unavailability remain typed
-unavailable states and never imply that the decision was saved. A 404 means `pizzi2020`
-is not configured. The route does not invent fixture data or access corpus files. See
-the [equation-review API contract](equation-review-api-contract.md) for the exact
-boundary.
+Choose **Render current correction** after editing. **Accept reviewed transcription**
+remains disabled until both exact current representations render successfully and their
+SHA-256 confirmation exists. Changing the LaTeX or display mode immediately clears both
+reviewer previews and the confirmation. Render errors do not enable acceptance.
+
+An acceptance sends the proposal identity, reviewer LaTeX, display mode, exact render
+hashes, note, and displayed previous revision. It never sends browser-derived Markdown
+as authority or a browser timestamp. Reject and correction-request actions remain
+separate and do not claim a successful transcription render. Only a successful
+owner-backed response is shown as recorded, with its schema, revision ID/number, status,
+and owner time.
+
+The collapsed **Debug & Provenance** pane shows bounded, read-only identities, hashes,
+model/method fields, revisions, statuses, storage metadata, renderer confirmation, typed
+error code, and contract JSON. It excludes transcription bodies, extracted text, paths,
+credentials, and secrets.
+
+Stale render and edit-after-render are distinguished from stale proposal, evidence,
+revision, and concurrent-decision conflicts. Partial output and owner unavailability
+never imply a save. A 404 means `pizzi2020` is not configured. The route does not invent
+fixture data or access corpus files. See the
+[equation-review API contract](equation-review-api-contract.md) for the exact boundary.
 
 ## Citation review
 
