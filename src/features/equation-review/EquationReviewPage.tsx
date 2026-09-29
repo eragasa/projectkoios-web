@@ -13,6 +13,11 @@ import {
   type EquationReviewFailureCode,
   type EquationReviewStatus,
 } from "../../api/client";
+import {
+  deriveProposalLatexBody,
+  type ProposalLatexDerivation,
+  type ProposalLatexDerivationFailure,
+} from "./equationLatex";
 
 const DOCUMENT_ID = "pizzi2020";
 const RENDERER_ID = "katex";
@@ -85,6 +90,8 @@ function decisionFailureMessage(error: unknown) {
       "The equation evidence changed. The decision was not saved; reload owner-backed evidence.",
     EQUATION_REVIEW_REVISION_STALE:
       "A newer human revision exists. The decision was not saved; reload before reviewing again.",
+    EQUATION_REVIEW_REVIEWER_LATEX_NONCANONICAL:
+      "The reviewer LaTeX is not a canonical NFC math body. The decision was not saved; remove delimiters, edge whitespace, or carriage returns and render again.",
     EQUATION_REVIEW_RENDER_STALE:
       "Stale render: the rendered Markdown no longer matches the canonical reviewer Markdown. The decision was not saved; render the current correction again.",
     EQUATION_REVIEW_EDIT_AFTER_RENDER:
@@ -109,13 +116,37 @@ function statusLabel(status: EquationReviewStatus) {
   return status.replaceAll("_", " ").toLowerCase();
 }
 
+function proposalDerivation(candidate: EquationReviewCandidate) {
+  return candidate.assistance?.status === "PROPOSED"
+    ? deriveProposalLatexBody(candidate.assistance.proposed_latex)
+    : null;
+}
+
 function initialReviewerLatex(candidate: EquationReviewCandidate) {
   if (candidate.decision?.schema_version === 3 && candidate.decision.reviewer_latex) {
     return candidate.decision.reviewer_latex;
   }
-  return candidate.assistance?.status === "PROPOSED"
-    ? candidate.assistance.proposed_latex
-    : "";
+  const derivation = proposalDerivation(candidate);
+  return derivation?.ok ? derivation.body : "";
+}
+
+const derivationFailureMessages: Record<ProposalLatexDerivationFailure, string> = {
+  EMPTY: "the source or derived math body is empty",
+  EDGE_WHITESPACE: "the source or derived math body has edge whitespace",
+  CARRIAGE_RETURN: "the source contains a carriage return",
+  NON_NFC: "the source is not NFC-normalized",
+  MIXED_DELIMITERS: "the outer math delimiters are mixed",
+  UNMATCHED_DELIMITER: "an outer math delimiter is unmatched",
+  NESTED_OR_INTERNAL_DELIMITER: "the math body contains nested or internal delimiters",
+  NONCANONICAL_DISPLAY_NEWLINE:
+    "display delimiters do not contain the canonical matching line feeds",
+};
+
+function derivationDescription(derivation: ProposalLatexDerivation) {
+  if (derivation.ok) {
+    return derivation.status;
+  }
+  return `INVALID · ${derivation.reason} · ${derivationFailureMessages[derivation.reason]}`;
 }
 
 function initialDisplayMode(candidate: EquationReviewCandidate): EquationDisplayMode {
@@ -165,10 +196,18 @@ function ProposedSection({ candidate }: { candidate: EquationReviewCandidate }) 
     );
   }
 
-  const latex = candidate.assistance.proposed_latex;
-  const markdown = canonicalObsidianMarkdown(latex, candidate.display_mode);
-  const latexPreview = renderWithKatex(latex, candidate.display_mode);
-  const markdownPreview = renderWithKatex(latex, candidate.display_mode);
+  const rawLatex = candidate.assistance.proposed_latex;
+  const derivation = deriveProposalLatexBody(rawLatex);
+  const derivedBody = derivation.ok ? derivation.body : null;
+  const markdown = derivedBody
+    ? canonicalObsidianMarkdown(derivedBody, candidate.display_mode)
+    : null;
+  const latexPreview = derivedBody
+    ? renderWithKatex(derivedBody, candidate.display_mode)
+    : null;
+  const markdownPreview = derivedBody
+    ? renderWithKatex(derivedBody, candidate.display_mode)
+    : null;
 
   return (
     <section
@@ -184,17 +223,25 @@ function ProposedSection({ candidate }: { candidate: EquationReviewCandidate }) 
       </header>
 
       <div className="equation-source-preview-row">
-        <label>
-          <span>Proposed LaTeX</span>
-          <textarea aria-label="Proposed LaTeX" readOnly rows={5} value={latex} />
-        </label>
+        <div className="equation-source-panel">
+          <span>Raw immutable assisted proposal LaTeX</span>
+          <pre aria-label="Proposed LaTeX" className="equation-source-code">
+            {rawLatex}
+          </pre>
+          <small className="equation-raw-proposal-hash">
+            Raw immutable source · proposal SHA-256{" "}
+            {candidate.assistance.proposal_sha256}
+          </small>
+        </div>
         <div>
-          <span>Rendered proposed LaTeX</span>
-          {latexPreview.html ? (
+          <span>Rendered proposed LaTeX body</span>
+          {latexPreview?.html ? (
             <Preview html={latexPreview.html} label="Rendered proposed LaTeX" />
           ) : (
             <p role="alert" className="equation-render-error">
-              {latexPreview.error}
+              {derivation.ok
+                ? latexPreview?.error
+                : `Proposal derivation rejected: ${derivationFailureMessages[derivation.reason]}.`}
             </p>
           )}
         </div>
@@ -202,29 +249,32 @@ function ProposedSection({ candidate }: { candidate: EquationReviewCandidate }) 
 
       <div className="equation-source-preview-row">
         <label>
-          <span>Canonical proposed Obsidian Markdown</span>
+          <span>Derived proposed Obsidian Markdown</span>
           <textarea
             aria-label="Canonical proposed Obsidian Markdown"
             readOnly
             rows={5}
-            value={markdown}
+            value={markdown ?? ""}
           />
         </label>
         <div>
-          <span>Rendered proposed Markdown</span>
-          {markdownPreview.html ? (
+          <span>Rendered proposed Markdown body</span>
+          {markdownPreview?.html ? (
             <Preview html={markdownPreview.html} label="Rendered proposed Markdown" />
           ) : (
             <p role="alert" className="equation-render-error">
-              {markdownPreview.error}
+              {derivation.ok
+                ? markdownPreview?.error
+                : "No proposed Markdown or preview was derived from noncanonical source."}
             </p>
           )}
         </div>
       </div>
       <p className="equation-preview-policy">
-        Preview only: rendered locally with KaTeX {RENDERER_VERSION}, strict errors, and
-        trust disabled. The canonical Markdown above remains Obsidian/MathJax-compatible
-        authority.
+        Derivation: {derivationDescription(derivation)}. The immutable source above is
+        never rewritten. Preview only: rendered locally from the derived math body with
+        KaTeX {RENDERER_VERSION}, strict errors, and trust disabled. The derived
+        Markdown remains Obsidian/MathJax-compatible.
       </p>
     </section>
   );
@@ -272,9 +322,9 @@ function StoredHistory({ candidate }: { candidate: EquationReviewCandidate }) {
       </dl>
       {decision.schema_version === 2 ? (
         <p>
-          This legacy acceptance has no canonical accepted reviewer source. The current
-          proposal initializes the reviewer LaTeX; saving creates revision{" "}
-          {candidate.current_revision + 1}
+          This legacy acceptance has no canonical accepted reviewer source. The
+          deterministically derived proposal body initializes the reviewer LaTeX; saving
+          creates revision {candidate.current_revision + 1}
           in schema 3.
         </p>
       ) : null}
@@ -285,6 +335,7 @@ function StoredHistory({ candidate }: { candidate: EquationReviewCandidate }) {
 function safeContractProjection(candidate: EquationReviewCandidate) {
   const assistance = candidate.assistance;
   const decision = candidate.decision;
+  const derivation = proposalDerivation(candidate);
   return {
     candidate_id: candidate.candidate_id,
     document_id: candidate.source.document_id,
@@ -310,6 +361,9 @@ function safeContractProjection(candidate: EquationReviewCandidate) {
             model_provenance: assistance.model_provenance ?? null,
           }
         : assistance,
+    proposal_derivation: derivation
+      ? { status: derivation.status, reason: derivation.reason }
+      : null,
     display_mode: candidate.display_mode,
     status: candidate.status,
     current_revision: candidate.current_revision,
@@ -341,6 +395,7 @@ function DebugProvenance({
 }) {
   const assistance = candidate.assistance;
   const model = assistance?.status === "PROPOSED" ? assistance.model_provenance : null;
+  const derivation = proposalDerivation(candidate);
   const errorCode = error instanceof ApiError ? error.code : null;
 
   return (
@@ -399,6 +454,10 @@ function DebugProvenance({
             </>
           ) : null}
           <div>
+            <dt>Proposal derivation</dt>
+            <dd>{derivation ? derivationDescription(derivation) : "NOT_AVAILABLE"}</dd>
+          </div>
+          <div>
             <dt>Candidate / decision status</dt>
             <dd>
               {candidate.status} · {candidate.decision?.status ?? "NO_DECISION"}
@@ -455,9 +514,17 @@ function CandidateWorkspace({ candidate }: { candidate: EquationReviewCandidate 
   const [renderError, setRenderError] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);
 
-  const reviewerMarkdown = canonicalObsidianMarkdown(reviewerLatex, displayMode);
+  const reviewerCanonicality = deriveProposalLatexBody(reviewerLatex);
+  const reviewerIsCanonical =
+    reviewerCanonicality.ok && reviewerCanonicality.status === "UNWRAPPED_EXACT";
+  const reviewerMarkdown = reviewerIsCanonical
+    ? canonicalObsidianMarkdown(reviewerLatex, displayMode)
+    : "";
   const proposal =
     candidate.assistance?.status === "PROPOSED" ? candidate.assistance : null;
+  const derivedProposal = proposal
+    ? deriveProposalLatexBody(proposal.proposed_latex)
+    : null;
 
   useEffect(() => {
     setReviewerLatex(initialReviewerLatex(candidate));
@@ -488,7 +555,11 @@ function CandidateWorkspace({ candidate }: { candidate: EquationReviewCandidate 
     rendered.obsidianMarkdown === reviewerMarkdown,
   );
   const canAccept = Boolean(
-    proposal && reviewerLatex.trim() && renderIsCurrent && !decision.isPending,
+    proposal &&
+    derivedProposal?.ok &&
+    reviewerIsCanonical &&
+    renderIsCurrent &&
+    !decision.isPending,
   );
 
   function invalidateRender() {
@@ -498,10 +569,22 @@ function CandidateWorkspace({ candidate }: { candidate: EquationReviewCandidate 
   }
 
   async function renderCurrentCorrection() {
-    setRendering(true);
     setRendered(null);
-    setRenderError(null);
     decision.reset();
+    if (!derivedProposal?.ok) {
+      setRenderError(
+        "The immutable proposal has no deterministic canonical math-body derivation. No render confirmation was created.",
+      );
+      return;
+    }
+    if (!reviewerIsCanonical) {
+      setRenderError(
+        "Reviewer LaTeX must be an exact NFC canonical math body without delimiters, carriage returns, or edge whitespace.",
+      );
+      return;
+    }
+    setRendering(true);
+    setRenderError(null);
     const latexAtRender = reviewerLatex;
     const modeAtRender = displayMode;
     const markdownAtRender = canonicalObsidianMarkdown(latexAtRender, modeAtRender);
@@ -543,7 +626,11 @@ function CandidateWorkspace({ candidate }: { candidate: EquationReviewCandidate 
   function submit(disposition: EquationReviewDisposition) {
     if (
       disposition === "ACCEPT_TRANSCRIPTION" &&
-      (!rendered || !renderIsCurrent || !proposal)
+      (!rendered ||
+        !renderIsCurrent ||
+        !proposal ||
+        !derivedProposal?.ok ||
+        !reviewerIsCanonical)
     ) {
       setRenderError(
         "Render the exact current correction before accepting it. No decision was sent.",
@@ -628,6 +715,15 @@ function CandidateWorkspace({ candidate }: { candidate: EquationReviewCandidate 
           </label>
         </header>
 
+        {derivedProposal && !derivedProposal.ok ? (
+          <p className="equation-derivation-warning">
+            Acceptance blocked: immutable proposal derivation is invalid ({" "}
+            {derivedProposal.reason}:{" "}
+            {derivationFailureMessages[derivedProposal.reason]}). Reject the candidate
+            or request correction rather than guessing.
+          </p>
+        ) : null}
+
         <div className="equation-source-preview-row">
           <label>
             <span>Reviewer LaTeX</span>
@@ -675,6 +771,13 @@ function CandidateWorkspace({ candidate }: { candidate: EquationReviewCandidate 
             )}
           </div>
         </div>
+        {reviewerLatex && !reviewerIsCanonical ? (
+          <p className="equation-derivation-warning">
+            Reviewer source is noncanonical (
+            {derivationDescription(reviewerCanonicality)}). Rendering and acceptance
+            remain disabled.
+          </p>
+        ) : null}
         <p className="equation-preview-policy">
           The browser derives canonical Markdown from reviewer LaTeX and display mode.
           It renders only a local KaTeX {RENDERER_VERSION} preview; the API owner
@@ -699,7 +802,12 @@ function CandidateWorkspace({ candidate }: { candidate: EquationReviewCandidate 
         <div className="equation-review-controls">
           <button
             className="button button--secondary"
-            disabled={!reviewerLatex.trim() || rendering || decision.isPending}
+            disabled={
+              !reviewerIsCanonical ||
+              !derivedProposal?.ok ||
+              rendering ||
+              decision.isPending
+            }
             onClick={() => void renderCurrentCorrection()}
             type="button"
           >

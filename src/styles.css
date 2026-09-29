@@ -4223,7 +4223,8 @@ a {
   grid-template-rows: auto 1fr;
 }
 
-.equation-source-preview-row > label {
+.equation-source-preview-row > label,
+.equation-source-preview-row > .equation-source-panel {
   border-right: 1px solid var(--line);
 }
 
@@ -4258,9 +4259,34 @@ a {
   box-shadow: inset 0 0 0 2px var(--green-bright);
 }
 
+.equation-source-code {
+  min-height: 140px;
+  margin: 0;
+  padding: 1rem;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+  color: #48524d;
+  background: #f8f8f5;
+  font-family: "DM Mono", monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .equation-source-preview-row textarea:read-only {
   color: #48524d;
   background: #f8f8f5;
+}
+
+.equation-raw-proposal-hash {
+  padding: 0.55rem 0.8rem;
+  overflow-wrap: anywhere;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  background: #f8f8f5;
+  font-family: "DM Mono", monospace;
+  font-size: 0.62rem;
+  line-height: 1.5;
 }
 
 .equation-math-preview,
@@ -4297,6 +4323,17 @@ a {
 .equation-section-empty {
   margin: 0;
   color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+
+.equation-derivation-warning {
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgb(163 58 50 / 24%);
+  border-radius: 9px;
+  color: var(--error);
+  background: rgb(163 58 50 / 6%);
   font-size: 0.72rem;
   line-height: 1.6;
 }
@@ -4464,7 +4501,8 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .equation-source-preview-row > label {
+  .equation-source-preview-row > label,
+  .equation-source-preview-row > .equation-source-panel {
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }

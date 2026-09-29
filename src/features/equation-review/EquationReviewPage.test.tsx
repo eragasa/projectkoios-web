@@ -10,8 +10,16 @@ import type {
 import { EquationReviewPage } from "./EquationReviewPage";
 
 const candidateId = "equation-candidate:sha256:review-1";
-const proposalLatex = "E = E_0 + \\frac{k^2}{2m}";
-const proposalSha256 = "d".repeat(64);
+const proposalLatex =
+  "$\\psi_{n\\mathbf{k}}(\\mathbf{r}) = u_{n\\mathbf{k}}(\\mathbf{r})\\mathrm{e}^{i\\mathbf{k}\\cdot\\mathbf{r}},$";
+const proposalBody =
+  "\\psi_{n\\mathbf{k}}(\\mathbf{r}) = u_{n\\mathbf{k}}(\\mathbf{r})\\mathrm{e}^{i\\mathbf{k}\\cdot\\mathbf{r}},";
+const proposalSha256 =
+  "7b2cea6aedc049b92dd9b87e7ee46f9d7e9906287e8172d052773d6881ad8bce";
+const reviewerLatexSha256 =
+  "2a26209ba3aa7d6b6879964255f07e22177811566ce5e830c434ea7230b6e0d5";
+const reviewerMarkdownSha256 =
+  "4d4ac48f44bc211c728fa23b72b696228455dcb72fc327e4c4735a6ba0cbc777";
 
 function candidate(
   overrides: Partial<EquationReviewCandidate> = {},
@@ -58,6 +66,17 @@ function candidate(
     expected_previous_revision: 0,
     decision: null,
     ...overrides,
+  };
+}
+
+function candidateWithProposal(rawProposal: string): EquationReviewCandidate {
+  const item = candidate();
+  if (item.assistance?.status !== "PROPOSED") {
+    throw new Error("test candidate must carry proposed assistance");
+  }
+  return {
+    ...item,
+    assistance: { ...item.assistance, proposed_latex: rawProposal },
   };
 }
 
@@ -140,13 +159,19 @@ describe("EquationReviewPage", () => {
       `/equation-reviews/${encodeURIComponent(candidateId)}/region`,
     );
 
-    const proposedLatex = screen.getByLabelText("Proposed LaTeX");
+    const rawProposalField = screen.getByLabelText("Proposed LaTeX");
     const proposedMarkdown = screen.getByLabelText(
       "Canonical proposed Obsidian Markdown",
     );
-    expect(proposedLatex).toHaveAttribute("readonly");
-    expect(proposedMarkdown).toHaveValue(`$$\n${proposalLatex}\n$$`);
+    expect(rawProposalField.textContent).toBe(proposalLatex);
+    expect(proposedMarkdown).toHaveValue(`$$\n${proposalBody}\n$$`);
+    expect((proposedMarkdown as HTMLTextAreaElement).value).not.toContain(
+      proposalLatex,
+    );
     expect(proposedMarkdown).toHaveAttribute("readonly");
+    expect(
+      screen.getByText(/Raw immutable source · proposal SHA-256/),
+    ).toHaveTextContent(proposalSha256);
     expect(
       screen.getByLabelText("Rendered proposed LaTeX").querySelector(".katex"),
     ).not.toBeNull();
@@ -154,14 +179,15 @@ describe("EquationReviewPage", () => {
       screen.getByLabelText("Rendered proposed Markdown").querySelector("math"),
     ).not.toBeNull();
     expect(
-      screen.getByText(/Preview only: rendered locally with KaTeX 0.16.47/),
+      screen.getByText(/Preview only: rendered locally from the derived math body/),
     ).toBeVisible();
+    expect(screen.getByText(/Derivation: STRIPPED_INLINE_DELIMITERS/)).toBeVisible();
   });
 
   test("shows schema-2 revision 1 as history and prepopulates its proposal for revision 2", async () => {
     renderPage(schema2Candidate());
 
-    expect(await screen.findByLabelText("Reviewer LaTeX")).toHaveValue(proposalLatex);
+    expect(await screen.findByLabelText("Reviewer LaTeX")).toHaveValue(proposalBody);
     expect(screen.getByText(/Schema 2 · revision 1 · legacy acceptance/)).toBeVisible();
     expect(
       screen.getByText(/legacy acceptance has no canonical accepted reviewer source/i),
@@ -171,6 +197,44 @@ describe("EquationReviewPage", () => {
       screen.getByRole("button", { name: "Accept reviewed transcription" }),
     ).toBeDisabled();
   });
+
+  test.each([
+    ["$E = mc^2", "UNMATCHED_DELIMITER"],
+    ["$$$E = mc^2$$$", "NESTED_OR_INTERNAL_DELIMITER"],
+    ["$ E = mc^2$", "EDGE_WHITESPACE"],
+    ["$E\r= mc^2$", "CARRIAGE_RETURN"],
+    ["$e\u0301 = 1$", "NON_NFC"],
+  ])(
+    "preserves but blocks noncanonical proposal %j (%s)",
+    async (rawProposal, reason) => {
+      const user = userEvent.setup();
+      renderPage(candidateWithProposal(rawProposal));
+
+      expect((await screen.findByLabelText("Proposed LaTeX")).textContent).toBe(
+        rawProposal,
+      );
+      expect(screen.getByLabelText("Canonical proposed Obsidian Markdown")).toHaveValue(
+        "",
+      );
+      expect(screen.getByLabelText("Reviewer LaTeX")).toHaveValue("");
+      expect(
+        screen.getByRole("button", { name: "Render current correction" }),
+      ).toBeDisabled();
+      expect(
+        screen.getByRole("button", { name: "Accept reviewed transcription" }),
+      ).toBeDisabled();
+      expect(
+        screen.queryByLabelText("Rendered proposed LaTeX"),
+      ).not.toBeInTheDocument();
+
+      const summary = screen.getByText("Debug & Provenance");
+      await user.click(summary);
+      const details = summary.closest("details") as HTMLElement;
+      expect(
+        within(details).getAllByText(new RegExp(`INVALID · ${reason}`))[0],
+      ).toBeVisible();
+    },
+  );
 
   test("enables acceptance only after exact dual rendering and invalidates previews on edit", async () => {
     const user = userEvent.setup();
@@ -234,20 +298,16 @@ describe("EquationReviewPage", () => {
             status: "ACCEPTED",
             disposition: "ACCEPT_TRANSCRIPTION",
             assistance_proposal_sha256: proposalSha256,
-            reviewer_latex: proposalLatex,
-            reviewer_latex_sha256:
-              "3274bfc231ff33d8751950fe4b6e65020c0714f8cd1939e7c75600915e8687f9",
+            reviewer_latex: proposalBody,
+            reviewer_latex_sha256: reviewerLatexSha256,
             display_mode: "DISPLAY",
-            obsidian_markdown: `$$\n${proposalLatex}\n$$`,
-            obsidian_markdown_sha256:
-              "c0f06a5ee6fbde17c456b0706e5a89c50c8019cae2a17a134571885a2fbd5479",
+            obsidian_markdown: `$$\n${proposalBody}\n$$`,
+            obsidian_markdown_sha256: reviewerMarkdownSha256,
             render_confirmation: {
               renderer_id: "katex",
               renderer_version: "0.16.47",
-              rendered_reviewer_latex_sha256:
-                "3274bfc231ff33d8751950fe4b6e65020c0714f8cd1939e7c75600915e8687f9",
-              rendered_obsidian_markdown_sha256:
-                "c0f06a5ee6fbde17c456b0706e5a89c50c8019cae2a17a134571885a2fbd5479",
+              rendered_reviewer_latex_sha256: reviewerLatexSha256,
+              rendered_obsidian_markdown_sha256: reviewerMarkdownSha256,
             },
             note: "Notation checked.",
             revision: 2,
@@ -284,15 +344,13 @@ describe("EquationReviewPage", () => {
     expect(putBody).toEqual({
       disposition: "ACCEPT_TRANSCRIPTION",
       assistance_proposal_sha256: proposalSha256,
-      reviewer_latex: proposalLatex,
+      reviewer_latex: proposalBody,
       display_mode: "DISPLAY",
       render_confirmation: {
         renderer_id: "katex",
         renderer_version: "0.16.47",
-        rendered_reviewer_latex_sha256:
-          "3274bfc231ff33d8751950fe4b6e65020c0714f8cd1939e7c75600915e8687f9",
-        rendered_obsidian_markdown_sha256:
-          "c0f06a5ee6fbde17c456b0706e5a89c50c8019cae2a17a134571885a2fbd5479",
+        rendered_reviewer_latex_sha256: reviewerLatexSha256,
+        rendered_obsidian_markdown_sha256: reviewerMarkdownSha256,
       },
       note: "Notation checked.",
       expected_previous_revision: 1,
@@ -302,7 +360,7 @@ describe("EquationReviewPage", () => {
     expect(putBody).not.toHaveProperty("updated_at_utc");
 
     expect(await screen.findByText(/Schema 3 · revision 2 · accepted/)).toBeVisible();
-    expect(screen.getByLabelText("Reviewer LaTeX")).toHaveValue(proposalLatex);
+    expect(screen.getByLabelText("Reviewer LaTeX")).toHaveValue(proposalBody);
     expect(screen.getByText("Next owner revision: 3")).toBeVisible();
   });
 
@@ -358,6 +416,7 @@ describe("EquationReviewPage", () => {
     expect(debug.getAllByText(/attempt-007/)[0]).toBeVisible();
     expect(debug.getAllByText(/equation-reader/)[0]).toBeVisible();
     expect(debug.getByText(/current 1 · expected previous 1/)).toBeVisible();
+    expect(debug.getAllByText(/STRIPPED_INLINE_DELIMITERS/)[0]).toBeVisible();
     expect(debug.getByText("Bounded contract JSON")).toBeVisible();
     expect(details).not.toHaveTextContent("/Users/");
     expect(details).not.toHaveTextContent("proposed_latex");
@@ -365,6 +424,10 @@ describe("EquationReviewPage", () => {
   });
 
   test.each([
+    [
+      "EQUATION_REVIEW_REVIEWER_LATEX_NONCANONICAL",
+      "The reviewer LaTeX is not a canonical NFC math body",
+    ],
     [
       "EQUATION_REVIEW_RENDER_STALE",
       "Stale render: the rendered Markdown no longer matches",

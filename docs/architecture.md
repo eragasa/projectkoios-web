@@ -154,10 +154,13 @@ The equation-review workspace consumes the owner-backed schema-3 contract in the
 deterministic control OpenAPI document. Queue, region-image, decision, render
 confirmation, provenance, status, and typed failure DTOs come from
 `src/api/schema.generated.ts`; the adopted boundary is documented in
-[equation-review-api-contract.md](equation-review-api-contract.md). The browser keeps
-reviewer LaTeX as editable source, derives read-only Obsidian/MathJax-compatible Markdown,
-and uses local KaTeX `0.16.47` only for an explicit, trust-disabled preview. Acceptance
-binds hashes of the exact rendered inputs while the owner recomputes canonical Markdown.
+[equation-review-api-contract.md](equation-review-api-contract.md). The browser preserves
+the assisted proposal as exact immutable source, derives a reviewer body only through a
+strict single-wrapper/no-normalization rule, and blocks ambiguous or noncanonical source
+instead of guessing. It keeps reviewer LaTeX as editable source, derives read-only
+Obsidian/MathJax-compatible Markdown, and uses local KaTeX `0.16.47` only for an explicit,
+trust-disabled preview. Acceptance binds hashes of the exact rendered inputs while the
+owner recomputes canonical Markdown.
 A 404 means the requested identity is not configured, while typed 409 and 503 responses
 preserve conflict and owner-availability semantics. No production fixture or filesystem
 fallback supplies corpus data.

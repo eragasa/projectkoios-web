@@ -180,13 +180,22 @@ From **Control center**, open **Equation review** to request owner-backed equati
 candidates for `pizzi2020`. The selected candidate shows its full-width source-region
 image first, then a **Proposed** comparison and a **Reviewer** comparison. Each comparison
 places LaTeX and canonical Obsidian Markdown source beside a rendered preview. Assisted
-text is always labeled as an unaccepted proposal.
+text is always labeled as an unaccepted proposal. Its raw immutable source and hash are
+displayed exactly, even when the proposal already contains math delimiters.
+
+For proposed preview and prefill, the browser strips exactly one matching outer `$...$`
+or `$$...$$` pair (with only the canonical matching display line feeds) and otherwise
+leaves an unwrapped body exact. It never trims or Unicode-normalizes. Mixed, unmatched,
+double/nested, empty, edge-whitespace, carriage-return, non-NFC, or asymmetric wrapper
+input is flagged and cannot be rendered or accepted. Proposed Markdown wraps only the
+derived body, so proposal delimiters are never nested.
 
 Reviewer LaTeX starts from the latest accepted schema-3 reviewer source. A legacy schema-2
-acceptance remains visible in stored history but has no accepted source, so the current
-proposal initializes the editor. The canonical reviewer Markdown is derived read-only
-text. KaTeX `0.16.47` renders local previews with trust disabled and strict errors; those
-previews do not replace the canonical Obsidian/MathJax-compatible Markdown.
+acceptance remains visible in stored history but has no accepted source, so the
+successfully derived proposal body initializes the editor. The canonical reviewer
+Markdown is derived read-only text. KaTeX `0.16.47` renders local previews with trust
+disabled and strict errors; those previews do not replace the canonical
+Obsidian/MathJax-compatible Markdown.
 
 Choose **Render current correction** after editing. **Accept reviewed transcription**
 remains disabled until both exact current representations render successfully and their
@@ -201,13 +210,13 @@ owner-backed response is shown as recorded, with its schema, revision ID/number,
 and owner time.
 
 The collapsed **Debug & Provenance** pane shows bounded, read-only identities, hashes,
-model/method fields, revisions, statuses, storage metadata, renderer confirmation, typed
-error code, and contract JSON. It excludes transcription bodies, extracted text, paths,
-credentials, and secrets.
+model/method fields, proposal-derivation status, revisions, statuses, storage metadata,
+renderer confirmation, typed error code, and contract JSON. It excludes transcription
+bodies, extracted text, paths, credentials, and secrets.
 
-Stale render and edit-after-render are distinguished from stale proposal, evidence,
-revision, and concurrent-decision conflicts. Partial output and owner unavailability
-never imply a save. A 404 means `pizzi2020` is not configured. The route does not invent
+Noncanonical reviewer LaTeX, stale render, and edit-after-render are distinguished from
+stale proposal, evidence, revision, and concurrent-decision conflicts. Partial output and
+owner unavailability never imply a save. A 404 means `pizzi2020` is not configured. The route does not invent
 fixture data or access corpus files. See the
 [equation-review API contract](equation-review-api-contract.md) for the exact boundary.
 

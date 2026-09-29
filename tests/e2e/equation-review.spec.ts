@@ -1,11 +1,15 @@
 import { expect, test } from "@playwright/test";
 
 const candidateId = "equation:pizzi2020:page-7:region-1";
-const proposalSha256 = "d".repeat(64);
-const proposalLatex = "E = E_0 + \\frac{k^2}{2m}";
-const latexSha256 = "3274bfc231ff33d8751950fe4b6e65020c0714f8cd1939e7c75600915e8687f9";
+const proposalSha256 =
+  "7b2cea6aedc049b92dd9b87e7ee46f9d7e9906287e8172d052773d6881ad8bce";
+const proposalLatex =
+  "$\\psi_{n\\mathbf{k}}(\\mathbf{r}) = u_{n\\mathbf{k}}(\\mathbf{r})\\mathrm{e}^{i\\mathbf{k}\\cdot\\mathbf{r}},$";
+const proposalBody =
+  "\\psi_{n\\mathbf{k}}(\\mathbf{r}) = u_{n\\mathbf{k}}(\\mathbf{r})\\mathrm{e}^{i\\mathbf{k}\\cdot\\mathbf{r}},";
+const latexSha256 = "2a26209ba3aa7d6b6879964255f07e22177811566ce5e830c434ea7230b6e0d5";
 const markdownSha256 =
-  "c0f06a5ee6fbde17c456b0706e5a89c50c8019cae2a17a134571885a2fbd5479";
+  "4d4ac48f44bc211c728fa23b72b696228455dcb72fc327e4c4735a6ba0cbc777";
 
 const legacyDecision = {
   schema_version: 2,
@@ -99,7 +103,7 @@ test("renders and records an exact schema-3 correction without browser Markdown 
     expect(route.request().postDataJSON()).toEqual({
       disposition: "ACCEPT_TRANSCRIPTION",
       assistance_proposal_sha256: proposalSha256,
-      reviewer_latex: proposalLatex,
+      reviewer_latex: proposalBody,
       display_mode: "DISPLAY",
       render_confirmation: {
         renderer_id: "katex",
@@ -115,10 +119,10 @@ test("renders and records an exact schema-3 correction without browser Markdown 
       status: "ACCEPTED",
       disposition: "ACCEPT_TRANSCRIPTION",
       assistance_proposal_sha256: proposalSha256,
-      reviewer_latex: proposalLatex,
+      reviewer_latex: proposalBody,
       reviewer_latex_sha256: latexSha256,
       display_mode: "DISPLAY",
-      obsidian_markdown: `$$\n${proposalLatex}\n$$`,
+      obsidian_markdown: `$$\n${proposalBody}\n$$`,
       obsidian_markdown_sha256: markdownSha256,
       render_confirmation: {
         renderer_id: "katex",
@@ -137,8 +141,17 @@ test("renders and records an exact schema-3 correction without browser Markdown 
   await page.goto("/control/equation-review");
   await expect(page.getByText("Unaccepted assisted proposal")).toBeVisible();
   await expect(page.getByText(/Schema 2 · revision 1/)).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Reviewer LaTeX" })).toHaveValue(
+  await expect(page.getByLabel("Proposed LaTeX", { exact: true })).toHaveText(
     proposalLatex,
+  );
+  await expect(page.getByLabel("Canonical proposed Obsidian Markdown")).toHaveValue(
+    `$$\n${proposalBody}\n$$`,
+  );
+  await expect(
+    page.getByLabel("Rendered proposed LaTeX").locator(".katex"),
+  ).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Reviewer LaTeX" })).toHaveValue(
+    proposalBody,
   );
 
   const accept = page.getByRole("button", { name: "Accept reviewed transcription" });
@@ -175,7 +188,7 @@ test("editing after rendering immediately clears previews and disables acceptanc
 
   await page
     .getByRole("textbox", { name: "Reviewer LaTeX" })
-    .fill(`${proposalLatex} + V`);
+    .fill(`${proposalBody} + V`);
   await expect(accept).toBeDisabled();
   await expect(page.getByLabel("Rendered reviewer LaTeX")).toHaveCount(0);
   await expect(
