@@ -20,6 +20,19 @@ interface runs at <http://127.0.0.1:5173> and proxies API requests to
 startup uses an ignored empty runtime catalog from `.run/`; explicit catalog paths and
 existing files are never overwritten.
 
+The private `pizzi2020` equation owner is disabled by default. Opt in only with an
+absolute existing document-package directory:
+
+```bash
+KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT=/absolute/path/to/document-package \
+  npm run start:local
+```
+
+In that mode startup also requires sibling `projectkoios-applications`,
+`projectkoios-ingestion`, and `projectkoios-references` source trees (or explicit
+`KOIOS_APPLICATIONS_REPO`, `KOIOS_INGESTION_REPO`, and `KOIOS_REFERENCES_REPO` values).
+Startup never guesses, defaults, or scans for a corpus path.
+
 Stop both managed processes with:
 
 ```bash
@@ -53,6 +66,9 @@ npm run build:public
 npm run build:control
 npm run test:e2e
 ```
+
+`npm test` includes the bounded managed-startup shell smoke suite. Run it alone with
+`npm run test:startup`.
 
 ## Documentation
 

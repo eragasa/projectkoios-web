@@ -34,6 +34,21 @@ Explicit `KOIOS_COURSE_CATALOG` and `KOIOS_PROJECT_CATALOG` paths are never repl
 and existing files are never overwritten. The script refuses to use a port occupied by
 an unmanaged process.
 
+Equation-owner packages are not required or added to `PYTHONPATH` during ordinary
+startup. To enable the private `pizzi2020` equation-review owner, explicitly provide an
+absolute existing document-package directory:
+
+```bash
+KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT=/absolute/path/to/document-package \
+  npm run start:local
+```
+
+Only this opt-in mode resolves and requires the applications, ingestion, and references
+Python source trees. Their sibling defaults can be overridden with
+`KOIOS_APPLICATIONS_REPO`, `KOIOS_INGESTION_REPO`, and `KOIOS_REFERENCES_REPO`. Paths
+containing spaces are supported. Startup does not supply a default document root and
+does not search for one.
+
 To open the browser automatically on macOS:
 
 ```bash
@@ -84,21 +99,25 @@ display operational health.
 
 The scripts accept these optional environment variables:
 
-| Variable                    | Default                                 |
-| --------------------------- | --------------------------------------- |
-| `KOIOS_API_HOST`            | `127.0.0.1`                             |
-| `KOIOS_API_PORT`            | `8000`                                  |
-| `KOIOS_WEB_HOST`            | `127.0.0.1`                             |
-| `KOIOS_WEB_PORT`            | `5173`                                  |
-| `KOIOS_RUN_DIR`             | `.run` inside this repository           |
-| `KOIOS_API_REPO`            | sibling `projectkoios-api`              |
-| `KOIOS_CORE_REPO`           | sibling `projectkoios`                  |
-| `KOIOS_COURSE_CATALOG`      | core catalog, or empty runtime fallback |
-| `KOIOS_PROJECT_CATALOG`     | core catalog, or empty runtime fallback |
-| `KOIOS_SEARCH_REPO`         | sibling `projectkoios-search`           |
-| `KOIOS_OBSIDIAN_REPO`       | sibling `projectkoios-obsidian`         |
-| `KOIOS_GITHUB_REPOSITORIES` | API and web repositories                |
-| `KOIOS_OPEN_BROWSER`        | `0`                                     |
+| Variable                                        | Default                                 |
+| ----------------------------------------------- | --------------------------------------- |
+| `KOIOS_API_HOST`                                | `127.0.0.1`                             |
+| `KOIOS_API_PORT`                                | `8000`                                  |
+| `KOIOS_WEB_HOST`                                | `127.0.0.1`                             |
+| `KOIOS_WEB_PORT`                                | `5173`                                  |
+| `KOIOS_RUN_DIR`                                 | `.run` inside this repository           |
+| `KOIOS_API_REPO`                                | sibling `projectkoios-api`              |
+| `KOIOS_CORE_REPO`                               | sibling `projectkoios`                  |
+| `KOIOS_COURSE_CATALOG`                          | core catalog, or empty runtime fallback |
+| `KOIOS_PROJECT_CATALOG`                         | core catalog, or empty runtime fallback |
+| `KOIOS_SEARCH_REPO`                             | sibling `projectkoios-search`           |
+| `KOIOS_OBSIDIAN_REPO`                           | sibling `projectkoios-obsidian`         |
+| `KOIOS_APPLICATIONS_REPO`                       | sibling `projectkoios-applications`     |
+| `KOIOS_INGESTION_REPO`                          | sibling `projectkoios-ingestion`        |
+| `KOIOS_REFERENCES_REPO`                         | sibling `projectkoios-references`       |
+| `KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT` | unset; equation owner disabled          |
+| `KOIOS_GITHUB_REPOSITORIES`                     | API and web repositories                |
+| `KOIOS_OPEN_BROWSER`                            | `0`                                     |
 
 The shell scripts target macOS and Unix-like development systems. They explicitly
 start both processes in the `control` profile and bind them to loopback by default.

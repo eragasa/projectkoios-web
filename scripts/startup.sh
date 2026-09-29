@@ -10,6 +10,11 @@ API_REPO="${KOIOS_API_REPO:-$REPOS_ROOT/projectkoios-api}"
 CORE_REPO="${KOIOS_CORE_REPO:-$REPOS_ROOT/projectkoios}"
 SEARCH_REPO="${KOIOS_SEARCH_REPO:-$REPOS_ROOT/projectkoios-search}"
 OBSIDIAN_REPO="${KOIOS_OBSIDIAN_REPO:-$REPOS_ROOT/projectkoios-obsidian}"
+APPLICATIONS_REPO="${KOIOS_APPLICATIONS_REPO:-$REPOS_ROOT/projectkoios-applications}"
+INGESTION_REPO="${KOIOS_INGESTION_REPO:-$REPOS_ROOT/projectkoios-ingestion}"
+REFERENCES_REPO="${KOIOS_REFERENCES_REPO:-$REPOS_ROOT/projectkoios-references}"
+EQUATION_REVIEW_OWNER_ENABLED=0
+EQUATION_REVIEW_DOCUMENT_ROOT=""
 API_HOST="${KOIOS_API_HOST:-127.0.0.1}"
 API_PORT="${KOIOS_API_PORT:-8000}"
 WEB_HOST="${KOIOS_WEB_HOST:-127.0.0.1}"
@@ -106,6 +111,28 @@ for directory in "$CORE_REPO" "$SEARCH_REPO" "$OBSIDIAN_REPO"; do
   fi
 done
 
+if [ "${KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT+x}" = x ]; then
+  EQUATION_REVIEW_DOCUMENT_ROOT="$KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT"
+  case "$EQUATION_REVIEW_DOCUMENT_ROOT" in
+    /*) ;;
+    *)
+      echo "KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT must be an absolute existing directory." >&2
+      exit 1
+      ;;
+  esac
+  if [ ! -d "$EQUATION_REVIEW_DOCUMENT_ROOT" ]; then
+    echo "KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT must be an absolute existing directory: $EQUATION_REVIEW_DOCUMENT_ROOT" >&2
+    exit 1
+  fi
+  for directory in "$APPLICATIONS_REPO" "$INGESTION_REPO" "$REFERENCES_REPO"; do
+    if [ ! -d "$directory/src/python" ]; then
+      echo "Equation-review owner source tree not found: $directory/src/python" >&2
+      exit 1
+    fi
+  done
+  EQUATION_REVIEW_OWNER_ENABLED=1
+fi
+
 mkdir -p "$RUN_DIR"
 
 if [ "${KOIOS_COURSE_CATALOG+x}" = x ]; then
@@ -144,13 +171,23 @@ else
   fi
 
   API_PYTHONPATH="$API_REPO/src/python:$CORE_REPO/src/python:$SEARCH_REPO/src/python:$OBSIDIAN_REPO/src/python"
+  API_ENV=(
+    "PYTHONPATH=$API_PYTHONPATH"
+    "KOIOS_DEPLOYMENT_PROFILE=control"
+    "KOIOS_COURSE_CATALOG=$COURSE_CATALOG"
+    "KOIOS_PROJECT_CATALOG=$PROJECT_CATALOG"
+    "KOIOS_GITHUB_REPOSITORIES=${KOIOS_GITHUB_REPOSITORIES:-eragasa/projectkoios-api,eragasa/projectkoios-web}"
+  )
+  if [ "$EQUATION_REVIEW_OWNER_ENABLED" -eq 1 ]; then
+    API_PYTHONPATH="$API_PYTHONPATH:$APPLICATIONS_REPO/src/python:$INGESTION_REPO/src/python:$REFERENCES_REPO/src/python"
+    API_ENV[0]="PYTHONPATH=$API_PYTHONPATH"
+    API_ENV+=(
+      "KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT=$EQUATION_REVIEW_DOCUMENT_ROOT"
+    )
+  fi
   (
     cd "$API_REPO"
-    nohup env PYTHONPATH="$API_PYTHONPATH" \
-      KOIOS_DEPLOYMENT_PROFILE=control \
-      KOIOS_COURSE_CATALOG="$COURSE_CATALOG" \
-      KOIOS_PROJECT_CATALOG="$PROJECT_CATALOG" \
-      KOIOS_GITHUB_REPOSITORIES="${KOIOS_GITHUB_REPOSITORIES:-eragasa/projectkoios-api,eragasa/projectkoios-web}" \
+    nohup env "${API_ENV[@]}" \
       "$API_PYTHON" -m uvicorn projectkoios.api.main:app \
       --host "$API_HOST" --port "$API_PORT" \
       >>"$API_LOG" 2>&1 </dev/null &
