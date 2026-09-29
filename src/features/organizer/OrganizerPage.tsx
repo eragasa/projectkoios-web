@@ -1,48 +1,30 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 
-import {
-  apiClient,
-  type OrganizerControlRequest,
-  type OrganizerEvent,
-} from "../../api/client";
+import { apiClient, type OrganizerControlRequest } from "../../api/client";
 
 const organizerStatusKey = ["organizer", "status"] as const;
+const organizerProposalsKey = ["organizer", "proposals"] as const;
 
 export function OrganizerPage() {
   const queryClient = useQueryClient();
-  const [events, setEvents] = useState<OrganizerEvent[]>([]);
-  const [streamError, setStreamError] = useState(false);
   const status = useQuery({
     queryKey: organizerStatusKey,
     queryFn: ({ signal }) => apiClient.organizerStatus(signal),
     refetchInterval: 3_000,
   });
+  const proposals = useQuery({
+    queryKey: organizerProposalsKey,
+    queryFn: ({ signal }) => apiClient.organizerProposals(200, signal),
+    refetchInterval: 5_000,
+  });
   const control = useMutation({
     mutationFn: (request: OrganizerControlRequest) =>
       apiClient.setOrganizerMode(request),
-    onSuccess: (value) => {
+    onSuccess: async (value) => {
       queryClient.setQueryData(organizerStatusKey, value);
+      await queryClient.invalidateQueries({ queryKey: organizerProposalsKey });
     },
   });
-
-  useEffect(() => {
-    const source = new EventSource(apiClient.organizerEventStreamUrl(0));
-    source.addEventListener("organizer", (event) => {
-      const value = JSON.parse((event as MessageEvent<string>).data) as OrganizerEvent;
-      setEvents((current) => {
-        if (current.some((item) => item.sequence === value.sequence)) {
-          return current;
-        }
-        return [...current, value].slice(-100);
-      });
-      setStreamError(false);
-    });
-    source.onerror = () => {
-      setStreamError(true);
-    };
-    return () => source.close();
-  }, []);
 
   const value = status.data;
   return (
@@ -66,8 +48,8 @@ export function OrganizerPage() {
       <section className="control-notice" aria-label="Organizer safety boundary">
         <strong>Proposal-only boundary.</strong>
         <span>
-          Cloud roots are read-only. Local Ollama proposals require human review before
-          any organization plan can be applied.
+          Cloud roots are read-only. Local categorization proposals require human review
+          before any organization plan can be applied.
         </span>
       </section>
 
@@ -97,23 +79,34 @@ export function OrganizerPage() {
         </section>
       ) : null}
 
-      <section className="organizer-events" aria-labelledby="organizer-events-title">
+      <section className="organizer-events" aria-labelledby="organizer-proposals-title">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Live local event stream</p>
-            <h2 id="organizer-events-title">Agent activity</h2>
+            <p className="eyebrow">Bounded polling snapshot</p>
+            <h2 id="organizer-proposals-title">Latest proposals</h2>
           </div>
-          <span>{streamError ? "Reconnecting…" : "Connected"}</span>
+          <span>
+            {proposals.data
+              ? `${proposals.data.proposals.length}/${proposals.data.total} shown`
+              : "Loading…"}
+          </span>
         </div>
-        {events.length === 0 ? (
-          <p>No organizer events have been recorded.</p>
+        {proposals.isError ? (
+          <p role="alert">Unable to read organizer proposals.</p>
+        ) : proposals.data?.proposals.length === 0 ? (
+          <p>No organizer proposals are available.</p>
         ) : (
           <ol>
-            {[...events].reverse().map((event) => (
-              <li key={event.sequence}>
-                <strong>{event.kind.replaceAll("_", " ")}</strong>
-                <span>{event.message}</span>
-                <time>{event.occurred_at}</time>
+            {proposals.data?.proposals.map((proposal) => (
+              <li key={proposal.file_id}>
+                <strong>{proposal.name}</strong>
+                <span>
+                  {proposal.life_domain} · {proposal.para_category} ·{" "}
+                  {proposal.suggested_group}
+                  {proposal.course_code ? ` · ${proposal.course_code}` : ""}
+                </span>
+                <code>{proposal.relative_path}</code>
+                <small>{proposal.rationale}</small>
               </li>
             ))}
           </ol>

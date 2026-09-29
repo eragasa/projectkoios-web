@@ -4095,6 +4095,17 @@ a {
   font-weight: 700;
 }
 
+.equation-review-error {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.equation-review-error .error-message {
+  color: var(--error);
+}
+
 @media (max-width: 900px) {
   .equation-review-workspace,
   .equation-evidence-grid {

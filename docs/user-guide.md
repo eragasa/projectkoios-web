@@ -73,7 +73,8 @@ npm run dev:control
 
 Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/courses`,
 `/api/projects`, `/api/publications`, `/github/tasks`, `/search`, `/citation-reviews`,
-`/equation-reviews`, `/literature-review`, `/docs`, and `/openapi.json` to the local API, avoiding a
+`/equation-reviews`, `/organizer`, `/transcript-reviews`, `/literature-review`, `/docs`,
+and `/openapi.json` to the local API, avoiding a
 development CORS dependency.
 
 The control header reports whether the API is available. The public profile does not
@@ -183,13 +184,17 @@ human decision.
 
 Assisted text is always labeled as an unaccepted proposal. Accepting it requires the
 operator to select **Accept this assisted transcription** and save a decision bound to
-the proposal SHA-256. Reject and correction-request dispositions remain separate.
+the proposal SHA-256. Reject and correction-request dispositions remain separate. Every
+write also sends the displayed previous revision (`0` before the first decision), but
+never a browser-generated receipt or review timestamp.
 
-The current API does not implement this capability, so the normal route displays an
-unavailable state and does not invent fixture data, access corpus files, or simulate a
-saved decision. See the [provisional API contract](equation-review-api-contract.md) for
-the exact integration boundary. After the API owner adopts that contract, regenerate
-the OpenAPI types and replace the provisional browser projection.
+Only a successful owner-backed response is shown as recorded, with its returned revision
+and UTC time. Stale proposal, evidence, revision, and different concurrent decisions are
+shown as typed conflicts. Partial owner output and owner unavailability remain typed
+unavailable states and never imply that the decision was saved. A 404 means `pizzi2020`
+is not configured. The route does not invent fixture data or access corpus files. See
+the [equation-review API contract](equation-review-api-contract.md) for the exact
+boundary.
 
 ## Citation review
 
@@ -231,16 +236,17 @@ browser bundle.
 
 ## Generate OpenAPI types
 
-With the API running:
+Generate from the reviewed deterministic control OpenAPI document:
 
 ```bash
-npm run generate:api
+KOIOS_OPENAPI_URL=/path/to/projectkoios-api/openapi/control.openapi.json \
+  npm run generate:api
 ```
 
-This writes `src/api/schema.generated.ts`. Generated files must be reviewed when
-API contracts change. The API client consumes the generated publication and control contracts. Generate
-from a control-profile OpenAPI document so the schema contains the full typed
-superset.
+This writes `src/api/schema.generated.ts`. Generated files must be reviewed when API
+contracts change. The API client consumes the generated publication and control
+contracts. Generate from a control-profile OpenAPI document so the schema contains the
+full typed superset.
 
 ## Run checks
 

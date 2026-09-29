@@ -6,6 +6,7 @@ import {
   apiClient,
   type EquationReviewCandidate,
   type EquationReviewDisposition,
+  type EquationReviewFailureCode,
 } from "../../api/client";
 
 const documentId = "pizzi2020";
@@ -15,6 +16,34 @@ const dispositionLabels: Record<EquationReviewDisposition, string> = {
   REJECT_CANDIDATE: "Reject this equation candidate",
   REVISION_REQUIRED: "Request a corrected transcription",
 };
+
+const failureMessages: Record<EquationReviewFailureCode, string> = {
+  EQUATION_REVIEW_PROPOSAL_STALE:
+    "The assisted proposal changed. Reload the candidate before reviewing it again.",
+  EQUATION_REVIEW_EVIDENCE_STALE:
+    "The immutable source evidence changed. Reload the candidate before reviewing it again.",
+  EQUATION_REVIEW_REVISION_STALE:
+    "A newer human revision exists. Reload the candidate before recording another decision.",
+  EQUATION_REVIEW_CONCURRENT_DECISION:
+    "A different decision won concurrently. Reload the candidate to inspect the recorded revision.",
+  EQUATION_REVIEW_PARTIAL_OUTPUT:
+    "The equation-review owner returned partial output. No saved decision has been confirmed.",
+  EQUATION_REVIEW_OWNER_UNAVAILABLE:
+    "The equation-review owner is unavailable. No saved decision has been confirmed.",
+};
+
+function equationFailureMessage(error: unknown): string {
+  if (
+    error instanceof ApiError &&
+    error.code !== undefined &&
+    error.code in failureMessages
+  ) {
+    return failureMessages[error.code as EquationReviewFailureCode];
+  }
+  return error instanceof Error
+    ? error.message
+    : "The human review could not be saved.";
+}
 
 function shortHash(value: string): string {
   return `${value.slice(0, 12)}…${value.slice(-8)}`;
@@ -40,6 +69,7 @@ function ReviewForm({ candidate }: { candidate: EquationReviewCandidate }) {
             ? (proposedAssistance?.proposal_sha256 ?? null)
             : null,
         note,
+        expected_previous_revision: candidate.decision?.revision ?? 0,
       });
     },
     onSuccess: async () => {
@@ -58,6 +88,13 @@ function ReviewForm({ candidate }: { candidate: EquationReviewCandidate }) {
     if (canSave) {
       decision.mutate();
     }
+  }
+
+  async function reloadEvidence() {
+    await queryClient.invalidateQueries({
+      queryKey: ["equation-reviews", documentId],
+    });
+    decision.reset();
   }
 
   return (
@@ -95,7 +132,7 @@ function ReviewForm({ candidate }: { candidate: EquationReviewCandidate }) {
         <span>Reviewer note</span>
         <textarea
           rows={3}
-          maxLength={4000}
+          maxLength={10000}
           value={note}
           onChange={(event) => {
             setNote(event.target.value);
@@ -106,9 +143,17 @@ function ReviewForm({ candidate }: { candidate: EquationReviewCandidate }) {
       </label>
       <div className="equation-review-actions__footer">
         <span>
-          {candidate.decision
-            ? `Existing human decision · revision ${candidate.decision.revision}`
-            : "No human decision recorded"}
+          {candidate.decision ? (
+            <>
+              Existing human decision · revision {candidate.decision.revision} ·
+              recorded at{" "}
+              <time dateTime={candidate.decision.updated_at_utc}>
+                {candidate.decision.updated_at_utc}
+              </time>
+            </>
+          ) : (
+            "No human decision recorded"
+          )}
         </span>
         <button
           className="button button--primary"
@@ -119,13 +164,29 @@ function ReviewForm({ candidate }: { candidate: EquationReviewCandidate }) {
         </button>
       </div>
       <div aria-live="polite">
-        {decision.isSuccess ? <p>Human review saved by the API.</p> : null}
-        {decision.isError ? (
-          <p className="error-message">
-            {decision.error instanceof Error
-              ? decision.error.message
-              : "The human review could not be saved."}
+        {decision.isSuccess ? (
+          <p>
+            Owner recorded human review revision {decision.data.revision} at{" "}
+            <time dateTime={decision.data.updated_at_utc}>
+              {decision.data.updated_at_utc}
+            </time>
+            .
           </p>
+        ) : null}
+        {decision.isError ? (
+          <div className="equation-review-error" role="alert">
+            <p className="error-message">{equationFailureMessage(decision.error)}</p>
+            {decision.error instanceof ApiError &&
+            (decision.error.status === 409 || decision.error.status === 503) ? (
+              <button
+                className="button button--secondary"
+                type="button"
+                onClick={reloadEvidence}
+              >
+                Reload candidate evidence
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
     </form>
@@ -259,17 +320,25 @@ export function EquationReviewPage() {
   }
 
   if (queue.isError) {
-    const unsupported = queue.error instanceof ApiError && queue.error.status === 404;
+    const notConfigured = queue.error instanceof ApiError && queue.error.status === 404;
+    const heading =
+      queue.error instanceof ApiError &&
+      queue.error.code === "EQUATION_REVIEW_PARTIAL_OUTPUT"
+        ? "Equation review evidence incomplete"
+        : queue.error instanceof ApiError &&
+            queue.error.code === "EQUATION_REVIEW_OWNER_UNAVAILABLE"
+          ? "Equation review owner unavailable"
+          : "Equation review unavailable";
     return (
       <div className="control-dashboard equation-review-page">
         <header className="control-heading">
           <div>
             <p className="eyebrow">Private workspace · API boundary</p>
-            <h1>Equation review unavailable</h1>
+            <h1>{heading}</h1>
             <p>
-              {unsupported
-                ? "The web review boundary is ready, but the configured API does not implement equation review yet."
-                : "Equation candidates could not be loaded from the configured API."}
+              {notConfigured
+                ? "The configured API did not provide the pizzi2020 equation-review identity."
+                : equationFailureMessage(queue.error)}
             </p>
           </div>
           <div className="operator-card">
@@ -279,10 +348,10 @@ export function EquationReviewPage() {
           </div>
         </header>
         <section className="control-notice" aria-label="Equation API requirement">
-          <strong>Required API contract</strong>
+          <strong>Owner-backed API required</strong>
           <span>
             GET <code>/equation-reviews?document_id=pizzi2020</code>, region image, and
-            decision endpoints must be supplied by the owning API.
+            decision endpoints must return complete owner-validated evidence.
           </span>
         </section>
       </div>

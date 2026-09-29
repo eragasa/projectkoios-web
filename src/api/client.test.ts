@@ -175,7 +175,7 @@ test("citation decisions use the private review endpoint", async () => {
   );
 });
 
-test("equation reviews request the provisional document queue contract", async () => {
+test("equation reviews request the generated document queue contract", async () => {
   fetchMock.mockResolvedValue(
     new Response(
       JSON.stringify({ document_id: "pizzi2020", total: 0, decided: 0, items: [] }),
@@ -218,6 +218,7 @@ test("equation review decisions bind acceptance to an assisted proposal", async 
     disposition: "ACCEPT_TRANSCRIPTION",
     assistance_proposal_sha256: "d".repeat(64),
     note: "Checked.",
+    expected_previous_revision: 0,
   });
 
   expect(fetchMock).toHaveBeenCalledWith(
@@ -228,11 +229,29 @@ test("equation review decisions bind acceptance to an assisted proposal", async 
         disposition: "ACCEPT_TRANSCRIPTION",
         assistance_proposal_sha256: "d".repeat(64),
         note: "Checked.",
+        expected_previous_revision: 0,
       }),
     }),
   );
   expect(client.equationRegionImageUrl("equation:pizzi2020:1")).toBe(
     "/equation-reviews/equation%3Apizzi2020%3A1/region",
+  );
+});
+
+test("organizer proposals use the bounded polling endpoint", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(JSON.stringify({ total: 0, complete: true, proposals: [] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await client.organizerProposals(200);
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/organizer/proposals?limit=200",
+    expect.objectContaining({ signal: undefined }),
   );
 });
 
@@ -291,6 +310,32 @@ test("provided references send a PDF with bounded metadata", async () => {
   expect(body.get("claim_id")).toBe("C-001");
   expect(body.get("citation_label")).toBe("ExampleAuthor2024");
   expect(body.get("reference_pdf")).toBe(file);
+});
+
+test("typed API errors preserve status, code, and detail", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        code: "EQUATION_REVIEW_REVISION_STALE",
+        detail: "equation review revision is stale",
+      }),
+      {
+        status: 409,
+        headers: { "Content-Type": "application/json" },
+      },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  const request = client.equationReviews("pizzi2020");
+
+  await expect(request).rejects.toEqual(
+    new ApiError(
+      409,
+      "equation review revision is stale",
+      "EQUATION_REVIEW_REVISION_STALE",
+    ),
+  );
 });
 
 test("API errors preserve status and detail", async () => {

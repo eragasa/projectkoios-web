@@ -141,7 +141,8 @@ GET /openapi.json
 ```
 
 The control API additionally exposes a live read-only GitHubTask projection plus
-private search, citation-review, and literature-review contracts.
+private search, organizer, transcript-review, equation-review, citation-review, and
+literature-review contracts.
 `src/api/schema.generated.ts` is generated from the control OpenAPI document, and
 `src/api/client.ts` consumes its request and response types. One typed client can
 support the superset while profile routing prevents public UI access. The API schema
@@ -149,11 +150,13 @@ remains authoritative; browser types are projections. A small refinement is
 used for `/health` because the current backend schema exposes a generic string
 mapping rather than a named health model.
 
-The current API has no equation-review endpoints. The control UI therefore uses the
-provisional browser projection in `src/api/equationReviewContract.ts` and reports the
-capability as unavailable when the queue endpoint returns 404. The minimal proposed
-HTTP boundary is documented in [equation-review-api-contract.md](equation-review-api-contract.md).
-No production fixture or filesystem fallback supplies corpus data.
+The equation-review workspace consumes the owner-backed contract in the deterministic
+control OpenAPI document. Queue, region-image, decision, and typed failure DTOs come
+from `src/api/schema.generated.ts`; the adopted boundary is documented in
+[equation-review-api-contract.md](equation-review-api-contract.md). A 404 means the
+requested identity is not configured, while typed 409 and 503 responses preserve
+conflict and owner-availability semantics. No production fixture or filesystem fallback
+supplies corpus data.
 
 ## Routing
 
@@ -165,6 +168,7 @@ No production fixture or filesystem fallback supplies corpus data.
 /control                     private single-operator dashboard
 /control/github              live read-only GitHubTask projection
 /control/search              private retrieval UI
+/control/organizer           private organizer status/proposal workspace
 /control/note-review         fixture-backed note-review design prototype
 /control/equation-review     private equation-review API boundary
 /control/citation-review     private citation-review workspace
@@ -182,8 +186,10 @@ domain, keep review disposition separate from explicit apply, and revalidate the
 destination precondition immediately before writing.
 
 The equation-review route is not fixture-backed: it requests the typed API contract,
-renders an unavailable state while that capability is absent, and never reads corpus
-files directly.
+renders explicit unconfigured, stale, concurrent, partial, and owner-unavailable states,
+and never reads corpus files directly. Human writes include the displayed previous
+revision and exact assisted-proposal hash but no browser-generated receipt or review
+timestamp.
 
 ## Local-first behavior
 

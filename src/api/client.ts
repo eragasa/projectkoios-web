@@ -1,17 +1,4 @@
-import type {
-  EquationReviewDecisionRequest,
-  EquationReviewDecisionResponse,
-  EquationReviewQueueResponse,
-} from "./equationReviewContract";
 import type { components, paths } from "./schema.generated";
-
-export type {
-  EquationReviewCandidate,
-  EquationReviewDecisionRequest,
-  EquationReviewDecisionResponse,
-  EquationReviewDisposition,
-  EquationReviewQueueResponse,
-} from "./equationReviewContract";
 
 type GeneratedHealthResponse =
   paths["/health"]["get"]["responses"][200]["content"]["application/json"];
@@ -43,9 +30,22 @@ export type CitationReviewDetail =
 export type CitationReviewQueue = components["schemas"]["CitationReviewQueueResponse"];
 export type LiteratureReviewProgress =
   components["schemas"]["LiteratureReviewProgressResponse"];
+export type EquationReviewQueueResponse =
+  paths["/equation-reviews"]["get"]["responses"][200]["content"]["application/json"];
+export type EquationReviewCandidate = EquationReviewQueueResponse["items"][number];
+export type EquationReviewDecisionRequest =
+  paths["/equation-reviews/{candidate_id}/decision"]["put"]["requestBody"]["content"]["application/json"];
+export type EquationReviewDecisionResponse =
+  paths["/equation-reviews/{candidate_id}/decision"]["put"]["responses"][200]["content"]["application/json"];
+export type EquationReviewDisposition =
+  components["schemas"]["EquationReviewDisposition"];
+export type EquationReviewFailureCode =
+  components["schemas"]["EquationReviewFailureCode"];
+export type EquationReviewFailureResponse =
+  components["schemas"]["EquationReviewFailureResponse"];
 export type OrganizerControlRequest = components["schemas"]["OrganizerControlRequest"];
-export type OrganizerEvent = components["schemas"]["OrganizerEventResponse"];
-export type OrganizerEventList = components["schemas"]["OrganizerEventListResponse"];
+export type OrganizerProposalList =
+  components["schemas"]["OrganizerProposalListResponse"];
 export type OrganizerStatus = components["schemas"]["OrganizerStatusResponse"];
 export type ProvidedReference = components["schemas"]["ProvidedReferenceResponse"];
 export type ProvidedReferenceList =
@@ -61,11 +61,13 @@ export interface ProvideReferenceRequest {
 
 export class ApiError extends Error {
   readonly status: number;
+  readonly code: string | undefined;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -112,17 +114,15 @@ export class ProjectKoiosApiClient {
     });
   }
 
-  async organizerEvents(
-    after: number,
+  async organizerProposals(
+    limit = 200,
     signal?: AbortSignal,
-  ): Promise<OrganizerEventList> {
-    return this.request<OrganizerEventList>(`/organizer/events?after=${after}`, {
-      signal,
-    });
-  }
-
-  organizerEventStreamUrl(after: number): string {
-    return `${this.baseUrl}/organizer/events/stream?after=${after}`;
+  ): Promise<OrganizerProposalList> {
+    const query = new URLSearchParams({ limit: String(limit) });
+    return this.request<OrganizerProposalList>(
+      `/organizer/proposals?${query.toString()}`,
+      { signal },
+    );
   }
 
   async search(request: SearchRequest, signal?: AbortSignal): Promise<SearchResult[]> {
@@ -240,15 +240,22 @@ export class ProjectKoiosApiClient {
     const response = await fetch(`${this.baseUrl}${path}`, init);
     if (!response.ok) {
       let message = `Project Koios API returned ${response.status}`;
+      let code: string | undefined;
       try {
-        const body = (await response.json()) as { detail?: unknown };
+        const body = (await response.json()) as {
+          code?: unknown;
+          detail?: unknown;
+        };
         if (typeof body.detail === "string") {
           message = body.detail;
+        }
+        if (typeof body.code === "string") {
+          code = body.code;
         }
       } catch {
         // The status code remains sufficient when the body is not JSON.
       }
-      throw new ApiError(response.status, message);
+      throw new ApiError(response.status, message, code);
     }
     return (await response.json()) as T;
   }
