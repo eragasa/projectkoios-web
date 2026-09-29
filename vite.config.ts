@@ -17,9 +17,12 @@ export default defineConfig({
       "/api/projects": apiTarget,
       "/api/publications": apiTarget,
       "/citation-reviews": apiTarget,
+      "/equation-reviews": apiTarget,
       "/github/tasks": apiTarget,
       "/literature-review/progress": apiTarget,
       "/literature-review/references": apiTarget,
+      "/organizer": apiTarget,
+      "/transcript-reviews": apiTarget,
       "/search": {
         target: apiTarget,
         bypass: (request) => (request.method === "GET" ? "/index.html" : undefined),

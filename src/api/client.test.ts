@@ -175,6 +175,101 @@ test("citation decisions use the private review endpoint", async () => {
   );
 });
 
+test("equation reviews request the generated document queue contract", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        contract_id: "projectkoios.api.equation-review",
+        schema_version: 1,
+        projection_id: "equation-review-queue:sha256:empty",
+        package_id: "equation-review-package:sha256:empty",
+        document_id: "pizzi2020",
+        source_sha256: "a".repeat(64),
+        total: 0,
+        decided: 0,
+        pending: 0,
+        items: [],
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await client.equationReviews("pizzi2020");
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/equation-reviews?document_id=pizzi2020",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
+test("equation review decisions bind acceptance to an assisted proposal", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        candidate_id: "equation:pizzi2020:1",
+        disposition: "ACCEPT_TRANSCRIPTION",
+        assistance_proposal_sha256: "d".repeat(64),
+        note: "Checked.",
+        revision: 1,
+        updated_at_utc: "2026-09-28T18:00:00Z",
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  const request = {
+    disposition: "ACCEPT_TRANSCRIPTION" as const,
+    assistance_proposal_sha256: "d".repeat(64),
+    reviewer_latex: "E = mc^2",
+    display_mode: "DISPLAY" as const,
+    render_confirmation: {
+      renderer_id: "katex",
+      renderer_version: "0.16.47",
+      rendered_reviewer_latex_sha256: "e".repeat(64),
+      rendered_obsidian_markdown_sha256: "f".repeat(64),
+    },
+    note: "Checked.",
+    expected_previous_revision: 0,
+  };
+  await client.saveEquationReviewDecision("equation:pizzi2020:1", request);
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/equation-reviews/equation%3Apizzi2020%3A1/decision",
+    expect.objectContaining({
+      method: "PUT",
+      body: JSON.stringify(request),
+    }),
+  );
+  expect(client.equationRegionImageUrl("equation:pizzi2020:1")).toBe(
+    "/equation-reviews/equation%3Apizzi2020%3A1/region",
+  );
+});
+
+test("organizer events use the bounded polling endpoint", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(JSON.stringify({ events: [] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await client.organizerEvents(7);
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/organizer/events?after=7",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
 test("literature review requests the private progress endpoint", async () => {
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify({ phase: "ASSESSING" }), {
@@ -230,6 +325,32 @@ test("provided references send a PDF with bounded metadata", async () => {
   expect(body.get("claim_id")).toBe("C-001");
   expect(body.get("citation_label")).toBe("ExampleAuthor2024");
   expect(body.get("reference_pdf")).toBe(file);
+});
+
+test("typed API errors preserve status, code, and detail", async () => {
+  fetchMock.mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        code: "EQUATION_REVIEW_REVISION_STALE",
+        detail: "equation review revision is stale",
+      }),
+      {
+        status: 409,
+        headers: { "Content-Type": "application/json" },
+      },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  const request = client.equationReviews("pizzi2020");
+
+  await expect(request).rejects.toEqual(
+    new ApiError(
+      409,
+      "equation review revision is stale",
+      "EQUATION_REVIEW_REVISION_STALE",
+    ),
+  );
 });
 
 test("API errors preserve status and detail", async () => {

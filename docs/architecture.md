@@ -86,11 +86,16 @@ src/
 │   ├── AppShell.tsx
 │   └── deploymentProfile.ts
 ├── components/
-│   └── HealthIndicator.tsx
+│   ├── DisclosurePanel.tsx
+│   ├── HealthIndicator.tsx
+│   ├── KatexMarkup.tsx
+│   └── ReviewPageHeader.tsx
 ├── features/
 │   ├── citation-review/
 │   ├── dashboard/
+│   ├── equation-review/
 │   ├── literature-review/
+│   ├── note-review/
 │   ├── publishing/
 │   └── search/
 ├── test/
@@ -99,6 +104,11 @@ src/
 
 Features depend on the API client and reusable components. The API client does
 not depend on React. Components do not import backend implementation packages.
+Shared review primitives own presentation-only concerns such as headers, progress,
+disclosure, bounded JSON display, and the single local KaTeX HTML sink. Equation
+canonicalization, strict rendering policy, render-confirmation state, provenance
+projection, and acceptance rules remain feature-local rather than configurable generic
+components.
 
 ## Local development process management
 
@@ -109,6 +119,8 @@ API and web processes. They keep PID files and append-only logs in ignored
 The startup script:
 
 - resolves sibling Project Koios repositories or explicit environment overrides;
+- creates ignored empty runtime catalogs when the optional default course or project
+  catalog is absent, without replacing an explicit path or existing file;
 - starts the API with an explicit Python namespace path;
 - starts Vite directly rather than through an extra npm process;
 - rejects ports occupied by unmanaged processes;
@@ -137,13 +149,35 @@ GET /openapi.json
 ```
 
 The control API additionally exposes a live read-only GitHubTask projection plus
-private search, citation-review, and literature-review contracts.
+private search, organizer, transcript-review, equation-review, citation-review, and
+literature-review contracts.
 `src/api/schema.generated.ts` is generated from the control OpenAPI document, and
 `src/api/client.ts` consumes its request and response types. One typed client can
 support the superset while profile routing prevents public UI access. The API schema
 remains authoritative; browser types are projections. A small refinement is
 used for `/health` because the current backend schema exposes a generic string
 mapping rather than a named health model.
+
+The equation-review workspace consumes the owner-backed schema-3 contract in the
+deterministic control OpenAPI document. Durable queue, region-image, decision, render
+confirmation, provenance, status, and typed failure DTOs come from
+`src/api/schema.generated.ts`; the adopted boundary is documented in
+[equation-review-api-contract.md](equation-review-api-contract.md). The browser preserves
+owner ordering for the bounded 256-candidate projection, reports owner-projected counts,
+and keeps stable opaque candidate selection in the URL. Previous, Next, and the accessible
+candidate list all use the same deterministic order. Navigation requires explicit discard
+when reviewer source, display mode, or note has changed.
+
+The browser preserves the assisted proposal as exact immutable source, derives a reviewer
+body only through a strict single-wrapper/no-normalization rule, and blocks ambiguous or
+noncanonical source instead of guessing. It keeps reviewer LaTeX as editable source,
+derives read-only Obsidian/MathJax-compatible Markdown, and uses local KaTeX `0.16.47`
+only for an explicit, trust-disabled preview. Acceptance binds hashes of the exact
+rendered inputs while the owner recomputes canonical Markdown. Unassisted candidates show
+the owner-projected deterministic evidence but cannot render or accept a transcription.
+A 404 means the requested identity is not configured, while typed 409 and 503 responses
+preserve conflict, incomplete/malformed queue, and owner-availability semantics. No
+production fixture or filesystem fallback supplies corpus data.
 
 ## Routing
 
@@ -155,6 +189,9 @@ mapping rather than a named health model.
 /control                     private single-operator dashboard
 /control/github              live read-only GitHubTask projection
 /control/search              private retrieval UI
+/control/organizer           private organizer status/event workspace
+/control/note-review         fixture-backed note-review design prototype
+/control/equation-review     private equation-review API boundary
 /control/citation-review     private citation-review workspace
 /control/literature-review   private literature-review workspace
 ```
@@ -166,7 +203,18 @@ mutation capability.
 The `/control` routes exist only in the control build. Planned control routes include
 repository health, tasks, decisions, agent runs, workflows, and release operations.
 A route should be added only when its backend contract exists or when it is explicitly
-a read-only prototype using fixtures.
+a read-only prototype using fixtures. The note-review route is such a prototype: it
+models proposal queues, provenance, precondition conflicts, managed-section previews,
+diffs, and non-persistent review intent, but exposes no note-write or materializer-apply
+capability. A future note integration must consume a contract from the note-owning
+domain, keep review disposition separate from explicit apply, and revalidate the
+destination precondition immediately before writing.
+
+The equation-review route is not fixture-backed: it requests the typed API contract,
+renders explicit unconfigured, stale, concurrent, partial, queue-integrity, and
+owner-unavailable states, and never reads corpus files directly. Human acceptance writes
+include the displayed previous revision, exact assisted-proposal hash, canonical reviewer
+source, display mode, and explicit local render hashes, but no browser review timestamp.
 
 ## Local-first behavior
 

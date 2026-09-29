@@ -21,23 +21,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health */
-        get: operations["health_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/courses": {
         parameters: {
             query?: never;
@@ -81,40 +64,6 @@ export interface paths {
         };
         /** List Publications */
         get: operations["list_publications_api_publications_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Search */
-        post: operations["search_search_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/github/tasks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read Github Tasks */
-        get: operations["read_github_tasks_github_tasks_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -191,6 +140,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/equation-reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Queue */
+        get: operations["queue_equation_reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/equation-reviews/{candidate_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Decide */
+        put: operations["decide_equation_reviews__candidate_id__decision_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/equation-reviews/{candidate_id}/region": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Region */
+        get: operations["region_equation_reviews__candidate_id__region_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/github/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Github Tasks */
+        get: operations["read_github_tasks_github_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health */
+        get: operations["health_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/literature-review/progress": {
         parameters: {
             query?: never;
@@ -226,18 +260,177 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/organizer/control": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Control */
+        put: operations["update_control_organizer_control_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizer/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Events */
+        get: operations["read_events_organizer_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizer/events/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream Events */
+        get: operations["stream_events_organizer_events_stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizer/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Status */
+        get: operations["read_status_organizer_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Search */
+        post: operations["search_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transcript-reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Queue */
+        get: operations["read_queue_transcript_reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transcript-reviews/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Document */
+        get: operations["read_document_transcript_reviews__document_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transcript-reviews/{document_id}/assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Preview */
+        get: operations["read_preview_transcript_reviews__document_id__assets__asset_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transcript-reviews/{document_id}/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Source */
+        get: operations["read_source_transcript_reviews__document_id__source_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ApiErrorResponse
+         * @description Stable HTTP error envelope exposed by API-owned routes.
+         */
+        ApiErrorResponse: {
+            /** Detail */
+            detail: string;
+        };
         /** Body_provide_reference_literature_review_references_post */
         Body_provide_reference_literature_review_references_post: {
-            /** Claim Id */
-            claim_id: string;
             /** Citation Label */
             citation_label: string;
-            /** Reference Pdf */
-            reference_pdf: string;
+            /** Claim Id */
+            claim_id: string;
             /** Doi Or Url */
             doi_or_url?: string | null;
             /**
@@ -245,27 +438,29 @@ export interface components {
              * @default
              */
             note: string;
+            /** Reference Pdf */
+            reference_pdf: string;
         };
         /** CitationCandidateResponse */
         CitationCandidateResponse: {
-            /** Rank */
-            rank: number;
-            /** Citation Key */
-            citation_key: string | null;
             /** Bibtex Entry Present */
             bibtex_entry_present: boolean;
-            /** Score */
-            score: number;
+            /** Citation Key */
+            citation_key: string | null;
             /** File */
             file: string;
+            /** Passage */
+            passage: string;
+            /** Passage Id */
+            passage_id: string;
             /** Physical Page */
             physical_page: number;
             /** Printed Page */
             printed_page: string;
-            /** Passage Id */
-            passage_id: string;
-            /** Passage */
-            passage: string;
+            /** Rank */
+            rank: number;
+            /** Score */
+            score: number;
         };
         /**
          * CitationDecisionDisposition
@@ -275,96 +470,324 @@ export interface components {
         /** CitationDecisionRequest */
         CitationDecisionRequest: {
             disposition: components["schemas"]["CitationDecisionDisposition"];
-            /** Selected Citation Keys */
-            selected_citation_keys?: string[];
             /**
              * Note
              * @default
              */
             note: string;
+            /** Selected Citation Keys */
+            selected_citation_keys?: string[];
         };
         /** CitationDecisionResponse */
         CitationDecisionResponse: {
             /** Claim Id */
             claim_id: string;
             disposition: components["schemas"]["CitationDecisionDisposition"];
-            /** Selected Citation Keys */
-            selected_citation_keys: string[];
             /** Note */
             note: string;
             /** Revision */
             revision: number;
+            /** Selected Citation Keys */
+            selected_citation_keys: string[];
             /** Updated At Utc */
             updated_at_utc: string;
         };
         /** CitationReviewDetailResponse */
         CitationReviewDetailResponse: {
-            /** Claim Id */
-            claim_id: string;
-            /** Lines */
-            lines: string;
+            /** Candidates */
+            candidates: components["schemas"]["CitationCandidateResponse"][];
             /** Claim */
             claim: string;
-            /** Recommendation Relationship */
-            recommendation_relationship: string;
-            /** Recommended Keys */
-            recommended_keys: string[];
+            /** Claim Id */
+            claim_id: string;
+            decision: components["schemas"]["CitationDecisionResponse"] | null;
             /** Evaluation Status */
             evaluation_status: string;
-            decision: components["schemas"]["CitationDecisionResponse"] | null;
-            /** Query */
-            query: string;
-            /** Manuscript Excerpt Latex */
-            manuscript_excerpt_latex: string;
-            /** Manuscript Equations */
-            manuscript_equations: components["schemas"]["ManuscriptEquationResponse"][];
             /** Expected Keys */
             expected_keys: string[];
             /** Expected Keys Available */
             expected_keys_available: string[];
             /** Expected Outcome */
             expected_outcome: string;
+            /** Lines */
+            lines: string;
+            /** Manuscript Equations */
+            manuscript_equations: components["schemas"]["ManuscriptEquationResponse"][];
+            /** Manuscript Excerpt Latex */
+            manuscript_excerpt_latex: string;
+            /** Query */
+            query: string;
             /** Recommendation */
             recommendation: string;
-            /** Candidates */
-            candidates: components["schemas"]["CitationCandidateResponse"][];
+            /** Recommendation Relationship */
+            recommendation_relationship: string;
+            /** Recommended Keys */
+            recommended_keys: string[];
         };
         /** CitationReviewQueueResponse */
         CitationReviewQueueResponse: {
             /** Assessment */
             assessment: string;
-            /** Manuscript Sha256 */
-            manuscript_sha256: string;
-            /** Total */
-            total: number;
             /** Decided */
             decided: number;
             /** Items */
             items: components["schemas"]["CitationReviewSummaryResponse"][];
+            /** Manuscript Sha256 */
+            manuscript_sha256: string;
+            /** Total */
+            total: number;
         };
         /** CitationReviewSummaryResponse */
         CitationReviewSummaryResponse: {
-            /** Claim Id */
-            claim_id: string;
-            /** Lines */
-            lines: string;
             /** Claim */
             claim: string;
+            /** Claim Id */
+            claim_id: string;
+            decision: components["schemas"]["CitationDecisionResponse"] | null;
+            /** Evaluation Status */
+            evaluation_status: string;
+            /** Lines */
+            lines: string;
             /** Recommendation Relationship */
             recommendation_relationship: string;
             /** Recommended Keys */
             recommended_keys: string[];
-            /** Evaluation Status */
-            evaluation_status: string;
-            decision: components["schemas"]["CitationDecisionResponse"] | null;
         };
         /**
          * CourseMaterialsStatus
          * @enum {string}
          */
         CourseMaterialsStatus: "inventory-only" | "review-candidate" | "published";
+        /** DeterministicEquationEvidenceResponse */
+        DeterministicEquationEvidenceResponse: {
+            /** Candidate Sha256 */
+            candidate_sha256: string;
+            /** Confidence */
+            confidence: number;
+            /** Configuration Digest */
+            configuration_digest: string;
+            /** Detection Input Id */
+            detection_input_id: string;
+            /** Evidence Sha256 */
+            evidence_sha256: string;
+            /** Evidence Status */
+            evidence_status: string;
+            /** Processor Name */
+            processor_name: string;
+            /** Processor Version */
+            processor_version: string;
+            /** Raw Text */
+            raw_text: string;
+            /** Source Block Id */
+            source_block_id: string;
+            /** Source Label */
+            source_label: string | null;
+            /** Warning Ids */
+            warning_ids: string[];
+        };
+        /**
+         * EquationDisplayMode
+         * @enum {string}
+         */
+        EquationDisplayMode: "INLINE" | "DISPLAY";
+        /** EquationRegionEvidenceResponse */
+        EquationRegionEvidenceResponse: {
+            /**
+             * Coordinate Space
+             * @constant
+             */
+            coordinate_space: "PDF_POINTS";
+            /** Height */
+            height: number;
+            /** Image Sha256 */
+            image_sha256: string;
+            /** Width */
+            width: number;
+            /** X */
+            x: number;
+            /** Y */
+            y: number;
+        };
+        /** EquationRenderConfirmation */
+        EquationRenderConfirmation: {
+            /** Rendered Obsidian Markdown Sha256 */
+            rendered_obsidian_markdown_sha256: string;
+            /** Rendered Reviewer Latex Sha256 */
+            rendered_reviewer_latex_sha256: string;
+            /** Renderer Id */
+            renderer_id: string;
+            /** Renderer Version */
+            renderer_version: string;
+        };
+        /** EquationReviewCandidateResponse */
+        EquationReviewCandidateResponse: {
+            /** Assistance */
+            assistance: components["schemas"]["UnassistedEquationProposalResponse"] | components["schemas"]["ProposedEquationAssistanceResponse"];
+            /** Candidate Id */
+            candidate_id: string;
+            /** Current Revision */
+            current_revision: number;
+            decision: components["schemas"]["EquationReviewDecision"] | null;
+            deterministic_evidence: components["schemas"]["DeterministicEquationEvidenceResponse"];
+            display_mode: components["schemas"]["EquationDisplayMode"];
+            /** Expected Previous Revision */
+            expected_previous_revision: number;
+            region: components["schemas"]["EquationRegionEvidenceResponse"];
+            source: components["schemas"]["EquationSourceIdentityResponse"];
+            status: components["schemas"]["EquationReviewStatus"];
+        };
+        /** EquationReviewDecision */
+        EquationReviewDecision: {
+            /** Assistance Proposal Sha256 */
+            assistance_proposal_sha256: string | null;
+            display_mode: components["schemas"]["EquationDisplayMode"] | null;
+            disposition: components["schemas"]["EquationReviewDisposition"];
+            /** Note */
+            note: string;
+            /** Obsidian Markdown */
+            obsidian_markdown: string | null;
+            /** Obsidian Markdown Sha256 */
+            obsidian_markdown_sha256: string | null;
+            /**
+             * Recorded At Utc
+             * Format: date-time
+             */
+            recorded_at_utc: string;
+            render_confirmation: components["schemas"]["EquationRenderConfirmation"] | null;
+            /** Reviewer Latex */
+            reviewer_latex: string | null;
+            /** Reviewer Latex Sha256 */
+            reviewer_latex_sha256: string | null;
+            /** Revision */
+            revision: number;
+            /** Revision Id */
+            revision_id: string;
+            /**
+             * Schema Version
+             * @enum {integer}
+             */
+            schema_version: 2 | 3;
+            status: components["schemas"]["EquationReviewStatus"];
+        };
+        /** EquationReviewDecisionRequest */
+        EquationReviewDecisionRequest: {
+            /** Assistance Proposal Sha256 */
+            assistance_proposal_sha256: string | null;
+            display_mode: components["schemas"]["EquationDisplayMode"] | null;
+            disposition: components["schemas"]["EquationReviewDisposition"];
+            /** Expected Previous Revision */
+            expected_previous_revision: number;
+            /** Note */
+            note: string;
+            render_confirmation: components["schemas"]["EquationRenderConfirmation"] | null;
+            /** Reviewer Latex */
+            reviewer_latex: string | null;
+        };
+        /** EquationReviewDecisionResponse */
+        EquationReviewDecisionResponse: {
+            /** Assistance Proposal Sha256 */
+            assistance_proposal_sha256: string | null;
+            /** Candidate Id */
+            candidate_id: string;
+            display_mode: components["schemas"]["EquationDisplayMode"] | null;
+            disposition: components["schemas"]["EquationReviewDisposition"];
+            /** Note */
+            note: string;
+            /** Obsidian Markdown */
+            obsidian_markdown: string | null;
+            /** Obsidian Markdown Sha256 */
+            obsidian_markdown_sha256: string | null;
+            /**
+             * Recorded At Utc
+             * Format: date-time
+             */
+            recorded_at_utc: string;
+            render_confirmation: components["schemas"]["EquationRenderConfirmation"] | null;
+            /** Reviewer Latex */
+            reviewer_latex: string | null;
+            /** Reviewer Latex Sha256 */
+            reviewer_latex_sha256: string | null;
+            /** Revision */
+            revision: number;
+            /** Revision Id */
+            revision_id: string;
+            /**
+             * Schema Version
+             * @enum {integer}
+             */
+            schema_version: 2 | 3;
+            status: components["schemas"]["EquationReviewStatus"];
+        };
+        /**
+         * EquationReviewDisposition
+         * @enum {string}
+         */
+        EquationReviewDisposition: "ACCEPT_TRANSCRIPTION" | "REJECT_CANDIDATE" | "REVISION_REQUIRED";
+        /**
+         * EquationReviewFailureCode
+         * @enum {string}
+         */
+        EquationReviewFailureCode: "EQUATION_REVIEW_PROPOSAL_STALE" | "EQUATION_REVIEW_EVIDENCE_STALE" | "EQUATION_REVIEW_REVISION_STALE" | "EQUATION_REVIEW_REVIEWER_LATEX_NONCANONICAL" | "EQUATION_REVIEW_RENDER_STALE" | "EQUATION_REVIEW_EDIT_AFTER_RENDER" | "EQUATION_REVIEW_CONCURRENT_DECISION" | "EQUATION_REVIEW_PARTIAL_OUTPUT" | "EQUATION_REVIEW_QUEUE_INCOMPLETE" | "EQUATION_REVIEW_QUEUE_MALFORMED" | "EQUATION_REVIEW_OWNER_UNAVAILABLE";
+        /** EquationReviewFailureResponse */
+        EquationReviewFailureResponse: {
+            code: components["schemas"]["EquationReviewFailureCode"];
+            /** Detail */
+            detail: string;
+        };
+        /** EquationReviewQueueResponse */
+        EquationReviewQueueResponse: {
+            /** Contract Id */
+            contract_id: string;
+            /** Decided */
+            decided: number;
+            /** Document Id */
+            document_id: string;
+            /** Items */
+            items: components["schemas"]["EquationReviewCandidateResponse"][];
+            /** Package Id */
+            package_id: string;
+            /** Pending */
+            pending: number;
+            /** Projection Id */
+            projection_id: string;
+            /**
+             * Schema Version
+             * @constant
+             */
+            schema_version: 1;
+            /** Source Sha256 */
+            source_sha256: string;
+            /** Total */
+            total: number;
+        };
+        /**
+         * EquationReviewStatus
+         * @enum {string}
+         */
+        EquationReviewStatus: "UNREVIEWED" | "LEGACY_ACCEPTANCE" | "ACCEPTED" | "REJECTED" | "REVISION_REQUIRED";
+        /** EquationSourceIdentityResponse */
+        EquationSourceIdentityResponse: {
+            /** Document Id */
+            document_id: string;
+            /** Page Index */
+            page_index: number;
+            /** Physical Page */
+            physical_page: number;
+            /** Printed Page Label */
+            printed_page_label: string | null;
+            /** Source Sha256 */
+            source_sha256: string;
+        };
         /** GitHubPullRequestSummary */
         GitHubPullRequestSummary: {
+            /** Base Branch */
+            base_branch: string;
+            /** Head Branch */
+            head_branch: string;
+            /** Head Sha */
+            head_sha: string;
+            /** Is Draft */
+            is_draft: boolean;
             /** Number */
             number: number;
             /** Title */
@@ -374,28 +797,14 @@ export interface components {
              * Format: uri
              */
             url: string;
-            /** Is Draft */
-            is_draft: boolean;
-            /** Head Branch */
-            head_branch: string;
-            /** Head Sha */
-            head_sha: string;
-            /** Base Branch */
-            base_branch: string;
         };
         /** GitHubRepositoryTaskProjection */
         GitHubRepositoryTaskProjection: {
-            /** Repository */
-            repository: string;
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "ok" | "error";
-            /** Error Kind */
-            error_kind?: string | null;
             /** Default Branch */
             default_branch?: string | null;
+            /** Error Kind */
+            error_kind?: string | null;
+            latest_sequence?: components["schemas"]["GitHubTaskSequence"] | null;
             /**
              * Open Pull Requests
              * @default []
@@ -406,65 +815,64 @@ export interface components {
              * @default true
              */
             open_pull_requests_complete: boolean;
-            latest_sequence?: components["schemas"]["GitHubTaskSequence"] | null;
+            /** Repository */
+            repository: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "ok" | "error";
         };
         /** GitHubTask */
         GitHubTask: {
-            /** Sequence Index */
-            sequence_index: number;
+            /** Completed At */
+            completed_at?: string | null;
+            /** Conclusion */
+            conclusion?: string | null;
             /** Job Name */
             job_name: string;
             /** Name */
             name: string;
-            /** Status */
-            status: string;
-            /** Conclusion */
-            conclusion?: string | null;
+            /** Sequence Index */
+            sequence_index: number;
             /** Started At */
             started_at?: string | null;
-            /** Completed At */
-            completed_at?: string | null;
+            /** Status */
+            status: string;
         };
         /** GitHubTaskDashboard */
         GitHubTaskDashboard: {
+            /**
+             * Repositories
+             * @default []
+             */
+            repositories: components["schemas"]["GitHubRepositoryTaskProjection"][];
             /**
              * Source
              * @default github-live
              * @constant
              */
             source: "github-live";
-            /**
-             * Repositories
-             * @default []
-             */
-            repositories: components["schemas"]["GitHubRepositoryTaskProjection"][];
         };
         /** GitHubTaskSequence */
         GitHubTaskSequence: {
-            /** Run Id */
-            run_id: number;
-            /** Workflow Name */
-            workflow_name: string;
-            /** Event */
-            event: string;
-            /** Status */
-            status: string;
-            /** Conclusion */
-            conclusion?: string | null;
             /** Branch */
             branch: string;
             /** Commit Sha */
             commit_sha: string;
-            /**
-             * Url
-             * Format: uri
-             */
-            url: string;
+            /** Conclusion */
+            conclusion?: string | null;
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
+            /** Event */
+            event: string;
+            /** Run Id */
+            run_id: number;
+            /** Status */
+            status: string;
             /**
              * Tasks
              * @default []
@@ -475,6 +883,13 @@ export interface components {
              * @default true
              */
             tasks_complete: boolean;
+            /**
+             * Url
+             * Format: uri
+             */
+            url: string;
+            /** Workflow Name */
+            workflow_name: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -483,25 +898,25 @@ export interface components {
         };
         /** LiteratureClaimProgressResponse */
         LiteratureClaimProgressResponse: {
-            /** Claim Id */
-            claim_id: string;
-            /** Section */
-            section: string;
+            /** Assumptions */
+            assumptions: string[];
             /** Claim */
             claim: string;
+            /** Claim Id */
+            claim_id: string;
+            /** Corrected Claim */
+            corrected_claim: string | null;
+            /** Evidence */
+            evidence: components["schemas"]["LiteratureEvidenceReferenceResponse"][];
             /** Evidence Count */
             evidence_count: number;
+            /** Section */
+            section: string;
+            /** Source Requests */
+            source_requests: string[];
             status: components["schemas"]["LiteratureClaimStatus"] | null;
             /** Summary */
             summary: string | null;
-            /** Corrected Claim */
-            corrected_claim: string | null;
-            /** Assumptions */
-            assumptions: string[];
-            /** Evidence */
-            evidence: components["schemas"]["LiteratureEvidenceReferenceResponse"][];
-            /** Source Requests */
-            source_requests: string[];
             validation_frame: components["schemas"]["LiteratureValidationFrameResponse"] | null;
         };
         /**
@@ -511,19 +926,19 @@ export interface components {
         LiteratureClaimStatus: "SUPPORTED" | "QUALIFIED" | "CONTRADICTED" | "UNRESOLVED";
         /** LiteratureEquationResponse */
         LiteratureEquationResponse: {
+            /** Interpretation */
+            interpretation: string;
             /** Label */
             label: string;
             /** Latex */
             latex: string;
-            /** Interpretation */
-            interpretation: string;
         };
         /** LiteratureEvidenceReferenceResponse */
         LiteratureEvidenceReferenceResponse: {
-            /** Label */
-            label: string;
             /** Citation Key */
             citation_key: string | null;
+            /** Label */
+            label: string;
             /** Physical Page */
             physical_page: number;
             /** Quote */
@@ -536,39 +951,39 @@ export interface components {
         LiteratureReviewPhase: "PENDING" | "RETRIEVING" | "ASSESSING" | "COMPLETE";
         /** LiteratureReviewProgressResponse */
         LiteratureReviewProgressResponse: {
-            /** Run Id */
-            run_id: string;
-            phase: components["schemas"]["LiteratureReviewPhase"];
+            /** Assessment Count */
+            assessment_count: number;
             /** Assessment Status */
             assessment_status: string;
             /** Claim Count */
             claim_count: number;
-            /** Evidence Ready Count */
-            evidence_ready_count: number;
-            /** Assessment Count */
-            assessment_count: number;
-            /** Completion Percent */
-            completion_percent: number;
-            status_counts: components["schemas"]["LiteratureStatusCountResponse"];
-            /** Human Disposition */
-            human_disposition: string | null;
-            /** Classifier Implementation Authorized */
-            classifier_implementation_authorized: boolean;
-            /** Scientific Calculation Authorized */
-            scientific_calculation_authorized: boolean;
-            /** Original Submission Markdown */
-            original_submission_markdown: string;
             /** Claims */
             claims: components["schemas"]["LiteratureClaimProgressResponse"][];
+            /** Classifier Implementation Authorized */
+            classifier_implementation_authorized: boolean;
+            /** Completion Percent */
+            completion_percent: number;
+            /** Evidence Ready Count */
+            evidence_ready_count: number;
+            /** Human Disposition */
+            human_disposition: string | null;
+            /** Original Submission Markdown */
+            original_submission_markdown: string;
+            phase: components["schemas"]["LiteratureReviewPhase"];
+            /** Run Id */
+            run_id: string;
+            /** Scientific Calculation Authorized */
+            scientific_calculation_authorized: boolean;
+            status_counts: components["schemas"]["LiteratureStatusCountResponse"];
         };
         /** LiteratureStatusCountResponse */
         LiteratureStatusCountResponse: {
-            /** Supported */
-            supported: number;
-            /** Qualified */
-            qualified: number;
             /** Contradicted */
             contradicted: number;
+            /** Qualified */
+            qualified: number;
+            /** Supported */
+            supported: number;
             /** Unresolved */
             unresolved: number;
         };
@@ -576,21 +991,96 @@ export interface components {
         LiteratureValidationFrameResponse: {
             /** Assessment Status */
             assessment_status: string;
-            /** Finding */
-            finding: string;
             /** Conclusion */
             conclusion: string;
-            /** Evidence Labels */
-            evidence_labels: string[];
             /** Equations */
             equations: components["schemas"]["LiteratureEquationResponse"][];
+            /** Evidence Labels */
+            evidence_labels: string[];
+            /** Finding */
+            finding: string;
         };
         /** ManuscriptEquationResponse */
         ManuscriptEquationResponse: {
-            /** Latex */
-            latex: string;
             /** Display */
             display: boolean;
+            /** Latex */
+            latex: string;
+        };
+        /** OrganizerControlRequest */
+        OrganizerControlRequest: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "on" | "pause" | "off";
+        };
+        /** OrganizerEventListResponse */
+        OrganizerEventListResponse: {
+            /** Events */
+            events: components["schemas"]["OrganizerEventResponse"][];
+        };
+        /** OrganizerEventResponse */
+        OrganizerEventResponse: {
+            /** File Id */
+            file_id: string | null;
+            /** Kind */
+            kind: string;
+            /** Message */
+            message: string;
+            /** Occurred At */
+            occurred_at: string;
+            /** Root Id */
+            root_id: string | null;
+            /** Sequence */
+            sequence: number;
+        };
+        /** OrganizerStatusResponse */
+        OrganizerStatusResponse: {
+            /**
+             * Activity
+             * @enum {string}
+             */
+            activity: "off" | "paused" | "idle" | "discovering" | "scanning" | "classifying" | "failed";
+            /** Current Relative Path */
+            current_relative_path: string | null;
+            /** Current Root Id */
+            current_root_id: string | null;
+            /**
+             * Desired Mode
+             * @enum {string}
+             */
+            desired_mode: "on" | "pause" | "off";
+            /** Discovered Roots */
+            discovered_roots: number;
+            /** Last Error */
+            last_error: string | null;
+            /** Last Event Sequence */
+            last_event_sequence: number;
+            /** Local Files */
+            local_files: number;
+            /** Observed Files */
+            observed_files: number;
+            /** Placeholder Files */
+            placeholder_files: number;
+            /** Proposed Files */
+            proposed_files: number;
+        };
+        /** ProposedEquationAssistanceResponse */
+        ProposedEquationAssistanceResponse: {
+            /** Attempt Id */
+            attempt_id: string;
+            /** Method */
+            method: string;
+            /** Proposal Sha256 */
+            proposal_sha256: string;
+            /** Proposed Latex */
+            proposed_latex: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            status: "AUTOMATED_UNREVIEWED";
         };
         /** ProvidedReferenceListResponse */
         ProvidedReferenceListResponse: {
@@ -599,27 +1089,27 @@ export interface components {
         };
         /** ProvidedReferenceResponse */
         ProvidedReferenceResponse: {
-            /** Receipt Id */
-            receipt_id: string;
-            /** Claim Id */
-            claim_id: string;
-            /** Citation Label */
-            citation_label: string;
-            /** Doi Or Url */
-            doi_or_url: string | null;
-            /** Note */
-            note: string;
-            /** Source Sha256 */
-            source_sha256: string;
             /** Byte Length */
             byte_length: number;
-            status: components["schemas"]["ProvidedReferenceStatus"];
-            /** Received At Utc */
-            received_at_utc: string;
-            /** Latest Generation */
-            latest_generation: string | null;
+            /** Citation Label */
+            citation_label: string;
+            /** Claim Id */
+            claim_id: string;
+            /** Doi Or Url */
+            doi_or_url: string | null;
             /** Duplicate */
             duplicate: boolean;
+            /** Latest Generation */
+            latest_generation: string | null;
+            /** Note */
+            note: string;
+            /** Receipt Id */
+            receipt_id: string;
+            /** Received At Utc */
+            received_at_utc: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            status: components["schemas"]["ProvidedReferenceStatus"];
         };
         /**
          * ProvidedReferenceStatus
@@ -634,24 +1124,24 @@ export interface components {
         /** PublicCourseCatalog */
         PublicCourseCatalog: {
             /**
-             * Schema Version
-             * @default 1
-             * @constant
+             * Institutions
+             * @default []
              */
-            schema_version: "1";
-            /** Reviewed On */
-            reviewed_on?: string | null;
-            source?: components["schemas"]["PublicCourseSource"] | null;
+            institutions: components["schemas"]["PublicCourseInstitution"][];
             /**
              * Publication Boundary
              * @default []
              */
             publication_boundary: string[];
+            /** Reviewed On */
+            reviewed_on?: string | null;
             /**
-             * Institutions
-             * @default []
+             * Schema Version
+             * @default 1
+             * @constant
              */
-            institutions: components["schemas"]["PublicCourseInstitution"][];
+            schema_version: "1";
+            source?: components["schemas"]["PublicCourseSource"] | null;
             /**
              * Unresolved Collections
              * @default []
@@ -660,22 +1150,22 @@ export interface components {
         };
         /** PublicCourseInstitution */
         PublicCourseInstitution: {
+            /** Courses */
+            courses: components["schemas"]["PublicCourseRecord"][];
             /** Id */
             id: string;
             /** Name */
             name: string;
-            /** Courses */
-            courses: components["schemas"]["PublicCourseRecord"][];
         };
         /** PublicCourseRecord */
         PublicCourseRecord: {
-            /** Id */
-            id: string;
             /** Code */
             code: string;
+            /** Id */
+            id: string;
+            materials_status: components["schemas"]["CourseMaterialsStatus"];
             /** Title */
             title?: string | null;
-            materials_status: components["schemas"]["CourseMaterialsStatus"];
         };
         /** PublicCourseSource */
         PublicCourseSource: {
@@ -700,16 +1190,16 @@ export interface components {
         /** PublicProjectCatalog */
         PublicProjectCatalog: {
             /**
+             * Projects
+             * @default []
+             */
+            projects: components["schemas"]["PublicProjectRecord"][];
+            /**
              * Schema Version
              * @default 1
              * @constant
              */
             schema_version: "1";
-            /**
-             * Projects
-             * @default []
-             */
-            projects: components["schemas"]["PublicProjectRecord"][];
         };
         /** PublicProjectLink */
         PublicProjectLink: {
@@ -723,42 +1213,15 @@ export interface components {
         };
         /** PublicProjectRecord */
         PublicProjectRecord: {
-            /** Id */
-            id: string;
-            /** Slug */
-            slug: string;
-            /** Name */
-            name: string;
-            /** Tagline */
-            tagline: string;
-            /** Summary */
-            summary: string;
-            status: components["schemas"]["PublicProjectStatus"];
-            review: components["schemas"]["PublicProjectReview"];
-            /** Source Revisions */
-            source_revisions: components["schemas"]["PublicProjectSourceRevision"][];
-            /** Evidence */
-            evidence: components["schemas"]["PublicProjectLink"][];
-            /**
-             * Topics
-             * @default []
-             */
-            topics: string[];
-            /**
-             * Purposes
-             * @default []
-             */
-            purposes: string[];
-            /**
-             * Principles
-             * @default []
-             */
-            principles: string[];
             /**
              * Capabilities
              * @default []
              */
             capabilities: components["schemas"]["PublicProjectCapability"][];
+            /** Evidence */
+            evidence: components["schemas"]["PublicProjectLink"][];
+            /** Id */
+            id: string;
             /**
              * Limitations
              * @default []
@@ -769,21 +1232,48 @@ export interface components {
              * @default []
              */
             links: components["schemas"]["PublicProjectLink"][];
+            /** Name */
+            name: string;
+            /**
+             * Principles
+             * @default []
+             */
+            principles: string[];
+            /**
+             * Purposes
+             * @default []
+             */
+            purposes: string[];
+            review: components["schemas"]["PublicProjectReview"];
+            /** Slug */
+            slug: string;
+            /** Source Revisions */
+            source_revisions: components["schemas"]["PublicProjectSourceRevision"][];
+            status: components["schemas"]["PublicProjectStatus"];
+            /** Summary */
+            summary: string;
+            /** Tagline */
+            tagline: string;
+            /**
+             * Topics
+             * @default []
+             */
+            topics: string[];
         };
         /** PublicProjectReview */
         PublicProjectReview: {
             /** Record Version */
             record_version: string;
             /**
-             * Reviewed On
-             * Format: date
-             */
-            reviewed_on: string;
-            /**
              * Review Url
              * Format: uri
              */
             review_url: string;
+            /**
+             * Reviewed On
+             * Format: date
+             */
+            reviewed_on: string;
         };
         /** PublicProjectSourceRevision */
         PublicProjectSourceRevision: {
@@ -805,16 +1295,16 @@ export interface components {
         /** PublicationCatalog */
         PublicationCatalog: {
             /**
+             * Publications
+             * @default []
+             */
+            publications: components["schemas"]["PublicationRecord"][];
+            /**
              * Schema Version
              * @default 1
              * @constant
              */
             schema_version: "1";
-            /**
-             * Publications
-             * @default []
-             */
-            publications: components["schemas"]["PublicationRecord"][];
         };
         /**
          * PublicationKind
@@ -833,36 +1323,18 @@ export interface components {
         };
         /** PublicationRecord */
         PublicationRecord: {
-            /** Id */
-            id: string;
-            /** Slug */
-            slug: string;
-            kind: components["schemas"]["PublicationKind"];
-            /** Title */
-            title: string;
-            /** Summary */
-            summary: string;
             /** Authors */
             authors: string[];
-            /**
-             * Published On
-             * Format: date
-             */
-            published_on: string;
-            /** Version */
-            version?: string | null;
             /** Citation */
             citation?: string | null;
-            /**
-             * Topics
-             * @default []
-             */
-            topics: string[];
             /**
              * Claims
              * @default []
              */
             claims: string[];
+            /** Id */
+            id: string;
+            kind: components["schemas"]["PublicationKind"];
             /**
              * Limitations
              * @default []
@@ -873,42 +1345,219 @@ export interface components {
              * @default []
              */
             links: components["schemas"]["PublicationLink"][];
+            /**
+             * Published On
+             * Format: date
+             */
+            published_on: string;
+            /** Slug */
+            slug: string;
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+            /**
+             * Topics
+             * @default []
+             */
+            topics: string[];
+            /** Version */
+            version?: string | null;
         };
         /** SearchRequest */
         SearchRequest: {
-            /** Query */
-            query: string;
             /**
              * Limit
              * @default 10
              */
             limit: number;
+            /** Query */
+            query: string;
         };
         /** SearchResult */
         SearchResult: {
-            /** Title */
-            title: string;
-            /** Path */
-            path: string;
-            /** Snippet */
-            snippet: string;
-            /** Score */
-            score: number;
             /** Object Type */
             object_type: string;
+            /** Path */
+            path: string;
+            /** Score */
+            score: number;
+            /** Snippet */
+            snippet: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * TranscriptReviewCategory
+         * @enum {string}
+         */
+        TranscriptReviewCategory: "TRANSCRIPT_DIFF" | "DEHYPHENATION" | "PAGE_NUMBER" | "FRONT_MATTER" | "PRIVATE_USE_GLYPH" | "EQUATION" | "FIGURE" | "BIBLIOGRAPHY" | "CITATION";
+        /** TranscriptReviewDocumentResponse */
+        TranscriptReviewDocumentResponse: {
+            /** Artifact Generation */
+            artifact_generation: number;
+            /** Categories */
+            categories: components["schemas"]["TranscriptReviewCategory"][];
+            /** Clean Artifact Id */
+            clean_artifact_id: string;
+            /** Display Name */
+            display_name: string;
+            /** Document Id */
+            document_id: string;
+            /** Items */
+            items: components["schemas"]["TranscriptReviewItemResponse"][];
+            /** Limitations */
+            limitations: string[];
+            /** Manifest Id */
+            manifest_id: string;
+            /** Pending Items */
+            pending_items: number;
+            /** Physical Page Count */
+            physical_page_count: number;
+            /** Source Id */
+            source_id: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            status: components["schemas"]["TranscriptReviewStatus"];
+            /** Total Items */
+            total_items: number;
+        };
+        /** TranscriptReviewDocumentSummaryResponse */
+        TranscriptReviewDocumentSummaryResponse: {
+            /** Artifact Generation */
+            artifact_generation: number;
+            /** Categories */
+            categories: components["schemas"]["TranscriptReviewCategory"][];
+            /** Display Name */
+            display_name: string;
+            /** Document Id */
+            document_id: string;
+            /** Pending Items */
+            pending_items: number;
+            /** Physical Page Count */
+            physical_page_count: number;
+            /** Source Id */
+            source_id: string;
+            status: components["schemas"]["TranscriptReviewStatus"];
+            /** Total Items */
+            total_items: number;
+        };
+        /** TranscriptReviewItemResponse */
+        TranscriptReviewItemResponse: {
+            category: components["schemas"]["TranscriptReviewCategory"];
+            /** Explanation */
+            explanation: string;
+            /**
+             * Flags
+             * @default []
+             */
+            flags: string[];
+            /** Item Id */
+            item_id: string;
+            /**
+             * Links
+             * @default []
+             */
+            links: components["schemas"]["TranscriptReviewLinkResponse"][];
+            /** Physical Page */
+            physical_page: number;
+            /** Predecessor Text */
+            predecessor_text?: string | null;
+            /** Preview Asset Id */
+            preview_asset_id?: string | null;
+            /** Printed Page */
+            printed_page?: string | null;
+            /** Projected Text */
+            projected_text?: string | null;
+            region?: components["schemas"]["TranscriptReviewRegionResponse"] | null;
+            risk: components["schemas"]["TranscriptReviewRisk"];
+            /** Source Text */
+            source_text: string;
+        };
+        /**
+         * TranscriptReviewLinkRelation
+         * @enum {string}
+         */
+        TranscriptReviewLinkRelation: "CITES" | "CITED_BY" | "DERIVED_FROM" | "HAS_DERIVATIVE";
+        /**
+         * TranscriptReviewLinkResolution
+         * @enum {string}
+         */
+        TranscriptReviewLinkResolution: "LINKED" | "AMBIGUOUS" | "UNRESOLVED";
+        /** TranscriptReviewLinkResponse */
+        TranscriptReviewLinkResponse: {
+            /** Label */
+            label: string;
+            relation: components["schemas"]["TranscriptReviewLinkRelation"];
+            resolution: components["schemas"]["TranscriptReviewLinkResolution"];
+            /** Target Item Id */
+            target_item_id?: string | null;
+        };
+        /** TranscriptReviewQueueResponse */
+        TranscriptReviewQueueResponse: {
+            /** Documents */
+            documents: components["schemas"]["TranscriptReviewDocumentSummaryResponse"][];
+            /** Pending Items */
+            pending_items: number;
+            /** Review Id */
+            review_id: string;
+            status: components["schemas"]["TranscriptReviewStatus"];
+            /** Title */
+            title: string;
+            /** Total Documents */
+            total_documents: number;
+            /** Total Items */
+            total_items: number;
+        };
+        /** TranscriptReviewRegionResponse */
+        TranscriptReviewRegionResponse: {
+            /** X0 */
+            x0: number;
+            /** X1 */
+            x1: number;
+            /** Y0 */
+            y0: number;
+            /** Y1 */
+            y1: number;
+        };
+        /**
+         * TranscriptReviewRisk
+         * @enum {string}
+         */
+        TranscriptReviewRisk: "REVIEW_REQUIRED" | "INFORMATIONAL";
+        /**
+         * TranscriptReviewStatus
+         * @enum {string}
+         */
+        TranscriptReviewStatus: "AUTOMATED_UNREVIEWED";
+        /** UnassistedEquationProposalResponse */
+        UnassistedEquationProposalResponse: {
+            /** Attempt Id */
+            attempt_id: null;
+            /** Method */
+            method: null;
+            /** Proposal Sha256 */
+            proposal_sha256: null;
+            /** Proposed Latex */
+            proposed_latex: null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            status: "NOT_STARTED";
         };
         /** ValidationError */
         ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
             /** Location */
             loc: (string | number)[];
             /** Message */
             msg: string;
             /** Error Type */
             type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
         };
     };
     responses: never;
@@ -920,28 +1569,6 @@ export interface components {
 export type $defs = Record<string, never>;
 export interface operations {
     read_root__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
-                };
-            };
-        };
-    };
-    health_health_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -1019,59 +1646,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicationCatalog"];
-                };
-            };
-        };
-    };
-    search_search_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SearchRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SearchResult"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_github_tasks_github_tasks_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GitHubTaskDashboard"];
                 };
             };
         };
@@ -1191,6 +1765,248 @@ export interface operations {
             };
         };
     };
+    queue_equation_reviews_get: {
+        parameters: {
+            query: {
+                document_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewQueueResponse"];
+                };
+            };
+            /** @description The equation-review identity is not configured. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description The proposal, immutable evidence, expected revision, render, or concurrent append does not match. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The applications-owned queue projection is malformed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+            /** @description The configured owner root, complete queue evidence, or append output is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+        };
+    };
+    decide_equation_reviews__candidate_id__decision_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EquationReviewDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewDecisionResponse"];
+                };
+            };
+            /** @description The equation-review identity is not configured. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description The proposal, immutable evidence, expected revision, render, or concurrent append does not match. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The applications-owned queue projection is malformed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+            /** @description The configured owner root, complete queue evidence, or append output is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+        };
+    };
+    region_equation_reviews__candidate_id__region_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Content-addressed PNG evidence, fully buffered and limited to exactly 20,000,000 bytes. */
+            200: {
+                headers: {
+                    /** @description Always `inline`; artifact filenames are never exposed. */
+                    "Content-Disposition"?: "inline";
+                    /** @description Prevents media-type sniffing. */
+                    "X-Content-Type-Options"?: "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                };
+            };
+            /** @description The equation-review identity is not configured. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The applications-owned queue projection is malformed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+            /** @description The configured owner root, complete queue evidence, or append output is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+        };
+    };
+    read_github_tasks_github_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubTaskDashboard"];
+                };
+            };
+        };
+    };
+    health_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
     progress_literature_review_progress_get: {
         parameters: {
             query?: never;
@@ -1260,6 +2076,411 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_control_organizer_control_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizerControlRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_events_organizer_events_get: {
+        parameters: {
+            query?: {
+                after?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerEventListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_events_organizer_events_stream_get: {
+        parameters: {
+            query?: {
+                after?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_status_organizer_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizerStatusResponse"];
+                };
+            };
+        };
+    };
+    search_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResult"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_queue_transcript_reviews_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscriptReviewQueueResponse"];
+                };
+            };
+            /** @description The transcript review owner adapter failed unexpectedly. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description The transcript review owner adapter returned invalid data. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description No transcript review owner adapter is available. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    read_document_transcript_reviews__document_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscriptReviewDocumentResponse"];
+                };
+            };
+            /** @description The requested transcript review projection was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The transcript review owner adapter failed unexpectedly. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description The transcript review owner adapter returned invalid data. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description No transcript review owner adapter is available. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    read_preview_transcript_reviews__document_id__assets__asset_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Nonempty PNG, JPEG, or WebP with matching magic bytes, fully buffered in memory and limited to exactly 20,000,000 bytes. */
+            200: {
+                headers: {
+                    /** @description Always `inline`; provider filenames are never exposed. */
+                    "Content-Disposition"?: "inline";
+                    /** @description Prevents media-type sniffing. */
+                    "X-Content-Type-Options"?: "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            /** @description The requested transcript review projection was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The transcript review owner adapter failed unexpectedly. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description The transcript review owner adapter returned invalid data. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description No transcript review owner adapter is available. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    read_source_transcript_reviews__document_id__source_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Nonempty PDF with a `%PDF-` signature, fully buffered in memory and limited to exactly 100,000,000 bytes. */
+            200: {
+                headers: {
+                    /** @description Always `inline`; provider filenames are never exposed. */
+                    "Content-Disposition"?: "inline";
+                    /** @description Prevents media-type sniffing. */
+                    "X-Content-Type-Options"?: "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            /** @description The requested transcript review projection was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The transcript review owner adapter failed unexpectedly. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description The transcript review owner adapter returned invalid data. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description No transcript review owner adapter is available. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };

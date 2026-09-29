@@ -28,7 +28,26 @@ It starts:
 
 It waits for both services to become ready and stores PID files and logs in
 `.run/`. Repeating the command is safe: already managed processes are reused.
-The script refuses to use a port occupied by an unmanaged process.
+When the optional default public course or project catalog is absent, startup creates
+an ignored empty runtime catalog in `.run/` so local control startup can continue.
+Explicit `KOIOS_COURSE_CATALOG` and `KOIOS_PROJECT_CATALOG` paths are never replaced,
+and existing files are never overwritten. The script refuses to use a port occupied by
+an unmanaged process.
+
+Equation-owner packages are not required or added to `PYTHONPATH` during ordinary
+startup. To enable the private `pizzi2020` equation-review owner, explicitly provide an
+absolute existing document-package directory:
+
+```bash
+KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT=/absolute/path/to/document-package \
+  npm run start:local
+```
+
+Only this opt-in mode resolves and requires the applications, ingestion, and references
+Python source trees. Their sibling defaults can be overridden with
+`KOIOS_APPLICATIONS_REPO`, `KOIOS_INGESTION_REPO`, and `KOIOS_REFERENCES_REPO`. Paths
+containing spaces are supported. Startup does not supply a default document root and
+does not search for one.
 
 To open the browser automatically on macOS:
 
@@ -69,7 +88,8 @@ npm run dev:control
 
 Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/courses`,
 `/api/projects`, `/api/publications`, `/github/tasks`, `/search`, `/citation-reviews`,
-`/literature-review`, `/docs`, and `/openapi.json` to the local API, avoiding a
+`/equation-reviews`, `/organizer`, `/transcript-reviews`, `/literature-review`, `/docs`,
+and `/openapi.json` to the local API, avoiding a
 development CORS dependency.
 
 The control header reports whether the API is available. The public profile does not
@@ -79,21 +99,25 @@ display operational health.
 
 The scripts accept these optional environment variables:
 
-| Variable                    | Default                         |
-| --------------------------- | ------------------------------- |
-| `KOIOS_API_HOST`            | `127.0.0.1`                     |
-| `KOIOS_API_PORT`            | `8000`                          |
-| `KOIOS_WEB_HOST`            | `127.0.0.1`                     |
-| `KOIOS_WEB_PORT`            | `5173`                          |
-| `KOIOS_RUN_DIR`             | `.run` inside this repository   |
-| `KOIOS_API_REPO`            | sibling `projectkoios-api`      |
-| `KOIOS_CORE_REPO`           | sibling `projectkoios`          |
-| `KOIOS_COURSE_CATALOG`      | core public-safe course catalog |
-| `KOIOS_PROJECT_CATALOG`     | core public project catalog     |
-| `KOIOS_SEARCH_REPO`         | sibling `projectkoios-search`   |
-| `KOIOS_OBSIDIAN_REPO`       | sibling `projectkoios-obsidian` |
-| `KOIOS_GITHUB_REPOSITORIES` | API and web repositories        |
-| `KOIOS_OPEN_BROWSER`        | `0`                             |
+| Variable                                        | Default                                 |
+| ----------------------------------------------- | --------------------------------------- |
+| `KOIOS_API_HOST`                                | `127.0.0.1`                             |
+| `KOIOS_API_PORT`                                | `8000`                                  |
+| `KOIOS_WEB_HOST`                                | `127.0.0.1`                             |
+| `KOIOS_WEB_PORT`                                | `5173`                                  |
+| `KOIOS_RUN_DIR`                                 | `.run` inside this repository           |
+| `KOIOS_API_REPO`                                | sibling `projectkoios-api`              |
+| `KOIOS_CORE_REPO`                               | sibling `projectkoios`                  |
+| `KOIOS_COURSE_CATALOG`                          | core catalog, or empty runtime fallback |
+| `KOIOS_PROJECT_CATALOG`                         | core catalog, or empty runtime fallback |
+| `KOIOS_SEARCH_REPO`                             | sibling `projectkoios-search`           |
+| `KOIOS_OBSIDIAN_REPO`                           | sibling `projectkoios-obsidian`         |
+| `KOIOS_APPLICATIONS_REPO`                       | sibling `projectkoios-applications`     |
+| `KOIOS_INGESTION_REPO`                          | sibling `projectkoios-ingestion`        |
+| `KOIOS_REFERENCES_REPO`                         | sibling `projectkoios-references`       |
+| `KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT` | unset; equation owner disabled          |
+| `KOIOS_GITHUB_REPOSITORIES`                     | API and web repositories                |
+| `KOIOS_OPEN_BROWSER`                            | `0`                                     |
 
 The shell scripts target macOS and Unix-like development systems. They explicitly
 start both processes in the `control` profile and bind them to loopback by default.
@@ -159,6 +183,76 @@ never placed in `VITE_*` variables or returned to the browser.
 An empty result is distinct from an unavailable API. The current backend uses an
 in-memory index, so results depend on how the API process was initialized.
 
+## Note-review prototype
+
+From **Control center**, open **Note review** to inspect the fixture-backed design for
+reviewing proposed reference and research notes. The queue distinguishes new notes,
+managed-section updates, and precondition conflicts. Each proposal exposes its target
+path, citekey, batch identity, expected content hash, proposed frontmatter,
+machine-managed sections, preserved human-owned sections, and a line-oriented diff.
+
+Review dispositions remain browser-local and disappear when the page reloads. The
+prototype cannot create, edit, approve, or apply a vault note. A future integration must
+consume the note-owning domain's catalog, keep review from apply, and revalidate the
+precondition hash immediately before any explicit materializer write.
+
+## Equation review
+
+From **Control center**, open **Equation review** to request the owner-backed durable
+queue for `pizzi2020`. The compact progress summary reports total, decided, and pending
+counts. Select an opaque candidate ID from the accessible status list or use
+**Previous**/**Next**; the selected ID remains in the URL for reload. The owner controls
+the deterministic queue order.
+
+The selected candidate shows its full-width source-region image first, followed by its
+deterministic evidence/status, a **Proposed** comparison, and a **Reviewer** comparison.
+Each transcription comparison places LaTeX and canonical Obsidian Markdown source beside
+a rendered preview. Assisted text is always labeled as an unaccepted proposal. Its raw
+immutable source and hash are displayed exactly, even when the proposal already contains
+math delimiters. Unassisted candidates retain their evidence but cannot render or accept
+a transcription.
+
+For proposed preview and prefill, the browser strips exactly one matching outer `$...$`
+or `$$...$$` pair (with only the canonical matching display line feeds) and otherwise
+leaves an unwrapped body exact. It never trims or Unicode-normalizes. Mixed, unmatched,
+double/nested, empty, edge-whitespace, carriage-return, non-NFC, or asymmetric wrapper
+input is flagged and cannot be rendered or accepted. Proposed Markdown wraps only the
+derived body, so proposal delimiters are never nested.
+
+Reviewer LaTeX starts from the latest accepted schema-3 reviewer source. A legacy schema-2
+acceptance remains visible in stored history but has no accepted source, so the
+successfully derived proposal body initializes the editor. The canonical reviewer
+Markdown is derived read-only text. KaTeX `0.16.47` renders local previews with trust
+disabled and strict errors; those previews do not replace the canonical
+Obsidian/MathJax-compatible Markdown.
+
+Choose **Render current correction** after editing. **Accept reviewed transcription**
+remains disabled until both exact current representations render successfully and their
+SHA-256 confirmation exists. Changing the LaTeX or display mode immediately clears both
+reviewer previews and the confirmation. Render errors do not enable acceptance. If the
+reviewer source, display mode, or note has changed, candidate navigation pauses until you
+stay or explicitly discard the unsubmitted draft.
+
+An acceptance sends the proposal identity, reviewer LaTeX, display mode, exact render
+hashes, note, and displayed previous revision. It never sends browser-derived Markdown
+as authority or a browser timestamp. Reject and correction-request actions remain
+separate and do not claim a successful transcription render. Only a successful
+owner-backed response is shown as recorded, with its schema, revision ID/number, status,
+and owner time.
+
+The collapsed **Debug & Provenance** pane shows bounded, read-only queue/projection
+identity and counts, current index/status, candidate identities, hashes, deterministic
+processor and proposal-method fields, proposal-derivation status, revisions, storage
+metadata, renderer confirmation, typed error code, and contract JSON. It excludes raw
+evidence and transcription bodies, notes, paths, credentials, and secrets.
+
+Noncanonical reviewer LaTeX, stale render, and edit-after-render are distinguished from
+stale proposal, evidence, revision, and concurrent-decision conflicts. Partial output,
+incomplete or malformed queues, and owner unavailability never imply a save. A 404 means
+`pizzi2020` is not configured. The route does not invent fixture data or access corpus
+files. See the
+[equation-review API contract](equation-review-api-contract.md) for the exact boundary.
+
 ## Citation review
 
 From **Control center**, open **Citation review** to inspect the configured private
@@ -199,16 +293,17 @@ browser bundle.
 
 ## Generate OpenAPI types
 
-With the API running:
+Generate from the reviewed deterministic control OpenAPI document:
 
 ```bash
-npm run generate:api
+KOIOS_OPENAPI_URL=/path/to/projectkoios-api/openapi/control.openapi.json \
+  npm run generate:api
 ```
 
-This writes `src/api/schema.generated.ts`. Generated files must be reviewed when
-API contracts change. The API client consumes the generated publication and control contracts. Generate
-from a control-profile OpenAPI document so the schema contains the full typed
-superset.
+This writes `src/api/schema.generated.ts`. Generated files must be reviewed when API
+contracts change. The API client consumes the generated publication and control
+contracts. Generate from a control-profile OpenAPI document so the schema contains the
+full typed superset.
 
 ## Run checks
 
