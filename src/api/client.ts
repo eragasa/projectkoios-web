@@ -30,6 +30,24 @@ export type CitationReviewDetail =
 export type CitationReviewQueue = components["schemas"]["CitationReviewQueueResponse"];
 export type LiteratureReviewProgress =
   components["schemas"]["LiteratureReviewProgressResponse"];
+export type EquationReviewQueueResponse =
+  paths["/equation-reviews"]["get"]["responses"][200]["content"]["application/json"];
+export type EquationReviewCandidate = EquationReviewQueueResponse["items"][number];
+export type EquationReviewDecisionRequest =
+  paths["/equation-reviews/{candidate_id}/decision"]["put"]["requestBody"]["content"]["application/json"];
+export type EquationReviewDecisionResponse =
+  paths["/equation-reviews/{candidate_id}/decision"]["put"]["responses"][200]["content"]["application/json"];
+export type EquationReviewDisposition =
+  components["schemas"]["EquationReviewDisposition"];
+export type EquationDisplayMode = components["schemas"]["EquationDisplayMode"];
+export type EquationReviewStatus = components["schemas"]["EquationReviewStatus"];
+export type EquationReviewFailureCode =
+  components["schemas"]["EquationReviewFailureCode"];
+export type EquationReviewFailureResponse =
+  components["schemas"]["EquationReviewFailureResponse"];
+export type OrganizerControlRequest = components["schemas"]["OrganizerControlRequest"];
+export type OrganizerEventList = components["schemas"]["OrganizerEventListResponse"];
+export type OrganizerStatus = components["schemas"]["OrganizerStatusResponse"];
 export type ProvidedReference = components["schemas"]["ProvidedReferenceResponse"];
 export type ProvidedReferenceList =
   components["schemas"]["ProvidedReferenceListResponse"];
@@ -44,11 +62,13 @@ export interface ProvideReferenceRequest {
 
 export class ApiError extends Error {
   readonly status: number;
+  readonly code: string | undefined;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -79,6 +99,29 @@ export class ProjectKoiosApiClient {
     return this.request<GitHubTaskDashboard>("/github/tasks", { signal });
   }
 
+  async organizerStatus(signal?: AbortSignal): Promise<OrganizerStatus> {
+    return this.request<OrganizerStatus>("/organizer/status", { signal });
+  }
+
+  async setOrganizerMode(
+    request: OrganizerControlRequest,
+    signal?: AbortSignal,
+  ): Promise<OrganizerStatus> {
+    return this.request<OrganizerStatus>("/organizer/control", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+      signal,
+    });
+  }
+
+  async organizerEvents(after = 0, signal?: AbortSignal): Promise<OrganizerEventList> {
+    const query = new URLSearchParams({ after: String(after) });
+    return this.request<OrganizerEventList>(`/organizer/events?${query.toString()}`, {
+      signal,
+    });
+  }
+
   async search(request: SearchRequest, signal?: AbortSignal): Promise<SearchResult[]> {
     return this.request<SearchResult[]>("/search", {
       method: "POST",
@@ -90,6 +133,38 @@ export class ProjectKoiosApiClient {
 
   async citationReviews(signal?: AbortSignal): Promise<CitationReviewQueue> {
     return this.request<CitationReviewQueue>("/citation-reviews", { signal });
+  }
+
+  async equationReviews(
+    documentId: string,
+    signal?: AbortSignal,
+  ): Promise<EquationReviewQueueResponse> {
+    const query = new URLSearchParams({ document_id: documentId });
+    return this.request<EquationReviewQueueResponse>(
+      `/equation-reviews?${query.toString()}`,
+      { signal },
+    );
+  }
+
+  async saveEquationReviewDecision(
+    candidateId: string,
+    request: EquationReviewDecisionRequest,
+    signal?: AbortSignal,
+  ): Promise<EquationReviewDecisionResponse> {
+    return this.request<EquationReviewDecisionResponse>(
+      `/equation-reviews/${encodeURIComponent(candidateId)}/decision`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+        signal,
+      },
+    );
+  }
+
+  equationRegionImageUrl(candidateId: string): string {
+    const path = `/equation-reviews/${encodeURIComponent(candidateId)}/region`;
+    return `${this.baseUrl}${path}`;
   }
 
   async literatureReviewProgress(
@@ -162,15 +237,22 @@ export class ProjectKoiosApiClient {
     const response = await fetch(`${this.baseUrl}${path}`, init);
     if (!response.ok) {
       let message = `Project Koios API returned ${response.status}`;
+      let code: string | undefined;
       try {
-        const body = (await response.json()) as { detail?: unknown };
+        const body = (await response.json()) as {
+          code?: unknown;
+          detail?: unknown;
+        };
         if (typeof body.detail === "string") {
           message = body.detail;
+        }
+        if (typeof body.code === "string") {
+          code = body.code;
         }
       } catch {
         // The status code remains sufficient when the body is not JSON.
       }
-      throw new ApiError(response.status, message);
+      throw new ApiError(response.status, message, code);
     }
     return (await response.json()) as T;
   }

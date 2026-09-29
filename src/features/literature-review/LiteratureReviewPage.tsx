@@ -1,10 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import katex from "katex";
 import { type FormEvent, type ReactNode, useState } from "react";
-
-import "katex/dist/katex.min.css";
-
 import { apiClient, type LiteratureReviewProgress } from "../../api/client";
+import { KatexMarkup } from "../../components/KatexMarkup";
 
 type Claim = LiteratureReviewProgress["claims"][number];
 
@@ -43,9 +41,10 @@ function inlineSubmissionMarkdown(text: string): ReactNode[] {
           trust: false,
         });
         return (
-          <span
+          <KatexMarkup
+            as="span"
             className="original-submission__inline-math"
-            dangerouslySetInnerHTML={{ __html: markup }}
+            html={markup}
             key={`${part}-${index}`}
           />
         );
@@ -94,9 +93,9 @@ function OriginalSubmission({ markdown }: { markdown: string }) {
                 trust: false,
               });
               return (
-                <div
+                <KatexMarkup
                   className="original-submission__equation"
-                  dangerouslySetInnerHTML={{ __html: markup }}
+                  html={markup}
                   key={`line-${index}`}
                 />
               );
@@ -153,10 +152,7 @@ function EquationValidation({ claim }: { claim: Claim }) {
           return (
             <article key={`${claim.claim_id}-${equation.label}`}>
               <strong>{equation.label}</strong>
-              <div
-                className="equation-validation__math"
-                dangerouslySetInnerHTML={{ __html: markup }}
-              />
+              <KatexMarkup className="equation-validation__math" html={markup} />
               <p>{equation.interpretation}</p>
             </article>
           );

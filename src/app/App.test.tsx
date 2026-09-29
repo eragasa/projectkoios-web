@@ -24,6 +24,9 @@ beforeEach(() => {
     "fetch",
     vi.fn((request: RequestInfo | URL) => {
       const path = String(request);
+      if (path.includes("/equation-reviews?")) {
+        return Promise.resolve(Response.json({ detail: "not found" }, { status: 404 }));
+      }
       const body = path.endsWith("/api/courses")
         ? {
             schema_version: "1",
@@ -122,4 +125,36 @@ test("control profile opens the single-operator dashboard", async () => {
     "href",
     "/control/search",
   );
+  expect(screen.getByRole("link", { name: /Open note review/ })).toHaveAttribute(
+    "href",
+    "/control/note-review",
+  );
+  expect(screen.getByRole("link", { name: /Open equation review/ })).toHaveAttribute(
+    "href",
+    "/control/equation-review",
+  );
+});
+
+test("control profile exposes the equation-review API boundary", async () => {
+  renderApp("control", "/control/equation-review");
+
+  expect(
+    await screen.findByRole("heading", { name: "Equation review is unavailable" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("pizzi2020 is not configured for equation review on this API."),
+  ).toBeInTheDocument();
+});
+
+test("public profile rejects the equation-review route", () => {
+  renderApp("public", "/control/equation-review");
+
+  expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
+});
+
+test("control profile exposes the note-review prototype", () => {
+  renderApp("control", "/control/note-review");
+
+  expect(screen.getByRole("heading", { name: "Note review" })).toBeInTheDocument();
+  expect(screen.getByText("No write capability")).toBeInTheDocument();
 });
