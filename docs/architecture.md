@@ -86,7 +86,10 @@ src/
 │   ├── AppShell.tsx
 │   └── deploymentProfile.ts
 ├── components/
-│   └── HealthIndicator.tsx
+│   ├── DisclosurePanel.tsx
+│   ├── HealthIndicator.tsx
+│   ├── KatexMarkup.tsx
+│   └── ReviewPageHeader.tsx
 ├── features/
 │   ├── citation-review/
 │   ├── dashboard/
@@ -101,6 +104,11 @@ src/
 
 Features depend on the API client and reusable components. The API client does
 not depend on React. Components do not import backend implementation packages.
+Shared review primitives own presentation-only concerns such as headers, progress,
+disclosure, bounded JSON display, and the single local KaTeX HTML sink. Equation
+canonicalization, strict rendering policy, render-confirmation state, provenance
+projection, and acceptance rules remain feature-local rather than configurable generic
+components.
 
 ## Local development process management
 

@@ -4215,7 +4215,6 @@ a {
   background: #fafaf7;
 }
 
-.equation-source-preview-row > label,
 .equation-source-preview-row > div {
   display: grid;
   min-width: 0;
@@ -4223,12 +4222,10 @@ a {
   grid-template-rows: auto 1fr;
 }
 
-.equation-source-preview-row > label,
 .equation-source-preview-row > .equation-source-panel {
   border-right: 1px solid var(--line);
 }
 
-.equation-source-preview-row > label > span,
 .equation-source-preview-row > div > span,
 .equation-review-note > span,
 .equation-display-mode > span {
@@ -4501,7 +4498,6 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .equation-source-preview-row > label,
   .equation-source-preview-row > .equation-source-panel {
     border-right: 0;
     border-bottom: 1px solid var(--line);

@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import katex from "katex";
 import { type FormEvent, useState } from "react";
-
-import "katex/dist/katex.min.css";
+import { KatexMarkup } from "../../components/KatexMarkup";
+import { ReviewPageHeader, ReviewProgress } from "../../components/ReviewPageHeader";
 
 import {
   apiClient,
@@ -40,11 +40,11 @@ function MathExpression({ latex, display }: { latex: string; display: boolean })
     trust: false,
   });
   return (
-    <div
+    <KatexMarkup
       className={
         display ? "math-expression math-expression--display" : "math-expression"
       }
-      dangerouslySetInnerHTML={{ __html: markup }}
+      html={markup}
     />
   );
 }
@@ -417,23 +417,19 @@ export function CitationReviewPage() {
 
   return (
     <div className="citation-review-page">
-      <header className="review-page-header">
-        <div>
-          <p className="eyebrow">Human review required</p>
-          <h1>Citation evidence queue</h1>
-          <p>
-            Inspect reference passages and record a disposition. Automated findings
-            remain unverified until you save a decision.
-          </p>
-        </div>
-        <div className="review-progress" aria-label="Review progress">
-          <strong>
-            {queue.data.decided}/{queue.data.total}
-          </strong>
-          <span>claims reviewed</span>
-          <progress value={queue.data.decided} max={queue.data.total} />
-        </div>
-      </header>
+      <ReviewPageHeader
+        eyebrow="Human review required"
+        title="Citation evidence queue"
+        description="Inspect reference passages and record a disposition. Automated findings remain unverified until you save a decision."
+        aside={
+          <ReviewProgress
+            ariaLabel="Review progress"
+            current={queue.data.decided}
+            total={queue.data.total}
+            summary="claims reviewed"
+          />
+        }
+      />
 
       <div className="review-integrity-banner">
         <strong>{queue.data.assessment}</strong>

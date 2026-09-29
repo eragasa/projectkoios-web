@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { ReviewPageHeader } from "../../components/ReviewPageHeader";
 
 import {
   apiClient,
@@ -183,28 +184,25 @@ export function GitHubTasksPage() {
 
   return (
     <div className="github-tasks-page">
-      <header className="review-page-header">
-        <div>
-          <p className="eyebrow">Control center · Read only</p>
-          <h1>GitHub tasks</h1>
-          <p>
-            Inspect live pull requests and ordered CI tasks without copying GitHub
-            authority or exposing mutation controls.
-          </p>
-        </div>
-        <div className="github-authority-card">
-          <span>Authority</span>
-          <strong>GitHub live</strong>
-          <button
-            className="button button--secondary"
-            type="button"
-            onClick={() => void dashboard.refetch()}
-            disabled={dashboard.isFetching}
-          >
-            {dashboard.isFetching ? "Refreshing…" : "Refresh"}
-          </button>
-        </div>
-      </header>
+      <ReviewPageHeader
+        eyebrow="Control center · Read only"
+        title="GitHub tasks"
+        description="Inspect live pull requests and ordered CI tasks without copying GitHub authority or exposing mutation controls."
+        aside={
+          <div className="github-authority-card">
+            <span>Authority</span>
+            <strong>GitHub live</strong>
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => void dashboard.refetch()}
+              disabled={dashboard.isFetching}
+            >
+              {dashboard.isFetching ? "Refreshing…" : "Refresh"}
+            </button>
+          </div>
+        }
+      />
 
       {dashboard.isPending ? (
         <div className="review-loading" role="status">
