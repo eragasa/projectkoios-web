@@ -159,19 +159,25 @@ used for `/health` because the current backend schema exposes a generic string
 mapping rather than a named health model.
 
 The equation-review workspace consumes the owner-backed schema-3 contract in the
-deterministic control OpenAPI document. Queue, region-image, decision, render
+deterministic control OpenAPI document. Durable queue, region-image, decision, render
 confirmation, provenance, status, and typed failure DTOs come from
 `src/api/schema.generated.ts`; the adopted boundary is documented in
 [equation-review-api-contract.md](equation-review-api-contract.md). The browser preserves
-the assisted proposal as exact immutable source, derives a reviewer body only through a
-strict single-wrapper/no-normalization rule, and blocks ambiguous or noncanonical source
-instead of guessing. It keeps reviewer LaTeX as editable source, derives read-only
-Obsidian/MathJax-compatible Markdown, and uses local KaTeX `0.16.47` only for an explicit,
-trust-disabled preview. Acceptance binds hashes of the exact rendered inputs while the
-owner recomputes canonical Markdown.
+owner ordering for the bounded 256-candidate projection, reports owner-projected counts,
+and keeps stable opaque candidate selection in the URL. Previous, Next, and the accessible
+candidate list all use the same deterministic order. Navigation requires explicit discard
+when reviewer source, display mode, or note has changed.
+
+The browser preserves the assisted proposal as exact immutable source, derives a reviewer
+body only through a strict single-wrapper/no-normalization rule, and blocks ambiguous or
+noncanonical source instead of guessing. It keeps reviewer LaTeX as editable source,
+derives read-only Obsidian/MathJax-compatible Markdown, and uses local KaTeX `0.16.47`
+only for an explicit, trust-disabled preview. Acceptance binds hashes of the exact
+rendered inputs while the owner recomputes canonical Markdown. Unassisted candidates show
+the owner-projected deterministic evidence but cannot render or accept a transcription.
 A 404 means the requested identity is not configured, while typed 409 and 503 responses
-preserve conflict and owner-availability semantics. No production fixture or filesystem
-fallback supplies corpus data.
+preserve conflict, incomplete/malformed queue, and owner-availability semantics. No
+production fixture or filesystem fallback supplies corpus data.
 
 ## Routing
 
@@ -183,7 +189,7 @@ fallback supplies corpus data.
 /control                     private single-operator dashboard
 /control/github              live read-only GitHubTask projection
 /control/search              private retrieval UI
-/control/organizer           private organizer status/proposal workspace
+/control/organizer           private organizer status/event workspace
 /control/note-review         fixture-backed note-review design prototype
 /control/equation-review     private equation-review API boundary
 /control/citation-review     private citation-review workspace
@@ -201,10 +207,10 @@ domain, keep review disposition separate from explicit apply, and revalidate the
 destination precondition immediately before writing.
 
 The equation-review route is not fixture-backed: it requests the typed API contract,
-renders explicit unconfigured, stale, concurrent, partial, and owner-unavailable states,
-and never reads corpus files directly. Human writes include the displayed previous
-revision and exact assisted-proposal hash but no browser-generated receipt or review
-timestamp.
+renders explicit unconfigured, stale, concurrent, partial, queue-integrity, and
+owner-unavailable states, and never reads corpus files directly. Human acceptance writes
+include the displayed previous revision, exact assisted-proposal hash, canonical reviewer
+source, display mode, and explicit local render hashes, but no browser review timestamp.
 
 ## Local-first behavior
 

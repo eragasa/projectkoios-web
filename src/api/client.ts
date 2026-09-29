@@ -46,8 +46,7 @@ export type EquationReviewFailureCode =
 export type EquationReviewFailureResponse =
   components["schemas"]["EquationReviewFailureResponse"];
 export type OrganizerControlRequest = components["schemas"]["OrganizerControlRequest"];
-export type OrganizerProposalList =
-  components["schemas"]["OrganizerProposalListResponse"];
+export type OrganizerEventList = components["schemas"]["OrganizerEventListResponse"];
 export type OrganizerStatus = components["schemas"]["OrganizerStatusResponse"];
 export type ProvidedReference = components["schemas"]["ProvidedReferenceResponse"];
 export type ProvidedReferenceList =
@@ -116,15 +115,11 @@ export class ProjectKoiosApiClient {
     });
   }
 
-  async organizerProposals(
-    limit = 200,
-    signal?: AbortSignal,
-  ): Promise<OrganizerProposalList> {
-    const query = new URLSearchParams({ limit: String(limit) });
-    return this.request<OrganizerProposalList>(
-      `/organizer/proposals?${query.toString()}`,
-      { signal },
-    );
+  async organizerEvents(after = 0, signal?: AbortSignal): Promise<OrganizerEventList> {
+    const query = new URLSearchParams({ after: String(after) });
+    return this.request<OrganizerEventList>(`/organizer/events?${query.toString()}`, {
+      signal,
+    });
   }
 
   async search(request: SearchRequest, signal?: AbortSignal): Promise<SearchResult[]> {

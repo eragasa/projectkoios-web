@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, type OrganizerControlRequest } from "../../api/client";
 
 const organizerStatusKey = ["organizer", "status"] as const;
-const organizerProposalsKey = ["organizer", "proposals"] as const;
+const organizerEventsKey = ["organizer", "events"] as const;
 
 export function OrganizerPage() {
   const queryClient = useQueryClient();
@@ -12,9 +12,9 @@ export function OrganizerPage() {
     queryFn: ({ signal }) => apiClient.organizerStatus(signal),
     refetchInterval: 3_000,
   });
-  const proposals = useQuery({
-    queryKey: organizerProposalsKey,
-    queryFn: ({ signal }) => apiClient.organizerProposals(200, signal),
+  const events = useQuery({
+    queryKey: organizerEventsKey,
+    queryFn: ({ signal }) => apiClient.organizerEvents(0, signal),
     refetchInterval: 5_000,
   });
   const control = useMutation({
@@ -22,7 +22,7 @@ export function OrganizerPage() {
       apiClient.setOrganizerMode(request),
     onSuccess: async (value) => {
       queryClient.setQueryData(organizerStatusKey, value);
-      await queryClient.invalidateQueries({ queryKey: organizerProposalsKey });
+      await queryClient.invalidateQueries({ queryKey: organizerEventsKey });
     },
   });
 
@@ -79,34 +79,30 @@ export function OrganizerPage() {
         </section>
       ) : null}
 
-      <section className="organizer-events" aria-labelledby="organizer-proposals-title">
+      <section className="organizer-events" aria-labelledby="organizer-events-title">
         <div className="section-heading">
           <div>
             <p className="eyebrow">Bounded polling snapshot</p>
-            <h2 id="organizer-proposals-title">Latest proposals</h2>
+            <h2 id="organizer-events-title">Latest organizer events</h2>
           </div>
-          <span>
-            {proposals.data
-              ? `${proposals.data.proposals.length}/${proposals.data.total} shown`
-              : "Loading…"}
-          </span>
+          <span>{events.data ? `${events.data.events.length} shown` : "Loading…"}</span>
         </div>
-        {proposals.isError ? (
-          <p role="alert">Unable to read organizer proposals.</p>
-        ) : proposals.data?.proposals.length === 0 ? (
-          <p>No organizer proposals are available.</p>
+        {events.isError ? (
+          <p role="alert">Unable to read organizer events.</p>
+        ) : events.data?.events.length === 0 ? (
+          <p>No organizer events are available.</p>
         ) : (
           <ol>
-            {proposals.data?.proposals.map((proposal) => (
-              <li key={proposal.file_id}>
-                <strong>{proposal.name}</strong>
+            {events.data?.events.map((event) => (
+              <li key={event.sequence}>
+                <strong>{event.kind}</strong>
                 <span>
-                  {proposal.life_domain} · {proposal.para_category} ·{" "}
-                  {proposal.suggested_group}
-                  {proposal.course_code ? ` · ${proposal.course_code}` : ""}
+                  Sequence {event.sequence}
+                  {event.root_id ? ` · root ${event.root_id}` : ""}
+                  {event.file_id ? ` · file ${event.file_id}` : ""}
                 </span>
-                <code>{proposal.relative_path}</code>
-                <small>{proposal.rationale}</small>
+                <time dateTime={event.occurred_at}>{event.occurred_at}</time>
+                <small>{event.message}</small>
               </li>
             ))}
           </ol>

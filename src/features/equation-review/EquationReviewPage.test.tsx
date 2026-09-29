@@ -2,6 +2,7 @@ import { webcrypto } from "node:crypto";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type {
   EquationReviewCandidate,
@@ -10,6 +11,7 @@ import type {
 import { EquationReviewPage } from "./EquationReviewPage";
 
 const candidateId = "equation-candidate:sha256:review-1";
+const sourceSha256 = "a".repeat(64);
 const proposalLatex =
   "$\\psi_{n\\mathbf{k}}(\\mathbf{r}) = u_{n\\mathbf{k}}(\\mathbf{r})\\mathrm{e}^{i\\mathbf{k}\\cdot\\mathbf{r}},$";
 const proposalBody =
@@ -28,9 +30,10 @@ function candidate(
     candidate_id: candidateId,
     source: {
       document_id: "pizzi2020",
-      source_name: "pizzi2020.pdf",
-      source_sha256: "a".repeat(64),
+      source_sha256: sourceSha256,
+      page_index: 6,
       physical_page: 7,
+      printed_page_label: "6",
     },
     region: {
       coordinate_space: "PDF_POINTS",
@@ -41,24 +44,25 @@ function candidate(
       image_sha256: "b".repeat(64),
     },
     deterministic_evidence: {
-      detector: "pdf-operator-detector",
-      detector_version: "1.0.0",
-      evidence_sha256: "c".repeat(64),
-      extracted_text: "E = E_0 + k^2 / 2m",
+      candidate_sha256: "c".repeat(64),
+      evidence_sha256: "d".repeat(64),
+      raw_text: "E = E_0 + k^2 / 2m",
+      source_label: "pizzi2020.pdf",
+      confidence: 0.91,
+      evidence_status: "READY",
+      source_block_id: "source-block-7",
+      detection_input_id: "detection-input-7",
+      warning_ids: [],
+      processor_name: "pdf-operator-detector",
+      processor_version: "1.0.0",
+      configuration_digest: "configuration-sha256-7",
     },
     assistance: {
-      status: "PROPOSED",
+      status: "AUTOMATED_UNREVIEWED",
       method: "local-equation-transcriber@1",
       proposal_sha256: proposalSha256,
       proposed_latex: proposalLatex,
       attempt_id: "attempt-007",
-      model_provenance: {
-        model_name: "equation-reader",
-        model_sha256: "e".repeat(64),
-        prompt_version: "equation-review-v3",
-        request_id: "request-007",
-        result_id: "result-007",
-      },
     },
     display_mode: "DISPLAY",
     status: "UNREVIEWED",
@@ -69,9 +73,53 @@ function candidate(
   };
 }
 
+function candidateWithIdentity(
+  id: string,
+  index: number,
+  overrides: Partial<EquationReviewCandidate> = {},
+): EquationReviewCandidate {
+  const base = candidate();
+  return {
+    ...base,
+    candidate_id: id,
+    source: {
+      ...base.source,
+      page_index: index,
+      physical_page: index + 1,
+      printed_page_label: String(index),
+    },
+    region: {
+      ...base.region,
+      y: index * 10,
+      image_sha256: index.toString(16).padStart(64, "0"),
+    },
+    deterministic_evidence: {
+      ...base.deterministic_evidence,
+      candidate_sha256: (index + 1).toString(16).padStart(64, "0"),
+      evidence_sha256: (index + 2).toString(16).padStart(64, "0"),
+      raw_text: `deterministic evidence ${index}`,
+      source_block_id: `source-block-${index}`,
+      detection_input_id: `detection-input-${index}`,
+    },
+    ...overrides,
+  };
+}
+
+function unassistedCandidate(id = "equation:unassisted", index = 1) {
+  return candidateWithIdentity(id, index, {
+    assistance: {
+      status: "NOT_STARTED",
+      attempt_id: null,
+      method: null,
+      proposal_sha256: null,
+      proposed_latex: null,
+    },
+  });
+}
+
 function candidateWithProposal(rawProposal: string): EquationReviewCandidate {
   const item = candidate();
-  if (item.assistance?.status !== "PROPOSED") {
+  if (item.assistance.status !== "AUTOMATED_UNREVIEWED") {
     throw new Error("test candidate must carry proposed assistance");
   }
   return {
@@ -80,8 +128,8 @@ function candidateWithProposal(rawProposal: string): EquationReviewCandidate {
   };
 }
 
-function schema2Candidate(): EquationReviewCandidate {
-  return candidate({
+function schema2Candidate(id = candidateId, index = 6): EquationReviewCandidate {
+  return candidateWithIdentity(id, index, {
     status: "LEGACY_ACCEPTANCE",
     current_revision: 1,
     expected_previous_revision: 1,
@@ -104,12 +152,101 @@ function schema2Candidate(): EquationReviewCandidate {
   });
 }
 
-function queue(item: EquationReviewCandidate): EquationReviewQueueResponse {
+function schema3Candidate(id = "equation:schema3", index = 2): EquationReviewCandidate {
+  const acceptedLatex = "E = mc^2";
+  return candidateWithIdentity(id, index, {
+    status: "ACCEPTED",
+    current_revision: 3,
+    expected_previous_revision: 3,
+    decision: {
+      schema_version: 3,
+      status: "ACCEPTED",
+      disposition: "ACCEPT_TRANSCRIPTION",
+      assistance_proposal_sha256: proposalSha256,
+      reviewer_latex: acceptedLatex,
+      reviewer_latex_sha256: "1".repeat(64),
+      display_mode: "INLINE",
+      obsidian_markdown: `$${acceptedLatex}$`,
+      obsidian_markdown_sha256: "2".repeat(64),
+      render_confirmation: {
+        renderer_id: "katex",
+        renderer_version: "0.16.47",
+        rendered_reviewer_latex_sha256: "1".repeat(64),
+        rendered_obsidian_markdown_sha256: "2".repeat(64),
+      },
+      note: "Accepted source",
+      revision: 3,
+      revision_id: "equation-review-revision:sha256:accepted",
+      recorded_at_utc: "2026-09-30T04:00:00Z",
+    },
+  });
+}
+
+function rejectedCandidate(id = "equation:rejected", index = 4) {
+  return candidateWithIdentity(id, index, {
+    status: "REJECTED",
+    current_revision: 1,
+    expected_previous_revision: 1,
+    decision: {
+      schema_version: 3,
+      status: "REJECTED",
+      disposition: "REJECT_CANDIDATE",
+      assistance_proposal_sha256: null,
+      reviewer_latex: null,
+      reviewer_latex_sha256: null,
+      display_mode: null,
+      obsidian_markdown: null,
+      obsidian_markdown_sha256: null,
+      render_confirmation: null,
+      note: "Not an equation",
+      revision: 1,
+      revision_id: "equation-review-revision:sha256:rejected",
+      recorded_at_utc: "2026-09-30T05:00:00Z",
+    },
+  });
+}
+
+function revisionRequiredCandidate(id = "equation:revision", index = 5) {
+  return candidateWithIdentity(id, index, {
+    status: "REVISION_REQUIRED",
+    current_revision: 1,
+    expected_previous_revision: 1,
+    decision: {
+      schema_version: 3,
+      status: "REVISION_REQUIRED",
+      disposition: "REVISION_REQUIRED",
+      assistance_proposal_sha256: null,
+      reviewer_latex: null,
+      reviewer_latex_sha256: null,
+      display_mode: null,
+      obsidian_markdown: null,
+      obsidian_markdown_sha256: null,
+      render_confirmation: null,
+      note: "Re-run transcription assistance",
+      revision: 1,
+      revision_id: "equation-review-revision:sha256:revision-required",
+      recorded_at_utc: "2026-09-30T06:00:00Z",
+    },
+  });
+}
+
+function queue(
+  items: EquationReviewCandidate[],
+  overrides: Partial<EquationReviewQueueResponse> = {},
+): EquationReviewQueueResponse {
+  const decided = items.filter((item) => item.decision !== null).length;
   return {
+    contract_id: "projectkoios.api.equation-review",
+    schema_version: 1,
+    projection_id: "equation-review-queue:sha256:projection-1",
+    package_id: "equation-review-package:sha256:package-1",
     document_id: "pizzi2020",
-    total: 1,
-    decided: item.decision ? 1 : 0,
-    items: [item],
+    source_sha256: sourceSha256,
+    total: items.length,
+    decided,
+    pending: items.length - decided,
+    items,
+    ...overrides,
   };
 }
 
@@ -120,15 +257,40 @@ function responseJson(body: unknown, status = 200) {
   });
 }
 
-function renderPage(item: EquationReviewCandidate = candidate()) {
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(responseJson(queue(item))));
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="location-search">{location.search}</output>;
+}
+
+function renderPage({
+  items = [candidate()],
+  initialEntry = "/control/equation-review",
+  fetchMock,
+}: {
+  items?: EquationReviewCandidate[];
+  initialEntry?: string;
+  fetchMock?: typeof fetch;
+} = {}) {
+  vi.stubGlobal(
+    "fetch",
+    fetchMock ?? vi.fn().mockResolvedValue(responseJson(queue(items))),
+  );
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <QueryClientProvider client={client}>
-      <EquationReviewPage />
-    </QueryClientProvider>,
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <QueryClientProvider client={client}>
+        <EquationReviewPage />
+        <LocationProbe />
+      </QueryClientProvider>
+    </MemoryRouter>,
   );
   return client;
+}
+
+function selectedCandidateFromUrl() {
+  return new URLSearchParams(
+    screen.getByTestId("location-search").textContent ?? "",
+  ).get("candidate");
 }
 
 beforeEach(() => {
@@ -141,15 +303,19 @@ afterEach(() => {
 });
 
 describe("EquationReviewPage", () => {
-  test("uses the confirmed accessible order and real local KaTeX output", async () => {
+  test("keeps source image first and renders owner-projected deterministic evidence", async () => {
     renderPage();
 
     const region = await screen.findByRole("heading", { name: "Source region" });
+    const evidence = screen.getByRole("heading", { name: "Deterministic evidence" });
     const proposed = screen.getByRole("heading", { name: "Proposed" });
     const reviewer = screen.getByRole("heading", { name: "Reviewer" });
 
     expect(
-      region.compareDocumentPosition(proposed) & Node.DOCUMENT_POSITION_FOLLOWING,
+      region.compareDocumentPosition(evidence) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      evidence.compareDocumentPosition(proposed) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
       proposed.compareDocumentPosition(reviewer) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -158,44 +324,161 @@ describe("EquationReviewPage", () => {
       "src",
       `/equation-reviews/${encodeURIComponent(candidateId)}/region`,
     );
+    expect(screen.getByLabelText("Deterministic raw equation text")).toHaveTextContent(
+      "E = E_0 + k^2 / 2m",
+    );
 
-    const rawProposalField = screen.getByLabelText("Proposed LaTeX");
-    const proposedMarkdown = screen.getByLabelText(
-      "Canonical proposed Obsidian Markdown",
+    expect(screen.getByLabelText("Proposed LaTeX")).toHaveTextContent(proposalLatex);
+    expect(screen.getByLabelText("Canonical proposed Obsidian Markdown")).toHaveValue(
+      `$$\n${proposalBody}\n$$`,
     );
-    expect(rawProposalField.textContent).toBe(proposalLatex);
-    expect(proposedMarkdown).toHaveValue(`$$\n${proposalBody}\n$$`);
-    expect((proposedMarkdown as HTMLTextAreaElement).value).not.toContain(
-      proposalLatex,
-    );
-    expect(proposedMarkdown).toHaveAttribute("readonly");
-    expect(
-      screen.getByText(/Raw immutable source · proposal SHA-256/),
-    ).toHaveTextContent(proposalSha256);
     expect(
       screen.getByLabelText("Rendered proposed LaTeX").querySelector(".katex"),
     ).not.toBeNull();
     expect(
       screen.getByLabelText("Rendered proposed Markdown").querySelector("math"),
     ).not.toBeNull();
-    expect(
-      screen.getByText(/Preview only: rendered locally from the derived math body/),
-    ).toBeVisible();
     expect(screen.getByText(/Derivation: STRIPPED_INLINE_DELIMITERS/)).toBeVisible();
   });
 
-  test("shows schema-2 revision 1 as history and prepopulates its proposal for revision 2", async () => {
-    renderPage(schema2Candidate());
+  test("preserves owner ordering, statuses, and deterministic Previous/Next navigation", async () => {
+    const user = userEvent.setup();
+    const items = [
+      schema2Candidate("equation:legacy", 0),
+      schema3Candidate("equation:schema3", 1),
+      unassistedCandidate("equation:unassisted", 2),
+      candidateWithIdentity("equation:assisted", 3),
+      rejectedCandidate("equation:rejected", 4),
+      revisionRequiredCandidate("equation:revision", 5),
+    ];
+    renderPage({ items });
+
+    const queuePanel = await screen.findByRole("complementary", {
+      name: "Equation candidate queue",
+    });
+    const buttons = within(queuePanel).getAllByRole("button");
+    expect(buttons.map((button) => button.textContent)).toEqual([
+      expect.stringContaining("equation:legacy"),
+      expect.stringContaining("equation:schema3"),
+      expect.stringContaining("equation:unassisted"),
+      expect.stringContaining("equation:assisted"),
+      expect.stringContaining("equation:rejected"),
+      expect.stringContaining("equation:revision"),
+    ]);
+    expect(
+      within(queuePanel).getByText("6 total · 4 decided · 2 pending"),
+    ).toBeVisible();
+    expect(within(queuePanel).getByText(/Page 6 · revision required/)).toBeVisible();
+    expect(
+      await screen.findByRole("heading", { name: "equation:legacy" }),
+    ).toBeVisible();
+    await waitFor(() => expect(selectedCandidateFromUrl()).toBe("equation:legacy"));
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(
+      await screen.findByRole("heading", { name: "equation:schema3" }),
+    ).toBeVisible();
+    expect(selectedCandidateFromUrl()).toBe("equation:schema3");
+    expect(screen.getByText("Candidate 2 of 6")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Previous" }));
+    expect(
+      await screen.findByRole("heading", { name: "equation:legacy" }),
+    ).toBeVisible();
+  });
+
+  test("reloads a stable opaque candidate selection from the URL", async () => {
+    const items = [candidateWithIdentity("equation:first", 0), schema3Candidate()];
+    renderPage({
+      items,
+      initialEntry: "/control/equation-review?candidate=equation%3Aschema3",
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: "equation:schema3" }),
+    ).toBeVisible();
+    expect(screen.getByText("Candidate 2 of 2")).toBeVisible();
+    expect(screen.getByLabelText("Reviewer LaTeX")).toHaveValue("E = mc^2");
+    expect(selectedCandidateFromUrl()).toBe("equation:schema3");
+  });
+
+  test("shows schema-2 and schema-3 latest decisions with their exact reviewer source", async () => {
+    const user = userEvent.setup();
+    renderPage({
+      items: [schema2Candidate("equation:legacy", 0), schema3Candidate()],
+    });
 
     expect(await screen.findByLabelText("Reviewer LaTeX")).toHaveValue(proposalBody);
     expect(screen.getByText(/Schema 2 · revision 1 · legacy acceptance/)).toBeVisible();
     expect(
       screen.getByText(/legacy acceptance has no canonical accepted reviewer source/i),
     ).toHaveTextContent("saving creates revision 2");
-    expect(screen.getByText("Next owner revision: 2")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: /Select candidate 2 of 2: equation:schema3/ }),
+    );
+    expect(await screen.findByLabelText("Reviewer LaTeX")).toHaveValue("E = mc^2");
+    expect(screen.getByLabelText("Reviewer display mode")).toHaveValue("INLINE");
+    expect(screen.getByText(/Schema 3 · revision 3 · accepted/)).toBeVisible();
+  });
+
+  test("shows unassisted evidence while gating render and acceptance", async () => {
+    renderPage({ items: [unassistedCandidate()] });
+
+    expect(await screen.findByText("No proposal available")).toBeVisible();
+    expect(screen.getByLabelText("Deterministic raw equation text")).toHaveTextContent(
+      "deterministic evidence 1",
+    );
+    expect(screen.getByText(/Automated assistance has not started/)).toBeVisible();
+    expect(screen.getByLabelText("Reviewer LaTeX")).toBeDisabled();
+    expect(screen.getByLabelText("Reviewer display mode")).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Render current correction" }),
+    ).toBeDisabled();
     expect(
       screen.getByRole("button", { name: "Accept reviewed transcription" }),
     ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Request correction" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Reject candidate" })).toBeEnabled();
+  });
+
+  test("requires explicit discard before navigating away from an edited draft", async () => {
+    const user = userEvent.setup();
+    renderPage({
+      items: [
+        candidateWithIdentity("equation:first", 0),
+        candidateWithIdentity("equation:second", 1),
+      ],
+    });
+
+    const editor = await screen.findByLabelText("Reviewer LaTeX");
+    await user.type(editor, " + V");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(
+      "Discard unsubmitted changes?",
+    );
+    expect(screen.getByRole("heading", { name: "equation:first" })).toBeVisible();
+    expect(selectedCandidateFromUrl()).toBe("equation:first");
+
+    await user.click(screen.getByRole("button", { name: "Stay on candidate" }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(editor).toHaveValue(`${proposalBody} + V`);
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(
+      screen.getByRole("button", { name: "Discard changes and continue" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "equation:second" }),
+    ).toBeVisible();
+    expect(selectedCandidateFromUrl()).toBe("equation:second");
+
+    await user.click(screen.getByRole("button", { name: "Previous" }));
+    expect(
+      await screen.findByRole("heading", { name: "equation:first" }),
+    ).toBeVisible();
+    expect(screen.getByLabelText("Reviewer LaTeX")).toHaveValue(proposalBody);
   });
 
   test.each([
@@ -208,7 +491,7 @@ describe("EquationReviewPage", () => {
     "preserves but blocks noncanonical proposal %j (%s)",
     async (rawProposal, reason) => {
       const user = userEvent.setup();
-      renderPage(candidateWithProposal(rawProposal));
+      renderPage({ items: [candidateWithProposal(rawProposal)] });
 
       expect((await screen.findByLabelText("Proposed LaTeX")).textContent).toBe(
         rawProposal,
@@ -223,9 +506,6 @@ describe("EquationReviewPage", () => {
       expect(
         screen.getByRole("button", { name: "Accept reviewed transcription" }),
       ).toBeDisabled();
-      expect(
-        screen.queryByLabelText("Rendered proposed LaTeX"),
-      ).not.toBeInTheDocument();
 
       const summary = screen.getByText("Debug & Provenance");
       await user.click(summary);
@@ -236,7 +516,7 @@ describe("EquationReviewPage", () => {
     },
   );
 
-  test("enables acceptance only after exact dual rendering and invalidates previews on edit", async () => {
+  test("enables acceptance only after exact dual rendering and invalidates on edit", async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -244,28 +524,18 @@ describe("EquationReviewPage", () => {
       name: "Accept reviewed transcription",
     });
     expect(accept).toBeDisabled();
-    expect(
-      screen.getAllByText(/Render the current correction to create this preview/),
-    ).toHaveLength(2);
-
     await user.click(screen.getByRole("button", { name: "Render current correction" }));
     await waitFor(() => expect(accept).toBeEnabled());
     expect(
       screen.getByLabelText("Rendered reviewer LaTeX").querySelector(".katex"),
     ).not.toBeNull();
-    expect(
-      screen.getByLabelText("Rendered reviewer Markdown").querySelector("math"),
-    ).not.toBeNull();
 
     await user.type(screen.getByLabelText("Reviewer LaTeX"), " + V");
     expect(accept).toBeDisabled();
     expect(screen.queryByLabelText("Rendered reviewer LaTeX")).not.toBeInTheDocument();
-    expect(
-      screen.getAllByText(/Render the current correction to create this preview/),
-    ).toHaveLength(2);
   });
 
-  test("surfaces real KaTeX errors without producing an acceptance confirmation", async () => {
+  test("surfaces real KaTeX errors without an acceptance confirmation", async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -281,55 +551,34 @@ describe("EquationReviewPage", () => {
     ).toBeDisabled();
   });
 
-  test("sends the exact schema-3 acceptance body and reloads schema 2 to schema 3", async () => {
+  test("refreshes queue counts after save, remains selected, and offers explicit Next", async () => {
     const user = userEvent.setup();
-    let current = schema2Candidate();
+    const first = candidateWithIdentity("equation:save-me", 0);
+    const second = unassistedCandidate("equation:next", 1);
+    let currentQueue = queue([first, second]);
     let putBody: unknown;
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (init?.method === "PUT") {
         putBody = JSON.parse(String(init.body));
-        current = candidate({
-          status: "ACCEPTED",
-          current_revision: 2,
-          expected_previous_revision: 2,
-          decision: {
-            schema_version: 3,
-            status: "ACCEPTED",
-            disposition: "ACCEPT_TRANSCRIPTION",
-            assistance_proposal_sha256: proposalSha256,
-            reviewer_latex: proposalBody,
-            reviewer_latex_sha256: reviewerLatexSha256,
-            display_mode: "DISPLAY",
-            obsidian_markdown: `$$\n${proposalBody}\n$$`,
-            obsidian_markdown_sha256: reviewerMarkdownSha256,
-            render_confirmation: {
-              renderer_id: "katex",
-              renderer_version: "0.16.47",
-              rendered_reviewer_latex_sha256: reviewerLatexSha256,
-              rendered_obsidian_markdown_sha256: reviewerMarkdownSha256,
-            },
-            note: "Notation checked.",
-            revision: 2,
-            revision_id: "equation-review-revision:sha256:schema3",
-            recorded_at_utc: "2026-09-29T04:00:00Z",
-          },
+        const accepted = schema3Candidate("equation:save-me", 0);
+        accepted.current_revision = 1;
+        accepted.expected_previous_revision = 1;
+        if (accepted.decision) accepted.decision.revision = 1;
+        currentQueue = queue([accepted, second], {
+          projection_id: "equation-review-queue:sha256:projection-2",
         });
-        return responseJson({ candidate_id: candidateId, ...current.decision });
+        return responseJson({
+          candidate_id: accepted.candidate_id,
+          ...accepted.decision,
+        });
       }
       expect(url).toContain("/equation-reviews?document_id=pizzi2020");
-      return responseJson(queue(current));
+      return responseJson(currentQueue);
     });
-    vi.stubGlobal("fetch", fetchMock);
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(
-      <QueryClientProvider client={client}>
-        <EquationReviewPage />
-      </QueryClientProvider>,
-    );
+    renderPage({ items: currentQueue.items, fetchMock });
 
     await screen.findByLabelText("Reviewer LaTeX");
-    await user.type(screen.getByLabelText("Reviewer note"), "Notation checked.");
     await user.click(screen.getByRole("button", { name: "Render current correction" }));
     await waitFor(() =>
       expect(
@@ -352,75 +601,102 @@ describe("EquationReviewPage", () => {
         rendered_reviewer_latex_sha256: reviewerLatexSha256,
         rendered_obsidian_markdown_sha256: reviewerMarkdownSha256,
       },
-      note: "Notation checked.",
-      expected_previous_revision: 1,
+      note: "",
+      expected_previous_revision: 0,
     });
-    expect(putBody).not.toHaveProperty("obsidian_markdown");
-    expect(putBody).not.toHaveProperty("recorded_at_utc");
-    expect(putBody).not.toHaveProperty("updated_at_utc");
+    expect(
+      await screen.findByText(/Owner recorded schema 3 review revision 1/),
+    ).toBeVisible();
+    expect(screen.getByRole("heading", { name: "equation:save-me" })).toBeVisible();
+    expect(selectedCandidateFromUrl()).toBe("equation:save-me");
+    expect(screen.getByText("1 / 2")).toBeVisible();
+    expect(screen.getByText("1 pending")).toBeVisible();
 
-    expect(await screen.findByText(/Schema 3 · revision 2 · accepted/)).toBeVisible();
-    expect(screen.getByLabelText("Reviewer LaTeX")).toHaveValue(proposalBody);
-    expect(screen.getByText("Next owner revision: 3")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Next candidate" }));
+    expect(await screen.findByRole("heading", { name: "equation:next" })).toBeVisible();
   });
 
-  test("prepopulates a stored schema-3 reviewer source on reload", async () => {
-    const acceptedLatex = "E = mc^2";
-    renderPage(
-      candidate({
-        status: "ACCEPTED",
-        current_revision: 3,
-        expected_previous_revision: 3,
-        decision: {
-          schema_version: 3,
-          status: "ACCEPTED",
-          disposition: "ACCEPT_TRANSCRIPTION",
-          assistance_proposal_sha256: proposalSha256,
-          reviewer_latex: acceptedLatex,
-          reviewer_latex_sha256: "1".repeat(64),
-          display_mode: "INLINE",
-          obsidian_markdown: `$${acceptedLatex}$`,
-          obsidian_markdown_sha256: "2".repeat(64),
-          render_confirmation: {
-            renderer_id: "katex",
-            renderer_version: "0.16.47",
-            rendered_reviewer_latex_sha256: "1".repeat(64),
-            rendered_obsidian_markdown_sha256: "2".repeat(64),
-          },
-          note: "Accepted source",
-          revision: 3,
-          revision_id: "equation-review-revision:sha256:accepted",
-          recorded_at_utc: "2026-09-30T04:00:00Z",
-        },
-      }),
-    );
-
-    expect(await screen.findByLabelText("Reviewer LaTeX")).toHaveValue(acceptedLatex);
-    expect(screen.getByLabelText("Reviewer display mode")).toHaveValue("INLINE");
-    expect(screen.getByLabelText("Derived reviewer Obsidian Markdown")).toHaveValue(
-      `$${acceptedLatex}$`,
-    );
-  });
-
-  test("keeps bounded path-free provenance collapsed until requested", async () => {
+  test("keeps queue projection and current status in bounded path-free debug", async () => {
     const user = userEvent.setup();
-    renderPage(schema2Candidate());
+    renderPage({ items: [schema2Candidate()] });
 
     const summary = await screen.findByText("Debug & Provenance");
-    const details = summary.closest("details");
+    const details = summary.closest("details") as HTMLElement;
     expect(details).not.toHaveAttribute("open");
     await user.click(summary);
-    expect(details).toHaveAttribute("open");
 
-    const debug = within(details as HTMLElement);
-    expect(debug.getAllByText(/attempt-007/)[0]).toBeVisible();
-    expect(debug.getAllByText(/equation-reader/)[0]).toBeVisible();
-    expect(debug.getByText(/current 1 · expected previous 1/)).toBeVisible();
-    expect(debug.getAllByText(/STRIPPED_INLINE_DELIMITERS/)[0]).toBeVisible();
+    const debug = within(details);
+    expect(
+      debug.getAllByText(/equation-review-queue:sha256:projection-1/)[0],
+    ).toBeVisible();
+    expect(debug.getByText(/1 of 1 · 1 decided · 0 pending/)).toBeVisible();
+    expect(debug.getByText(/LEGACY_ACCEPTANCE · LEGACY_ACCEPTANCE/)).toBeVisible();
     expect(debug.getByText("Bounded contract JSON")).toBeVisible();
     expect(details).not.toHaveTextContent("/Users/");
     expect(details).not.toHaveTextContent("proposed_latex");
-    expect(details).not.toHaveTextContent("extracted_text");
+    expect(details).not.toHaveTextContent("raw_text");
+    expect(details).not.toHaveTextContent(proposalLatex);
+  });
+
+  test("renders the complete 256-candidate owner bound", async () => {
+    const items = Array.from({ length: 256 }, (_, index) =>
+      unassistedCandidate(
+        `equation:bounded:${index.toString().padStart(3, "0")}`,
+        index,
+      ),
+    );
+    renderPage({ items });
+
+    const queuePanel = await screen.findByRole("complementary", {
+      name: "Equation candidate queue",
+    });
+    expect(within(queuePanel).getAllByRole("button")).toHaveLength(256);
+    expect(
+      within(queuePanel).getByText("256 total · 0 decided · 256 pending"),
+    ).toBeVisible();
+    expect(screen.getByText("Candidate 1 of 256")).toBeVisible();
+  });
+
+  test("fails closed if a response exceeds the 256-candidate bound", async () => {
+    const items = Array.from({ length: 257 }, (_, index) =>
+      unassistedCandidate(`equation:overflow:${index}`, index),
+    );
+    renderPage({ items });
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Equation queue exceeds the browser safety bound",
+      }),
+    ).toBeVisible();
+    expect(screen.queryByLabelText("Equation candidate queue")).not.toBeInTheDocument();
+  });
+
+  test("renders an explicit successful empty queue", async () => {
+    renderPage({ items: [] });
+
+    expect(
+      await screen.findByRole("heading", { name: "No equation candidates" }),
+    ).toBeVisible();
+    expect(screen.getByText(/empty queue for pizzi2020/)).toBeVisible();
+  });
+
+  test("renders typed queue errors with retry and no candidate", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      responseJson(
+        {
+          code: "EQUATION_REVIEW_QUEUE_INCOMPLETE",
+          detail: "bounded owner detail",
+        },
+        503,
+      ),
+    );
+    renderPage({ fetchMock });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The owner queue is incomplete",
+    );
+    expect(screen.getByRole("button", { name: "Retry" })).toBeVisible();
+    expect(screen.queryByLabelText("Equation candidate queue")).not.toBeInTheDocument();
   });
 
   test.each([
@@ -442,15 +718,9 @@ describe("EquationReviewPage", () => {
       if (init?.method === "PUT") {
         return responseJson({ code, detail: "bounded owner detail" }, 409);
       }
-      return responseJson(queue(candidate()));
+      return responseJson(queue([candidate()]));
     });
-    vi.stubGlobal("fetch", fetchMock);
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(
-      <QueryClientProvider client={client}>
-        <EquationReviewPage />
-      </QueryClientProvider>,
-    );
+    renderPage({ fetchMock });
 
     await screen.findByLabelText("Reviewer LaTeX");
     await user.click(screen.getByRole("button", { name: "Render current correction" }));

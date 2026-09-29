@@ -3,9 +3,9 @@
 ## Authority
 
 The control-only Equation review workspace consumes the deterministic OpenAPI document
-from `projectkoios-api` commit `5ea1128dce3e7c8d93272ff0155f2e2d81c8a72e`
-(tree `4d5a8152e11c7f310421e8c59bf81579d35de68b`). Its SHA-256 is
-`018039121496e5eadb4cd3d58c98179bbd894a97a9ca4370115e25eb02acb4d2`.
+from `projectkoios-api` commit `e4921ba5ff679c3d1e80a017b9618e57e689ecb8`
+(tree `c95be904720f4199bba1eef6506c1949f10de776`). Its SHA-256 is
+`16fb3952d01006c60cb1ff11fb010435e01154b82ab1a460dbed4127ed9c03f1`.
 `src/api/schema.generated.ts` is generated from that document; there is no handwritten
 equation-review response projection. The browser never falls back to filesystem or
 corpus access.
@@ -18,16 +18,20 @@ GET /equation-reviews/{candidate_id}/region
 PUT /equation-reviews/{candidate_id}/decision
 ```
 
-The queue returns complete candidates with source identity, PDF-point region and image
-hash, deterministic evidence, display mode, nullable assisted output, review status,
-current and expected revisions, and the latest nullable human decision. The API supports
-only its configured document identity and returns a safe 404 when that identity is not
-configured.
+The owner-projected queue envelope includes a stable projection ID, package ID, source
+hash, total/decided/pending counts, and at most 256 deterministically ordered candidates.
+Each candidate contains path-free source identity, PDF-point region and image hash,
+deterministic evidence, display mode, a discriminated `NOT_STARTED` or
+`AUTOMATED_UNREVIEWED` assistance state, review status, current and expected revisions,
+and the latest nullable human decision. The browser preserves owner ordering and selects
+candidates by opaque ID in the URL. It never derives an identity from a path. The API
+supports only its configured document identity and returns a safe 404 when that identity
+is not configured.
 
-The region endpoint returns owner-validated PNG, JPEG, or WebP evidence. The API binds
-the image to `region.image_sha256`, buffers at most 20,000,000 bytes, and sends
-`Content-Disposition: inline` and `X-Content-Type-Options: nosniff`. The browser sends
-only the opaque candidate identity and never a source path.
+The region endpoint returns owner-validated, content-addressed PNG evidence. The API
+binds the image to `region.image_sha256`, buffers at most 20,000,000 bytes, and sends
+`Content-Disposition: inline` and `X-Content-Type-Options: nosniff`.
+The browser requests it only by opaque candidate identity and never sends a source path.
 
 ## Canonical source and preview boundary
 
@@ -98,7 +102,10 @@ A semantic retry can therefore return the original winning revision and time.
 
 A schema-2 legacy acceptance has no canonical accepted reviewer source. The UI retains it
 as stored history and initializes the editable reviewer LaTeX from the current proposal;
-a subsequent successful save becomes schema 3 at the next revision.
+a subsequent successful save becomes schema 3 at the next revision. A schema-3 decision
+reloads its exact stored reviewer source, display mode, hashes, and receipt. Unassisted
+candidates retain deterministic evidence and status but cannot render or accept a
+transcription.
 
 ## Typed failures
 
@@ -114,6 +121,10 @@ write succeeded:
 - HTTP 409 `EQUATION_REVIEW_EDIT_AFTER_RENDER` — reviewer LaTeX changed after render;
 - HTTP 409 `EQUATION_REVIEW_CONCURRENT_DECISION` — a different concurrent decision won;
 - HTTP 503 `EQUATION_REVIEW_PARTIAL_OUTPUT` — owner output was partial or malformed;
+- HTTP 503 `EQUATION_REVIEW_QUEUE_INCOMPLETE` — the owner has not published a complete
+  durable queue;
+- HTTP 502 `EQUATION_REVIEW_QUEUE_MALFORMED` — the owner queue projection failed
+  validation;
 - HTTP 503 `EQUATION_REVIEW_OWNER_UNAVAILABLE` — the authorized owner was unavailable.
 
 Render-stale and edit-after-render remain visibly distinct. Conflict and unavailable
@@ -123,9 +134,11 @@ response displays a recorded revision ID, revision number, schema, and owner tim
 ## Debug and provenance
 
 The collapsed, read-only **Debug & Provenance** pane contains only bounded API contract
-fields: opaque identities and hashes, path-free source display name, detector and model
+fields: queue contract/projection/package identity and counts, current index, opaque
+candidate identities and hashes, path-free source label, deterministic processor
 provenance, proposal method/attempt, deterministic proposal-derivation status/reason,
 candidate and decision statuses, current/expected revisions, owner-stored revision
 ID/time, render metadata, typed error code, and a bounded JSON projection. It excludes
-extracted source text, transcription bodies, notes, filesystem paths, environment values,
-credentials, and secrets.
+raw evidence text, transcription bodies, notes, filesystem paths, environment values,
+credentials, and secrets. Raw deterministic equation text appears only in its explicit
+review evidence surface.

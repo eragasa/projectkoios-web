@@ -25,29 +25,17 @@ beforeEach(() => {
           }),
         );
       }
-      if (url === "/organizer/proposals?limit=200") {
+      if (url === "/organizer/events?after=0") {
         return Promise.resolve(
           Response.json({
-            total: 1,
-            complete: true,
-            proposals: [
+            events: [
               {
-                file_id: "file-1",
+                sequence: 8,
+                kind: "proposal-created",
+                message: "A local categorization proposal is ready for review.",
+                occurred_at: "2026-09-29T04:00:00Z",
                 root_id: "root-1",
-                relative_path: "teaching/lecture-01.pdf",
-                name: "lecture-01.pdf",
-                extension: ".pdf",
-                byte_size: 100,
-                availability: "local",
-                life_domain: "teaching",
-                course_code: "PHYS101",
-                para_category: "resource",
-                suggested_group: "Lectures",
-                confidence: 0.9,
-                rationale: "Teaching material",
-                model: "local-model",
-                model_digest: "sha256:abc",
-                proposed_at: "2026-09-29T04:00:00Z",
+                file_id: "file-1",
               },
             ],
           }),
@@ -62,7 +50,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test("polls bounded organizer status and proposal snapshots without an event stream", async () => {
+test("polls bounded organizer status and event snapshots without opening the stream", async () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -74,12 +62,12 @@ test("polls bounded organizer status and proposal snapshots without an event str
 
   expect(await screen.findByText("Requested mode: pause")).toBeInTheDocument();
   expect(
-    await screen.findByRole("heading", { name: "Latest proposals" }),
+    await screen.findByRole("heading", { name: "Latest organizer events" }),
   ).toBeInTheDocument();
-  expect(screen.getByText("lecture-01.pdf")).toBeInTheDocument();
-  expect(screen.getByText(/PHYS101/)).toBeInTheDocument();
+  expect(screen.getByText("proposal-created")).toBeInTheDocument();
+  expect(screen.getByText(/Sequence 8/)).toBeInTheDocument();
   expect(fetch).toHaveBeenCalledWith(
-    "/organizer/proposals?limit=200",
+    "/organizer/events?after=0",
     expect.objectContaining({ signal: expect.any(AbortSignal) }),
   );
 });

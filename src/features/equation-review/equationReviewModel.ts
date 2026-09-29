@@ -49,6 +49,10 @@ export function equationDecisionFailureMessage(error: unknown) {
       "A different concurrent decision won. This decision was not saved; reload the owner-backed revision.",
     EQUATION_REVIEW_PARTIAL_OUTPUT:
       "The owner returned partial output. The decision was not saved; reload before retrying.",
+    EQUATION_REVIEW_QUEUE_INCOMPLETE:
+      "The owner queue is incomplete. No review state was loaded; retry after the owner publishes a complete queue.",
+    EQUATION_REVIEW_QUEUE_MALFORMED:
+      "The owner queue is malformed. No review state was loaded; the queue must be repaired before review.",
     EQUATION_REVIEW_OWNER_UNAVAILABLE:
       "The authorized review owner is unavailable. The decision was not saved.",
   };
@@ -66,7 +70,7 @@ export function equationStatusLabel(status: EquationReviewStatus) {
 }
 
 export function candidateProposalDerivation(candidate: EquationReviewCandidate) {
-  return candidate.assistance?.status === "PROPOSED"
+  return candidate.assistance.status === "AUTOMATED_UNREVIEWED"
     ? deriveProposalLatexBody(candidate.assistance.proposed_latex)
     : null;
 }
@@ -85,6 +89,22 @@ export function initialDisplayMode(
   return candidate.decision?.schema_version === 3 && candidate.decision.display_mode
     ? candidate.decision.display_mode
     : candidate.display_mode;
+}
+
+export function equationSourceLabel(candidate: EquationReviewCandidate) {
+  return candidate.deterministic_evidence.source_label ?? candidate.source.document_id;
+}
+
+export interface EquationReviewQueueContext {
+  contractId: string;
+  schemaVersion: number;
+  projectionId: string;
+  packageId: string;
+  sourceSha256: string;
+  total: number;
+  decided: number;
+  pending: number;
+  currentIndex: number;
 }
 
 export function derivationDescription(derivation: ProposalLatexDerivation) {

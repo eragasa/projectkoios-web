@@ -7,6 +7,8 @@ import {
   derivationDescription,
   derivationFailureMessages,
   equationStatusLabel,
+  equationSourceLabel,
+  type EquationReviewQueueContext,
 } from "./equationReviewModel";
 import {
   canonicalObsidianMarkdown,
@@ -58,12 +60,62 @@ export function EquationSourcePreviewRow({
   );
 }
 
+export function DeterministicEvidenceSection({
+  candidate,
+}: {
+  candidate: EquationReviewCandidate;
+}) {
+  const evidence = candidate.deterministic_evidence;
+  return (
+    <section
+      className="equation-evidence-card"
+      aria-labelledby="deterministic-evidence-heading"
+    >
+      <header>
+        <div>
+          <p className="eyebrow">Owner-projected detection</p>
+          <h3 id="deterministic-evidence-heading">Deterministic evidence</h3>
+        </div>
+        <span>{evidence.evidence_status}</span>
+      </header>
+      <dl>
+        <div>
+          <dt>Source label</dt>
+          <dd>{equationSourceLabel(candidate)}</dd>
+        </div>
+        <div>
+          <dt>Confidence</dt>
+          <dd>{evidence.confidence}</dd>
+        </div>
+        <div>
+          <dt>Processor</dt>
+          <dd>
+            {evidence.processor_name}@{evidence.processor_version}
+          </dd>
+        </div>
+        <div>
+          <dt>Warnings</dt>
+          <dd>{evidence.warning_ids.join(", ") || "None"}</dd>
+        </div>
+      </dl>
+      <div>
+        <span>Deterministic raw equation text</span>
+        <pre aria-label="Deterministic raw equation text">{evidence.raw_text}</pre>
+      </div>
+      <p>
+        Evidence SHA-256 {evidence.evidence_sha256} · candidate SHA-256{" "}
+        {evidence.candidate_sha256}
+      </p>
+    </section>
+  );
+}
+
 export function ProposedEquationSection({
   candidate,
 }: {
   candidate: EquationReviewCandidate;
 }) {
-  if (candidate.assistance?.status !== "PROPOSED") {
+  if (candidate.assistance.status !== "AUTOMATED_UNREVIEWED") {
     return (
       <section
         className="equation-transcription-section"
@@ -77,8 +129,9 @@ export function ProposedEquationSection({
           <span className="pending">No proposal available</span>
         </header>
         <p className="equation-section-empty">
-          Assistance is {candidate.assistance?.status.toLowerCase() ?? "unavailable"}.
-          There is no transcription to accept.
+          Assistance is {candidate.assistance.status.toLowerCase()}. Deterministic
+          evidence remains available, but there is no assisted transcription to render
+          or accept.
         </p>
       </section>
     );
@@ -229,35 +282,57 @@ export function EquationReviewHistory({
   );
 }
 
-function safeContractProjection(candidate: EquationReviewCandidate) {
+function safeContractProjection(
+  candidate: EquationReviewCandidate,
+  queue: EquationReviewQueueContext,
+) {
   const assistance = candidate.assistance;
   const decision = candidate.decision;
   const derivation = candidateProposalDerivation(candidate);
   return {
+    queue: {
+      contract_id: queue.contractId,
+      schema_version: queue.schemaVersion,
+      projection_id: queue.projectionId,
+      package_id: queue.packageId,
+      source_sha256: queue.sourceSha256,
+      total: queue.total,
+      decided: queue.decided,
+      pending: queue.pending,
+      current_index: queue.currentIndex,
+    },
     candidate_id: candidate.candidate_id,
-    document_id: candidate.source.document_id,
-    source_name: candidate.source.source_name,
-    source_sha256: candidate.source.source_sha256,
+    source: {
+      document_id: candidate.source.document_id,
+      source_sha256: candidate.source.source_sha256,
+      page_index: candidate.source.page_index,
+      physical_page: candidate.source.physical_page,
+      printed_page_label: candidate.source.printed_page_label,
+    },
     region: {
       coordinate_space: candidate.region.coordinate_space,
-      physical_page: candidate.source.physical_page,
       image_sha256: candidate.region.image_sha256,
     },
     deterministic_evidence: {
-      detector: candidate.deterministic_evidence.detector,
-      detector_version: candidate.deterministic_evidence.detector_version,
+      candidate_sha256: candidate.deterministic_evidence.candidate_sha256,
       evidence_sha256: candidate.deterministic_evidence.evidence_sha256,
+      evidence_status: candidate.deterministic_evidence.evidence_status,
+      source_block_id: candidate.deterministic_evidence.source_block_id,
+      detection_input_id: candidate.deterministic_evidence.detection_input_id,
+      processor_name: candidate.deterministic_evidence.processor_name,
+      processor_version: candidate.deterministic_evidence.processor_version,
+      configuration_digest: candidate.deterministic_evidence.configuration_digest,
+      warning_ids: candidate.deterministic_evidence.warning_ids,
     },
     assistance:
-      assistance?.status === "PROPOSED"
+      assistance.status === "AUTOMATED_UNREVIEWED"
         ? {
             status: assistance.status,
             method: assistance.method,
             proposal_sha256: assistance.proposal_sha256,
-            attempt_id: assistance.attempt_id ?? null,
-            model_provenance: assistance.model_provenance ?? null,
+            attempt_id: assistance.attempt_id,
           }
-        : assistance,
+        : { status: assistance.status },
     proposal_derivation: derivation
       ? { status: derivation.status, reason: derivation.reason }
       : null,
@@ -283,15 +358,16 @@ function safeContractProjection(candidate: EquationReviewCandidate) {
 
 export function EquationDebugProvenance({
   candidate,
+  queue,
   render,
   error,
 }: {
   candidate: EquationReviewCandidate;
+  queue: EquationReviewQueueContext;
   render: RenderedEquationPreview | null;
   error: unknown;
 }) {
   const assistance = candidate.assistance;
-  const model = assistance?.status === "PROPOSED" ? assistance.model_provenance : null;
   const derivation = candidateProposalDerivation(candidate);
   const errorCode = error instanceof ApiError ? error.code : null;
 
@@ -299,6 +375,17 @@ export function EquationDebugProvenance({
     <DisclosurePanel className="equation-debug" summary="Debug & Provenance">
       <div className="equation-debug__content">
         <dl>
+          <div>
+            <dt>Queue projection</dt>
+            <dd>{queue.projectionId}</dd>
+          </div>
+          <div>
+            <dt>Queue position / counts</dt>
+            <dd>
+              {queue.currentIndex + 1} of {queue.total} · {queue.decided} decided ·{" "}
+              {queue.pending} pending
+            </dd>
+          </div>
           <div>
             <dt>Candidate / document</dt>
             <dd>
@@ -308,46 +395,32 @@ export function EquationDebugProvenance({
           <div>
             <dt>Source</dt>
             <dd>
-              {candidate.source.source_name} · SHA-256 {candidate.source.source_sha256}
+              {equationSourceLabel(candidate)} · SHA-256{" "}
+              {candidate.source.source_sha256}
             </dd>
           </div>
           <div>
             <dt>Evidence</dt>
             <dd>
-              {candidate.deterministic_evidence.detector}@
-              {candidate.deterministic_evidence.detector_version} · SHA-256{" "}
+              {candidate.deterministic_evidence.processor_name}@
+              {candidate.deterministic_evidence.processor_version} ·{" "}
+              {candidate.deterministic_evidence.evidence_status} · SHA-256{" "}
               {candidate.deterministic_evidence.evidence_sha256}
             </dd>
           </div>
           <div>
             <dt>Proposal</dt>
             <dd>
-              {assistance?.status === "PROPOSED"
+              {assistance.status === "AUTOMATED_UNREVIEWED"
                 ? `${assistance.method} · SHA-256 ${assistance.proposal_sha256}`
-                : (assistance?.status ?? "UNAVAILABLE")}
+                : assistance.status}
             </dd>
           </div>
-          {assistance?.status === "PROPOSED" && assistance.attempt_id ? (
+          {assistance.status === "AUTOMATED_UNREVIEWED" ? (
             <div>
               <dt>Attempt</dt>
               <dd>{assistance.attempt_id}</dd>
             </div>
-          ) : null}
-          {model ? (
-            <>
-              <div>
-                <dt>Model</dt>
-                <dd>
-                  {model.model_name} · SHA-256 {model.model_sha256}
-                </dd>
-              </div>
-              <div>
-                <dt>Prompt / request / result</dt>
-                <dd>
-                  {model.prompt_version} · {model.request_id} · {model.result_id}
-                </dd>
-              </div>
-            </>
           ) : null}
           <div>
             <dt>Proposal derivation</dt>
@@ -390,7 +463,7 @@ export function EquationDebugProvenance({
         </dl>
         <div>
           <h4>Bounded contract JSON</h4>
-          <BoundedJsonView value={safeContractProjection(candidate)} />
+          <BoundedJsonView value={safeContractProjection(candidate, queue)} />
         </div>
       </div>
     </DisclosurePanel>

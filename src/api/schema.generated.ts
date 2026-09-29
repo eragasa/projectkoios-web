@@ -277,15 +277,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/organizer/proposals": {
+    "/organizer/events": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Read Proposals */
-        get: operations["read_proposals_organizer_proposals_get"];
+        /** Read Events */
+        get: operations["read_events_organizer_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organizer/events/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream Events */
+        get: operations["stream_events_organizer_events_stream_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -537,44 +554,42 @@ export interface components {
             recommended_keys: string[];
         };
         /**
-         * CourseCode
-         * @description Nominal nullable course identity supplied by an owning adapter.
-         */
-        CourseCode: string;
-        /**
          * CourseMaterialsStatus
          * @enum {string}
          */
         CourseMaterialsStatus: "inventory-only" | "review-candidate" | "published";
         /** DeterministicEquationEvidenceResponse */
         DeterministicEquationEvidenceResponse: {
-            /** Detector */
-            detector: string;
-            /** Detector Version */
-            detector_version: string;
+            /** Candidate Sha256 */
+            candidate_sha256: string;
+            /** Confidence */
+            confidence: number;
+            /** Configuration Digest */
+            configuration_digest: string;
+            /** Detection Input Id */
+            detection_input_id: string;
             /** Evidence Sha256 */
             evidence_sha256: string;
-            /** Extracted Text */
-            extracted_text: string | null;
+            /** Evidence Status */
+            evidence_status: string;
+            /** Processor Name */
+            processor_name: string;
+            /** Processor Version */
+            processor_version: string;
+            /** Raw Text */
+            raw_text: string;
+            /** Source Block Id */
+            source_block_id: string;
+            /** Source Label */
+            source_label: string | null;
+            /** Warning Ids */
+            warning_ids: string[];
         };
         /**
          * EquationDisplayMode
          * @enum {string}
          */
         EquationDisplayMode: "INLINE" | "DISPLAY";
-        /** EquationModelProvenanceResponse */
-        EquationModelProvenanceResponse: {
-            /** Model Name */
-            model_name: string;
-            /** Model Sha256 */
-            model_sha256: string;
-            /** Prompt Version */
-            prompt_version: string;
-            /** Request Id */
-            request_id: string;
-            /** Result Id */
-            result_id: string;
-        };
         /** EquationRegionEvidenceResponse */
         EquationRegionEvidenceResponse: {
             /**
@@ -607,7 +622,7 @@ export interface components {
         /** EquationReviewCandidateResponse */
         EquationReviewCandidateResponse: {
             /** Assistance */
-            assistance: (components["schemas"]["PendingEquationAssistanceResponse"] | components["schemas"]["ProposedEquationAssistanceResponse"]) | null;
+            assistance: components["schemas"]["UnassistedEquationProposalResponse"] | components["schemas"]["ProposedEquationAssistanceResponse"];
             /** Candidate Id */
             candidate_id: string;
             /** Current Revision */
@@ -712,7 +727,7 @@ export interface components {
          * EquationReviewFailureCode
          * @enum {string}
          */
-        EquationReviewFailureCode: "EQUATION_REVIEW_PROPOSAL_STALE" | "EQUATION_REVIEW_EVIDENCE_STALE" | "EQUATION_REVIEW_REVISION_STALE" | "EQUATION_REVIEW_REVIEWER_LATEX_NONCANONICAL" | "EQUATION_REVIEW_RENDER_STALE" | "EQUATION_REVIEW_EDIT_AFTER_RENDER" | "EQUATION_REVIEW_CONCURRENT_DECISION" | "EQUATION_REVIEW_PARTIAL_OUTPUT" | "EQUATION_REVIEW_OWNER_UNAVAILABLE";
+        EquationReviewFailureCode: "EQUATION_REVIEW_PROPOSAL_STALE" | "EQUATION_REVIEW_EVIDENCE_STALE" | "EQUATION_REVIEW_REVISION_STALE" | "EQUATION_REVIEW_REVIEWER_LATEX_NONCANONICAL" | "EQUATION_REVIEW_RENDER_STALE" | "EQUATION_REVIEW_EDIT_AFTER_RENDER" | "EQUATION_REVIEW_CONCURRENT_DECISION" | "EQUATION_REVIEW_PARTIAL_OUTPUT" | "EQUATION_REVIEW_QUEUE_INCOMPLETE" | "EQUATION_REVIEW_QUEUE_MALFORMED" | "EQUATION_REVIEW_OWNER_UNAVAILABLE";
         /** EquationReviewFailureResponse */
         EquationReviewFailureResponse: {
             code: components["schemas"]["EquationReviewFailureCode"];
@@ -721,12 +736,27 @@ export interface components {
         };
         /** EquationReviewQueueResponse */
         EquationReviewQueueResponse: {
+            /** Contract Id */
+            contract_id: string;
             /** Decided */
             decided: number;
             /** Document Id */
             document_id: string;
             /** Items */
             items: components["schemas"]["EquationReviewCandidateResponse"][];
+            /** Package Id */
+            package_id: string;
+            /** Pending */
+            pending: number;
+            /** Projection Id */
+            projection_id: string;
+            /**
+             * Schema Version
+             * @constant
+             */
+            schema_version: 1;
+            /** Source Sha256 */
+            source_sha256: string;
             /** Total */
             total: number;
         };
@@ -739,10 +769,12 @@ export interface components {
         EquationSourceIdentityResponse: {
             /** Document Id */
             document_id: string;
+            /** Page Index */
+            page_index: number;
             /** Physical Page */
             physical_page: number;
-            /** Source Name */
-            source_name: string;
+            /** Printed Page Label */
+            printed_page_label: string | null;
             /** Source Sha256 */
             source_sha256: string;
         };
@@ -864,11 +896,6 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
-        /**
-         * LifeDomain
-         * @enum {string}
-         */
-        LifeDomain: "research" | "teaching" | "software" | "business" | "personal" | "administration" | "finance" | "health" | "media" | "other";
         /** LiteratureClaimProgressResponse */
         LiteratureClaimProgressResponse: {
             /** Assumptions */
@@ -980,85 +1007,54 @@ export interface components {
             /** Latex */
             latex: string;
         };
-        /**
-         * OrganizerActivity
-         * @enum {string}
-         */
-        OrganizerActivity: "off" | "paused" | "idle" | "discovering" | "scanning" | "classifying" | "failed";
-        /**
-         * OrganizerControlMode
-         * @enum {string}
-         */
-        OrganizerControlMode: "on" | "pause" | "off";
         /** OrganizerControlRequest */
         OrganizerControlRequest: {
-            mode: components["schemas"]["OrganizerControlMode"];
-        };
-        /**
-         * OrganizerFileAvailability
-         * @enum {string}
-         */
-        OrganizerFileAvailability: "local" | "cloud_placeholder" | "inaccessible";
-        /**
-         * OrganizerParaCategory
-         * @enum {string}
-         */
-        OrganizerParaCategory: "project" | "area" | "resource" | "archive" | "inbox";
-        /** OrganizerProposalListResponse */
-        OrganizerProposalListResponse: {
-            /** Complete */
-            complete: boolean;
-            /** Proposals */
-            proposals: components["schemas"]["OrganizerProposalResponse"][];
-            /** Total */
-            total: number;
-        };
-        /** OrganizerProposalResponse */
-        OrganizerProposalResponse: {
-            availability: components["schemas"]["OrganizerFileAvailability"];
-            /** Byte Size */
-            byte_size: number;
-            /** Confidence */
-            confidence: number;
-            course_code: components["schemas"]["CourseCode"] | null;
-            /** Extension */
-            extension: string;
-            /** File Id */
-            file_id: string;
-            life_domain: components["schemas"]["LifeDomain"];
-            /** Model */
-            model: string;
-            /** Model Digest */
-            model_digest: string;
-            /** Name */
-            name: string;
-            para_category: components["schemas"]["OrganizerParaCategory"];
             /**
-             * Proposed At
-             * Format: date-time
+             * Mode
+             * @enum {string}
              */
-            proposed_at: string;
-            /** Rationale */
-            rationale: string;
-            /** Relative Path */
-            relative_path: string;
+            mode: "on" | "pause" | "off";
+        };
+        /** OrganizerEventListResponse */
+        OrganizerEventListResponse: {
+            /** Events */
+            events: components["schemas"]["OrganizerEventResponse"][];
+        };
+        /** OrganizerEventResponse */
+        OrganizerEventResponse: {
+            /** File Id */
+            file_id: string | null;
+            /** Kind */
+            kind: string;
+            /** Message */
+            message: string;
+            /** Occurred At */
+            occurred_at: string;
             /** Root Id */
-            root_id: string;
-            /** Suggested Group */
-            suggested_group: string;
+            root_id: string | null;
+            /** Sequence */
+            sequence: number;
         };
         /** OrganizerStatusResponse */
         OrganizerStatusResponse: {
-            activity: components["schemas"]["OrganizerActivity"];
+            /**
+             * Activity
+             * @enum {string}
+             */
+            activity: "off" | "paused" | "idle" | "discovering" | "scanning" | "classifying" | "failed";
             /** Current Relative Path */
-            current_relative_path?: string | null;
+            current_relative_path: string | null;
             /** Current Root Id */
-            current_root_id?: string | null;
-            desired_mode: components["schemas"]["OrganizerControlMode"];
+            current_root_id: string | null;
+            /**
+             * Desired Mode
+             * @enum {string}
+             */
+            desired_mode: "on" | "pause" | "off";
             /** Discovered Roots */
             discovered_roots: number;
             /** Last Error */
-            last_error?: string | null;
+            last_error: string | null;
             /** Last Event Sequence */
             last_event_sequence: number;
             /** Local Files */
@@ -1070,27 +1066,12 @@ export interface components {
             /** Proposed Files */
             proposed_files: number;
         };
-        /** PendingEquationAssistanceResponse */
-        PendingEquationAssistanceResponse: {
-            /** Method */
-            method: string | null;
-            /** Proposal Sha256 */
-            proposal_sha256: null;
-            /** Proposed Latex */
-            proposed_latex: null;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            status: "FAILED" | "PENDING";
-        };
         /** ProposedEquationAssistanceResponse */
         ProposedEquationAssistanceResponse: {
             /** Attempt Id */
-            attempt_id?: string | null;
+            attempt_id: string;
             /** Method */
             method: string;
-            model_provenance?: components["schemas"]["EquationModelProvenanceResponse"] | null;
             /** Proposal Sha256 */
             proposal_sha256: string;
             /** Proposed Latex */
@@ -1099,7 +1080,7 @@ export interface components {
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            status: "PROPOSED";
+            status: "AUTOMATED_UNREVIEWED";
         };
         /** ProvidedReferenceListResponse */
         ProvidedReferenceListResponse: {
@@ -1178,7 +1159,8 @@ export interface components {
         };
         /** PublicCourseRecord */
         PublicCourseRecord: {
-            code: components["schemas"]["CourseCode"];
+            /** Code */
+            code: string;
             /** Id */
             id: string;
             materials_status: components["schemas"]["CourseMaterialsStatus"];
@@ -1548,6 +1530,22 @@ export interface components {
          * @enum {string}
          */
         TranscriptReviewStatus: "AUTOMATED_UNREVIEWED";
+        /** UnassistedEquationProposalResponse */
+        UnassistedEquationProposalResponse: {
+            /** Attempt Id */
+            attempt_id: null;
+            /** Method */
+            method: null;
+            /** Proposal Sha256 */
+            proposal_sha256: null;
+            /** Proposed Latex */
+            proposed_latex: null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            status: "NOT_STARTED";
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -1610,33 +1608,6 @@ export interface operations {
                     "application/json": components["schemas"]["PublicCourseCatalog"];
                 };
             };
-            /** @description The public course provider failed unexpectedly. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description The public course provider returned an invalid projection. */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description The public course projection is unavailable. */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
         };
     };
     list_projects_api_projects_get: {
@@ -1655,33 +1626,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicProjectCatalog"];
-                };
-            };
-            /** @description The public project provider failed unexpectedly. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description The public project provider returned an invalid projection. */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description The public project projection is unavailable. */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -1850,7 +1794,7 @@ export interface operations {
                     "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
-            /** @description The proposal, immutable evidence, expected revision, or concurrent append does not match. */
+            /** @description The proposal, immutable evidence, expected revision, render, or concurrent append does not match. */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -1868,7 +1812,16 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description Configured evidence, the owner root, or complete append output is unavailable. */
+            /** @description The applications-owned queue projection is malformed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+            /** @description The configured owner root, complete queue evidence, or append output is unavailable. */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1912,7 +1865,7 @@ export interface operations {
                     "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
-            /** @description The proposal, immutable evidence, expected revision, or concurrent append does not match. */
+            /** @description The proposal, immutable evidence, expected revision, render, or concurrent append does not match. */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -1930,7 +1883,16 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description Configured evidence, the owner root, or complete append output is unavailable. */
+            /** @description The applications-owned queue projection is malformed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+            /** @description The configured owner root, complete queue evidence, or append output is unavailable. */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1952,7 +1914,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Content-addressed PNG, JPEG, or WebP evidence, fully buffered and limited to exactly 20,000,000 bytes. */
+            /** @description Content-addressed PNG evidence, fully buffered and limited to exactly 20,000,000 bytes. */
             200: {
                 headers: {
                     /** @description Always `inline`; artifact filenames are never exposed. */
@@ -1962,9 +1924,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "image/jpeg": string;
                     "image/png": string;
-                    "image/webp": string;
                 };
             };
             /** @description The equation-review identity is not configured. */
@@ -1985,7 +1945,16 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description Configured evidence, the owner root, or complete append output is unavailable. */
+            /** @description The applications-owned queue projection is malformed. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquationReviewFailureResponse"];
+                };
+            };
+            /** @description The configured owner root, complete queue evidence, or append output is unavailable. */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2142,40 +2111,12 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description The organizer owner adapter failed unexpectedly. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description The organizer owner adapter returned an invalid projection. */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description No organizer owner adapter is available. */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
         };
     };
-    read_proposals_organizer_proposals_get: {
+    read_events_organizer_events_get: {
         parameters: {
             query?: {
-                life_domain?: components["schemas"]["LifeDomain"];
-                limit?: number;
+                after?: number;
             };
             header?: never;
             path?: never;
@@ -2189,7 +2130,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OrganizerProposalListResponse"];
+                    "application/json": components["schemas"]["OrganizerEventListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2201,31 +2142,33 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description The organizer owner adapter failed unexpectedly. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
+        };
+    };
+    stream_events_organizer_events_stream_get: {
+        parameters: {
+            query?: {
+                after?: number;
             };
-            /** @description The organizer owner adapter returned an invalid projection. */
-            502: {
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
+                content?: never;
             };
-            /** @description No organizer owner adapter is available. */
-            503: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -2246,33 +2189,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrganizerStatusResponse"];
-                };
-            };
-            /** @description The organizer owner adapter failed unexpectedly. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description The organizer owner adapter returned an invalid projection. */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description No organizer owner adapter is available. */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };

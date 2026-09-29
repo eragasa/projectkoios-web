@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
 const candidateId = "equation:pizzi2020:page-7:region-1";
+const unassistedId = "equation:pizzi2020:page-8:region-1";
+const sourceSha256 = "a".repeat(64);
 const proposalSha256 =
   "7b2cea6aedc049b92dd9b87e7ee46f9d7e9906287e8172d052773d6881ad8bce";
 const proposalLatex =
@@ -28,68 +30,109 @@ const legacyDecision = {
   recorded_at_utc: "2026-09-28T17:00:00Z",
 };
 
-function queue(decision = legacyDecision) {
+function deterministicEvidence(index: number) {
   return {
-    document_id: "pizzi2020",
-    total: 1,
-    decided: 1,
-    items: [
-      {
-        candidate_id: candidateId,
-        source: {
-          document_id: "pizzi2020",
-          source_name: "pizzi2020.pdf",
-          source_sha256: "a".repeat(64),
-          physical_page: 7,
-        },
-        region: {
-          coordinate_space: "PDF_POINTS",
-          x: 72,
-          y: 188,
-          width: 420,
-          height: 96,
-          image_sha256: "b".repeat(64),
-        },
-        deterministic_evidence: {
-          detector: "pdf-operator-detector",
-          detector_version: "1.0.0",
-          evidence_sha256: "c".repeat(64),
-          extracted_text: "E = E_0 + k^2 / 2m",
-        },
-        assistance: {
-          status: "PROPOSED",
-          method: "local-equation-transcriber@1",
-          proposal_sha256: proposalSha256,
-          proposed_latex: proposalLatex,
-          attempt_id: "attempt-007",
-          model_provenance: {
-            model_name: "equation-reader",
-            model_sha256: "e".repeat(64),
-            prompt_version: "equation-review-v3",
-            request_id: "request-007",
-            result_id: "result-007",
-          },
-        },
-        display_mode: "DISPLAY",
-        status: decision.status,
-        current_revision: decision.revision,
-        expected_previous_revision: decision.revision,
-        decision,
-      },
-    ],
+    candidate_sha256: (index + 1).toString(16).padStart(64, "0"),
+    evidence_sha256: (index + 2).toString(16).padStart(64, "0"),
+    raw_text: `deterministic equation evidence ${index}`,
+    source_label: "pizzi2020.pdf",
+    confidence: 0.9,
+    evidence_status: "READY",
+    source_block_id: `source-block-${index}`,
+    detection_input_id: `detection-input-${index}`,
+    warning_ids: [],
+    processor_name: "pdf-operator-detector",
+    processor_version: "1.0.0",
+    configuration_digest: `configuration-${index}`,
   };
 }
 
-test("renders and records an exact schema-3 correction without browser Markdown authority", async ({
-  page,
-}) => {
-  let currentDecision = legacyDecision;
+function assistedCandidate(decision = legacyDecision) {
+  return {
+    candidate_id: candidateId,
+    source: {
+      document_id: "pizzi2020",
+      source_sha256: sourceSha256,
+      page_index: 6,
+      physical_page: 7,
+      printed_page_label: "6",
+    },
+    region: {
+      coordinate_space: "PDF_POINTS",
+      x: 72,
+      y: 188,
+      width: 420,
+      height: 96,
+      image_sha256: "b".repeat(64),
+    },
+    deterministic_evidence: deterministicEvidence(6),
+    assistance: {
+      status: "AUTOMATED_UNREVIEWED",
+      method: "local-equation-transcriber@1",
+      proposal_sha256: proposalSha256,
+      proposed_latex: proposalLatex,
+      attempt_id: "attempt-007",
+    },
+    display_mode: "DISPLAY",
+    status: decision.status,
+    current_revision: decision.revision,
+    expected_previous_revision: decision.revision,
+    decision,
+  };
+}
 
+function unassistedCandidate() {
+  return {
+    candidate_id: unassistedId,
+    source: {
+      document_id: "pizzi2020",
+      source_sha256: sourceSha256,
+      page_index: 7,
+      physical_page: 8,
+      printed_page_label: "7",
+    },
+    region: {
+      coordinate_space: "PDF_POINTS",
+      x: 80,
+      y: 220,
+      width: 400,
+      height: 80,
+      image_sha256: "c".repeat(64),
+    },
+    deterministic_evidence: deterministicEvidence(7),
+    assistance: {
+      status: "NOT_STARTED",
+      attempt_id: null,
+      method: null,
+      proposal_sha256: null,
+      proposed_latex: null,
+    },
+    display_mode: "DISPLAY",
+    status: "UNREVIEWED",
+    current_revision: 0,
+    expected_previous_revision: 0,
+    decision: null,
+  };
+}
+
+function queue(decision = legacyDecision, projection = "projection-1") {
+  return {
+    contract_id: "projectkoios.api.equation-review",
+    schema_version: 1,
+    projection_id: `equation-review-queue:sha256:${projection}`,
+    package_id: "equation-review-package:sha256:package-1",
+    document_id: "pizzi2020",
+    source_sha256: sourceSha256,
+    total: 2,
+    decided: 1,
+    pending: 1,
+    items: [assistedCandidate(decision), unassistedCandidate()],
+  };
+}
+
+async function routeMixedQueue(page: import("@playwright/test").Page) {
   await page.route("**/health", (route) => route.fulfill({ json: { status: "ok" } }));
-  await page.route("**/equation-reviews?document_id=pizzi2020", (route) =>
-    route.fulfill({ json: queue(currentDecision) }),
-  );
-  await page.route(/\/equation-reviews\/.*\/region$/, (route) =>
+  await page.route(/\/equation-reviews\/.*\/region(?:\?.*)?$/, (route) =>
     route.fulfill({
       contentType: "image/png",
       body: Buffer.from(
@@ -97,6 +140,18 @@ test("renders and records an exact schema-3 correction without browser Markdown 
         "base64",
       ),
     }),
+  );
+}
+
+test("navigates a mixed queue and records an exact schema-3 correction", async ({
+  page,
+}) => {
+  let currentDecision = legacyDecision;
+  let projection = "projection-1";
+
+  await routeMixedQueue(page);
+  await page.route("**/equation-reviews?document_id=pizzi2020", (route) =>
+    route.fulfill({ json: queue(currentDecision, projection) }),
   );
   await page.route(/\/equation-reviews\/.*\/decision$/, async (route) => {
     expect(route.request().method()).toBe("PUT");
@@ -135,12 +190,19 @@ test("renders and records an exact schema-3 correction without browser Markdown 
       revision_id: "equation-review-revision:sha256:schema3",
       recorded_at_utc: "2026-09-29T04:00:00Z",
     };
+    projection = "projection-2";
     await route.fulfill({ json: { candidate_id: candidateId, ...currentDecision } });
   });
 
-  await page.goto("/control/equation-review");
+  await page.goto(
+    `/control/equation-review?candidate=${encodeURIComponent(candidateId)}`,
+  );
+  await expect(page.getByText("2 total · 1 decided · 1 pending")).toBeVisible();
   await expect(page.getByText("Unaccepted assisted proposal")).toBeVisible();
   await expect(page.getByText(/Schema 2 · revision 1/)).toBeVisible();
+  await expect(page.getByLabel("Deterministic raw equation text")).toContainText(
+    "deterministic equation evidence 6",
+  );
   await expect(page.getByLabel("Proposed LaTeX", { exact: true })).toHaveText(
     proposalLatex,
   );
@@ -150,16 +212,10 @@ test("renders and records an exact schema-3 correction without browser Markdown 
   await expect(
     page.getByLabel("Rendered proposed LaTeX").locator(".katex"),
   ).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Reviewer LaTeX" })).toHaveValue(
-    proposalBody,
-  );
 
   const accept = page.getByRole("button", { name: "Accept reviewed transcription" });
   await expect(accept).toBeDisabled();
   await page.getByRole("button", { name: "Render current correction" }).click();
-  await expect(
-    page.getByLabel("Rendered reviewer LaTeX").locator(".katex"),
-  ).toBeVisible();
   await expect(accept).toBeEnabled();
   await page.getByLabel("Reviewer note").fill("Region and notation checked.");
   await accept.click();
@@ -168,17 +224,24 @@ test("renders and records an exact schema-3 correction without browser Markdown 
     page.getByText(/Owner recorded schema 3 review revision 2/),
   ).toContainText("2026-09-29T04:00:00Z");
   await expect(page.getByText(/Schema 3 · revision 2/)).toBeVisible();
+  await expect(page).toHaveURL(
+    new RegExp(`candidate=${encodeURIComponent(candidateId)}`),
+  );
+
+  await page.getByRole("button", { name: "Next candidate" }).click();
+  await expect(page.getByRole("heading", { name: unassistedId })).toBeVisible();
+  await expect(page.getByText("No proposal available")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Accept reviewed transcription" }),
+  ).toBeDisabled();
 });
 
-test("editing after rendering immediately clears previews and disables acceptance", async ({
+test("guards mixed-queue navigation after an editor mutation and discards explicitly", async ({
   page,
 }) => {
-  await page.route("**/health", (route) => route.fulfill({ json: { status: "ok" } }));
+  await routeMixedQueue(page);
   await page.route("**/equation-reviews?document_id=pizzi2020", (route) =>
     route.fulfill({ json: queue() }),
-  );
-  await page.route(/\/equation-reviews\/.*\/region$/, (route) =>
-    route.fulfill({ contentType: "image/png", body: Buffer.from("") }),
   );
 
   await page.goto("/control/equation-review");
@@ -191,7 +254,17 @@ test("editing after rendering immediately clears previews and disables acceptanc
     .fill(`${proposalBody} + V`);
   await expect(accept).toBeDisabled();
   await expect(page.getByLabel("Rendered reviewer LaTeX")).toHaveCount(0);
-  await expect(
-    page.getByText(/Render the current correction to create this preview/),
-  ).toHaveCount(2);
+
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByRole("alertdialog")).toContainText(
+    "Discard unsubmitted changes?",
+  );
+  await expect(page.getByRole("heading", { name: candidateId })).toBeVisible();
+
+  await page.getByRole("button", { name: "Discard changes and continue" }).click();
+  await expect(page.getByRole("heading", { name: unassistedId })).toBeVisible();
+  await expect(page).toHaveURL(
+    new RegExp(`candidate=${encodeURIComponent(unassistedId)}`),
+  );
+  await expect(page.getByLabel("Reviewer LaTeX")).toBeDisabled();
 });

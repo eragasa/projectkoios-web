@@ -176,12 +176,19 @@ precondition hash immediately before any explicit materializer write.
 
 ## Equation review
 
-From **Control center**, open **Equation review** to request owner-backed equation
-candidates for `pizzi2020`. The selected candidate shows its full-width source-region
-image first, then a **Proposed** comparison and a **Reviewer** comparison. Each comparison
-places LaTeX and canonical Obsidian Markdown source beside a rendered preview. Assisted
-text is always labeled as an unaccepted proposal. Its raw immutable source and hash are
-displayed exactly, even when the proposal already contains math delimiters.
+From **Control center**, open **Equation review** to request the owner-backed durable
+queue for `pizzi2020`. The compact progress summary reports total, decided, and pending
+counts. Select an opaque candidate ID from the accessible status list or use
+**Previous**/**Next**; the selected ID remains in the URL for reload. The owner controls
+the deterministic queue order.
+
+The selected candidate shows its full-width source-region image first, followed by its
+deterministic evidence/status, a **Proposed** comparison, and a **Reviewer** comparison.
+Each transcription comparison places LaTeX and canonical Obsidian Markdown source beside
+a rendered preview. Assisted text is always labeled as an unaccepted proposal. Its raw
+immutable source and hash are displayed exactly, even when the proposal already contains
+math delimiters. Unassisted candidates retain their evidence but cannot render or accept
+a transcription.
 
 For proposed preview and prefill, the browser strips exactly one matching outer `$...$`
 or `$$...$$` pair (with only the canonical matching display line feeds) and otherwise
@@ -200,7 +207,9 @@ Obsidian/MathJax-compatible Markdown.
 Choose **Render current correction** after editing. **Accept reviewed transcription**
 remains disabled until both exact current representations render successfully and their
 SHA-256 confirmation exists. Changing the LaTeX or display mode immediately clears both
-reviewer previews and the confirmation. Render errors do not enable acceptance.
+reviewer previews and the confirmation. Render errors do not enable acceptance. If the
+reviewer source, display mode, or note has changed, candidate navigation pauses until you
+stay or explicitly discard the unsubmitted draft.
 
 An acceptance sends the proposal identity, reviewer LaTeX, display mode, exact render
 hashes, note, and displayed previous revision. It never sends browser-derived Markdown
@@ -209,15 +218,17 @@ separate and do not claim a successful transcription render. Only a successful
 owner-backed response is shown as recorded, with its schema, revision ID/number, status,
 and owner time.
 
-The collapsed **Debug & Provenance** pane shows bounded, read-only identities, hashes,
-model/method fields, proposal-derivation status, revisions, statuses, storage metadata,
-renderer confirmation, typed error code, and contract JSON. It excludes transcription
-bodies, extracted text, paths, credentials, and secrets.
+The collapsed **Debug & Provenance** pane shows bounded, read-only queue/projection
+identity and counts, current index/status, candidate identities, hashes, deterministic
+processor and proposal-method fields, proposal-derivation status, revisions, storage
+metadata, renderer confirmation, typed error code, and contract JSON. It excludes raw
+evidence and transcription bodies, notes, paths, credentials, and secrets.
 
 Noncanonical reviewer LaTeX, stale render, and edit-after-render are distinguished from
-stale proposal, evidence, revision, and concurrent-decision conflicts. Partial output and
-owner unavailability never imply a save. A 404 means `pizzi2020` is not configured. The route does not invent
-fixture data or access corpus files. See the
+stale proposal, evidence, revision, and concurrent-decision conflicts. Partial output,
+incomplete or malformed queues, and owner unavailability never imply a save. A 404 means
+`pizzi2020` is not configured. The route does not invent fixture data or access corpus
+files. See the
 [equation-review API contract](equation-review-api-contract.md) for the exact boundary.
 
 ## Citation review

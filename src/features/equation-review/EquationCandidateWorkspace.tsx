@@ -9,6 +9,7 @@ import {
   type EquationReviewDisposition,
 } from "../../api/client";
 import {
+  DeterministicEvidenceSection,
   EquationDebugProvenance,
   EquationPreview,
   EquationPreviewPlaceholder,
@@ -23,9 +24,11 @@ import {
   derivationFailureMessages,
   EQUATION_REVIEW_DOCUMENT_ID,
   equationDecisionFailureMessage,
+  equationSourceLabel,
   equationStatusLabel,
   initialDisplayMode,
   initialReviewerLatex,
+  type EquationReviewQueueContext,
 } from "./equationReviewModel";
 import {
   canonicalObsidianMarkdown,
@@ -33,10 +36,21 @@ import {
 } from "./equationRendering";
 import { useEquationRenderConfirmation } from "./useEquationRenderConfirmation";
 
+export interface EquationCandidateDraftState {
+  dirty: boolean;
+  busy: boolean;
+}
+
 export function EquationCandidateWorkspace({
   candidate,
+  queue,
+  onDraftStateChange,
+  onNextCandidate,
 }: {
   candidate: EquationReviewCandidate;
+  queue: EquationReviewQueueContext;
+  onDraftStateChange: (state: EquationCandidateDraftState) => void;
+  onNextCandidate?: () => void;
 }) {
   const queryClient = useQueryClient();
   const [reviewerLatex, setReviewerLatex] = useState(() =>
@@ -54,7 +68,9 @@ export function EquationCandidateWorkspace({
     ? canonicalObsidianMarkdown(reviewerLatex, displayMode)
     : "";
   const proposal =
-    candidate.assistance?.status === "PROPOSED" ? candidate.assistance : null;
+    candidate.assistance.status === "AUTOMATED_UNREVIEWED"
+      ? candidate.assistance
+      : null;
   const derivedProposal = candidateProposalDerivation(candidate);
   const render = useEquationRenderConfirmation({
     reviewerLatex,
@@ -83,6 +99,15 @@ export function EquationCandidateWorkspace({
       });
     },
   });
+
+  const hasUnsavedDraft =
+    reviewerLatex !== initialReviewerLatex(candidate) ||
+    displayMode !== initialDisplayMode(candidate) ||
+    note !== "";
+
+  useEffect(() => {
+    onDraftStateChange({ dirty: hasUnsavedDraft, busy: decision.isPending });
+  }, [decision.isPending, hasUnsavedDraft, onDraftStateChange]);
 
   const canAccept = Boolean(
     proposal &&
@@ -152,8 +177,11 @@ export function EquationCandidateWorkspace({
           <p className="eyebrow">Candidate</p>
           <h2>{candidate.candidate_id}</h2>
           <span>
-            {candidate.source.source_name} · physical page{" "}
+            {equationSourceLabel(candidate)} · physical page{" "}
             {candidate.source.physical_page}
+            {candidate.source.printed_page_label
+              ? ` · printed ${candidate.source.printed_page_label}`
+              : ""}
           </span>
         </div>
         <span className={candidate.status === "UNREVIEWED" ? "pending" : "decided"}>
@@ -169,7 +197,7 @@ export function EquationCandidateWorkspace({
         <figure>
           <img
             src={apiClient.equationRegionImageUrl(candidate.candidate_id)}
-            alt={`Equation region from ${candidate.source.source_name}, physical page ${candidate.source.physical_page}`}
+            alt={`Equation region from ${equationSourceLabel(candidate)}, physical page ${candidate.source.physical_page}`}
           />
           <figcaption>
             Region image SHA-256 {candidate.region.image_sha256} · x{" "}
@@ -178,6 +206,8 @@ export function EquationCandidateWorkspace({
           </figcaption>
         </figure>
       </section>
+
+      <DeterministicEvidenceSection candidate={candidate} />
 
       <ProposedEquationSection candidate={candidate} />
 
@@ -194,7 +224,7 @@ export function EquationCandidateWorkspace({
             <span>Display mode</span>
             <select
               aria-label="Reviewer display mode"
-              disabled={decision.isPending}
+              disabled={!proposal || decision.isPending}
               onChange={(event) => {
                 invalidateRender();
                 setDisplayMode(event.target.value as EquationDisplayMode);
@@ -206,6 +236,14 @@ export function EquationCandidateWorkspace({
             </select>
           </label>
         </header>
+
+        {!proposal ? (
+          <p className="equation-derivation-warning">
+            Automated assistance has not started. The deterministic evidence and region
+            remain reviewable, but transcription rendering and acceptance are
+            unavailable for this candidate.
+          </p>
+        ) : null}
 
         {derivedProposal && !derivedProposal.ok ? (
           <p className="equation-derivation-warning">
@@ -221,7 +259,7 @@ export function EquationCandidateWorkspace({
           source={
             <textarea
               aria-label="Reviewer LaTeX"
-              disabled={decision.isPending}
+              disabled={!proposal || decision.isPending}
               onChange={(event) => {
                 invalidateRender();
                 setReviewerLatex(event.target.value);
@@ -359,15 +397,27 @@ export function EquationCandidateWorkspace({
           </div>
         ) : null}
         {saved ? (
-          <p className="equation-save-success" role="status">
-            Owner recorded schema {saved.schema_version} review revision{" "}
-            {saved.revision} ({saved.revision_id}) at{" "}
-            <time dateTime={saved.recorded_at_utc}>{saved.recorded_at_utc}</time>.
-          </p>
+          <div className="equation-save-success" role="status">
+            <p>
+              Owner recorded schema {saved.schema_version} review revision{" "}
+              {saved.revision} ({saved.revision_id}) at{" "}
+              <time dateTime={saved.recorded_at_utc}>{saved.recorded_at_utc}</time>.
+            </p>
+            {onNextCandidate ? (
+              <button
+                className="button button--primary"
+                onClick={onNextCandidate}
+                type="button"
+              >
+                Next candidate
+              </button>
+            ) : null}
+          </div>
         ) : null}
 
         <EquationDebugProvenance
           candidate={candidate}
+          queue={queue}
           render={render.isCurrent ? render.rendered : null}
           error={decision.error}
         />

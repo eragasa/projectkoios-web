@@ -178,7 +178,18 @@ test("citation decisions use the private review endpoint", async () => {
 test("equation reviews request the generated document queue contract", async () => {
   fetchMock.mockResolvedValue(
     new Response(
-      JSON.stringify({ document_id: "pizzi2020", total: 0, decided: 0, items: [] }),
+      JSON.stringify({
+        contract_id: "projectkoios.api.equation-review",
+        schema_version: 1,
+        projection_id: "equation-review-queue:sha256:empty",
+        package_id: "equation-review-package:sha256:empty",
+        document_id: "pizzi2020",
+        source_sha256: "a".repeat(64),
+        total: 0,
+        decided: 0,
+        pending: 0,
+        items: [],
+      }),
       {
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -242,19 +253,19 @@ test("equation review decisions bind acceptance to an assisted proposal", async 
   );
 });
 
-test("organizer proposals use the bounded polling endpoint", async () => {
+test("organizer events use the bounded polling endpoint", async () => {
   fetchMock.mockResolvedValue(
-    new Response(JSON.stringify({ total: 0, complete: true, proposals: [] }), {
+    new Response(JSON.stringify({ events: [] }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     }),
   );
   const client = new ProjectKoiosApiClient();
 
-  await client.organizerProposals(200);
+  await client.organizerEvents(7);
 
   expect(fetchMock).toHaveBeenCalledWith(
-    "/organizer/proposals?limit=200",
+    "/organizer/events?after=7",
     expect.objectContaining({ signal: undefined }),
   );
 });
