@@ -35,6 +35,14 @@ const workspaces = [
   },
   {
     eyebrow: "Document corpus",
+    title: "Read parsed transcripts",
+    description:
+      "Open one parsed document and read its exact automated, unreviewed text in canonical page order.",
+    action: "Open parsed transcripts",
+    to: "/control/transcripts",
+  },
+  {
+    eyebrow: "Document corpus",
     title: "Review equation candidates",
     description:
       "Inspect source regions, deterministic evidence, and unaccepted assisted transcriptions before recording a human decision.",

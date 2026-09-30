@@ -13,6 +13,10 @@ import { CoursesPage } from "../features/publishing/CoursesPage";
 import { ProjectsPage } from "../features/publishing/ProjectsPage";
 import { PublicationsPage } from "../features/publishing/PublicationsPage";
 import { SearchPage } from "../features/search/SearchPage";
+import {
+  TranscriptCatalogPage,
+  TranscriptDocumentPage,
+} from "../features/transcripts/TranscriptsPage";
 import { AppShell } from "./AppShell";
 import { deploymentProfile, type DeploymentProfile } from "./deploymentProfile";
 
@@ -33,6 +37,11 @@ export function App({ profile = deploymentProfile }: { profile?: DeploymentProfi
             <Route path="control/search" element={<SearchPage />} />
             <Route path="control/organizer" element={<OrganizerPage />} />
             <Route path="control/note-review" element={<NoteReviewPage />} />
+            <Route path="control/transcripts" element={<TranscriptCatalogPage />} />
+            <Route
+              path="control/transcripts/:documentId"
+              element={<TranscriptDocumentPage />}
+            />
             <Route path="control/equation-review" element={<EquationReviewPage />} />
             <Route path="control/citation-review" element={<CitationReviewPage />} />
             <Route

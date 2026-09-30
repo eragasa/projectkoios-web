@@ -40,7 +40,9 @@ beforeEach(() => {
           ? { schema_version: "1", projects: [] }
           : path.endsWith("/api/publications")
             ? { schema_version: "1", publications: [] }
-            : { status: "ok" };
+            : path.endsWith("/transcripts")
+              ? { documents: [] }
+              : { status: "ok" };
       return Promise.resolve(
         new Response(JSON.stringify(body), {
           status: 200,
@@ -133,6 +135,27 @@ test("control profile opens the single-operator dashboard", async () => {
     "href",
     "/control/equation-review",
   );
+  expect(screen.getByRole("link", { name: /Open parsed transcripts/ })).toHaveAttribute(
+    "href",
+    "/control/transcripts",
+  );
+});
+
+test("control profile exposes the read-only parsed transcript catalog", async () => {
+  renderApp("control", "/control/transcripts");
+
+  expect(
+    screen.getByRole("heading", { name: "Parsed transcripts" }),
+  ).toBeInTheDocument();
+  expect(
+    await screen.findByRole("heading", { name: "No parsed documents available" }),
+  ).toBeInTheDocument();
+});
+
+test("public profile rejects parsed transcript routes", () => {
+  renderApp("public", "/control/transcripts/document%3Afixture-001");
+
+  expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
 });
 
 test("control profile exposes the equation-review API boundary", async () => {
