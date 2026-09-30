@@ -18,6 +18,16 @@ export type PublicProjectCatalog = components["schemas"]["PublicProjectCatalog"]
 export type PublicProjectRecord = components["schemas"]["PublicProjectRecord"];
 export type PublicationCatalog = components["schemas"]["PublicationCatalog"];
 export type PublicationRecord = components["schemas"]["PublicationRecord"];
+
+export type TranscriptCatalog =
+  paths["/transcripts"]["get"]["responses"][200]["content"]["application/json"];
+export type TranscriptDocument =
+  paths["/transcripts/{document_id}"]["get"]["responses"][200]["content"]["application/json"];
+export type TranscriptDocumentSummary =
+  components["schemas"]["TranscriptDocumentSummaryResponse"];
+export type TranscriptPage = components["schemas"]["TranscriptPageResponse"];
+export type TranscriptStatus = components["schemas"]["TranscriptStatus"];
+
 export type SearchRequest = components["schemas"]["SearchRequest"];
 export type SearchResult = components["schemas"]["SearchResult"];
 export type CitationDecisionDisposition =
@@ -97,6 +107,20 @@ export class ProjectKoiosApiClient {
 
   async githubTasks(signal?: AbortSignal): Promise<GitHubTaskDashboard> {
     return this.request<GitHubTaskDashboard>("/github/tasks", { signal });
+  }
+
+  async transcripts(signal?: AbortSignal): Promise<TranscriptCatalog> {
+    return this.request<TranscriptCatalog>("/transcripts", { signal });
+  }
+
+  async transcript(
+    documentId: string,
+    signal?: AbortSignal,
+  ): Promise<TranscriptDocument> {
+    return this.request<TranscriptDocument>(
+      `/transcripts/${encodeURIComponent(documentId)}`,
+      { signal },
+    );
   }
 
   async organizerStatus(signal?: AbortSignal): Promise<OrganizerStatus> {

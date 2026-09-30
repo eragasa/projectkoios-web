@@ -97,7 +97,8 @@ src/
 │   ├── literature-review/
 │   ├── note-review/
 │   ├── publishing/
-│   └── search/
+│   ├── search/
+│   └── transcripts/
 ├── test/
 └── main.tsx
 ```
@@ -149,14 +150,22 @@ GET /openapi.json
 ```
 
 The control API additionally exposes a live read-only GitHubTask projection plus
-private search, organizer, transcript-review, equation-review, citation-review, and
-literature-review contracts.
+private search, organizer, parsed-transcript display, transcript-review,
+equation-review, citation-review, and literature-review contracts.
 `src/api/schema.generated.ts` is generated from the control OpenAPI document, and
 `src/api/client.ts` consumes its request and response types. One typed client can
 support the superset while profile routing prevents public UI access. The API schema
 remains authoritative; browser types are projections. A small refinement is
 used for `/health` because the current backend schema exposes a generic string
 mapping rather than a named health model.
+
+The parsed-transcript display consumes the control-only `GET /transcripts` catalog and
+`GET /transcripts/{document_id}` detail projection. It preserves the owner's complete,
+ascending page array without sorting or deriving identities, renders transcript text as
+escaped preformatted text, and labels every document as automated and unreviewed. The
+browser exposes no filesystem path, review disposition, acceptance, or evidence mutation.
+A catalog can be empty; detail failures distinguish missing documents from malformed,
+unavailable, and unexpected provider failures.
 
 The equation-review workspace consumes the owner-backed schema-3 contract in the
 deterministic control OpenAPI document. Durable queue, region-image, decision, render
@@ -191,6 +200,8 @@ production fixture or filesystem fallback supplies corpus data.
 /control/search              private retrieval UI
 /control/organizer           private organizer status/event workspace
 /control/note-review         fixture-backed note-review design prototype
+/control/transcripts         read-only parsed-document catalog
+/control/transcripts/:id     exact page-ordered transcript
 /control/equation-review     private equation-review API boundary
 /control/citation-review     private citation-review workspace
 /control/literature-review   private literature-review workspace
@@ -209,6 +220,11 @@ diffs, and non-persistent review intent, but exposes no note-write or materializ
 capability. A future note integration must consume a contract from the note-owning
 domain, keep review disposition separate from explicit apply, and revalidate the
 destination precondition immediately before writing.
+
+The parsed-transcript routes are not fixture-backed in production: they request the typed
+API contract and render explicit loading, empty, not-found, malformed-provider,
+provider-unavailable, and unexpected-failure states. Sanitized fixtures are confined to
+tests. The public build omits both routes.
 
 The equation-review route is not fixture-backed: it requests the typed API contract,
 renders explicit unconfigured, stale, concurrent, partial, queue-integrity, and

@@ -88,7 +88,8 @@ npm run dev:control
 
 Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/courses`,
 `/api/projects`, `/api/publications`, `/github/tasks`, `/search`, `/citation-reviews`,
-`/equation-reviews`, `/organizer`, `/transcript-reviews`, `/literature-review`, `/docs`,
+`/equation-reviews`, `/organizer`, `/transcripts`, `/transcript-reviews`,
+`/literature-review`, `/docs`,
 and `/openapi.json` to the local API, avoiding a
 development CORS dependency.
 
@@ -195,6 +196,24 @@ Review dispositions remain browser-local and disappear when the page reloads. Th
 prototype cannot create, edit, approve, or apply a vault note. A future integration must
 consume the note-owning domain's catalog, keep review from apply, and revalidate the
 precondition hash immediately before any explicit materializer write.
+
+## Parsed transcripts
+
+From **Control center**, open **Parsed transcripts**, then choose one document. The
+catalog and document detail are supplied only by the control API. Each document is
+clearly labeled **Automated · unreviewed** and shows its opaque, path-free identity.
+
+The detail route renders the complete transcript in the owner's canonical page order.
+Every page shows its opaque page ID, zero-based page index, one-based physical page, and
+exact nullable printed-page label. Transcript text is escaped and displayed verbatim,
+including whitespace and a valid empty string; the browser does not parse it as HTML or
+Markdown. Reading a transcript cannot review, accept, edit, or mutate evidence.
+
+An empty catalog is distinct from an unavailable provider. Missing documents, malformed
+owner projections, unavailable providers, and unexpected provider failures are displayed
+as read-only failure states without exposing owner internals. The public build does not
+include either transcript route. The separate `/transcript-reviews` API remains a
+different workflow and is not used by this display.
 
 ## Equation review
 
@@ -329,6 +348,28 @@ npm run test:e2e
 
 The end-to-end test controls API responses and does not require access to a
 private vault.
+
+For a repeatable cross-repository transcript-display check, supply the absolute API
+worktree, the API-owned control OpenAPI path relative to that worktree, and the exact
+reviewed API commit:
+
+```bash
+scripts/validate-transcript-display.sh \
+  /absolute/path/to/projectkoios-api \
+  openapi/control.openapi.json \
+  0123456789abcdef0123456789abcdef01234567 \
+  0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+```
+
+The final argument is the reviewed artifact's exact SHA-256. The script verifies both
+that digest and the API revision, regenerates types only in temporary storage, compares
+them with the reviewed Web schema, runs formatting, type checking, unit/startup tests,
+the control build, and one sanitized transcript Playwright spec with one worker. It refuses missing dependencies,
+revision drift, untracked or linked OpenAPI artifacts, paths outside the supplied API
+worktree, schema drift, or any change in
+either worktree's tracked/untracked status. Temporary files are removed on exit and the
+Playwright-managed server is bounded to the test run. It never starts a transcript owner,
+reads corpus data, installs dependencies, or authorizes production readiness.
 
 ## Production preview
 

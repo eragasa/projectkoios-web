@@ -117,6 +117,59 @@ test("GitHub tasks request the live control projection", async () => {
   );
 });
 
+test("transcripts request the control-only parsed-document catalog", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json({
+      documents: [
+        {
+          document_id: "document:fixture-001",
+          display_name: "Sanitized fixture document",
+          status: "AUTOMATED_UNREVIEWED",
+          physical_page_count: 2,
+        },
+      ],
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await expect(client.transcripts()).resolves.toMatchObject({
+    documents: [{ document_id: "document:fixture-001" }],
+  });
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/transcripts",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
+test("one transcript requests its encoded opaque identity", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json({
+      document_id: "document:fixture-001",
+      display_name: "Sanitized fixture document",
+      status: "AUTOMATED_UNREVIEWED",
+      physical_page_count: 1,
+      pages: [
+        {
+          page_id: "page:fixture-001:0",
+          page_index: 0,
+          physical_page: 1,
+          printed_page_label: null,
+          text: "Exact fixture text.",
+        },
+      ],
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await expect(client.transcript("document:fixture-001")).resolves.toMatchObject({
+    pages: [{ text: "Exact fixture text." }],
+  });
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/transcripts/document%3Afixture-001",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
 test("search sends the API request contract", async () => {
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify([]), {

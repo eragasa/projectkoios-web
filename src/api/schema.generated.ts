@@ -413,6 +413,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/transcripts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Collection */
+        get: operations["read_collection_transcripts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transcripts/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Document */
+        get: operations["read_document_transcripts__document_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1387,6 +1421,55 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** TranscriptCollectionResponse */
+        TranscriptCollectionResponse: {
+            /**
+             * Documents
+             * @description Configured documents in authoritative owner order.
+             */
+            documents: components["schemas"]["TranscriptDocumentSummaryResponse"][];
+        };
+        /** TranscriptDocumentResponse */
+        TranscriptDocumentResponse: {
+            /** Display Name */
+            display_name: string;
+            /** Document Id */
+            document_id: string;
+            /**
+             * Pages
+             * @description Complete authoritative owner page order. Page indexes are contiguous and zero-based.
+             */
+            pages: components["schemas"]["TranscriptPageResponse"][];
+            /** Physical Page Count */
+            physical_page_count: number;
+            status: components["schemas"]["TranscriptStatus"];
+        };
+        /** TranscriptDocumentSummaryResponse */
+        TranscriptDocumentSummaryResponse: {
+            /** Display Name */
+            display_name: string;
+            /** Document Id */
+            document_id: string;
+            /** Physical Page Count */
+            physical_page_count: number;
+            status: components["schemas"]["TranscriptStatus"];
+        };
+        /** TranscriptPageResponse */
+        TranscriptPageResponse: {
+            /** Page Id */
+            page_id: string;
+            /** Page Index */
+            page_index: number;
+            /** Physical Page */
+            physical_page: number;
+            /** Printed Page Label */
+            printed_page_label: string | null;
+            /**
+             * Text
+             * @description Exact owner-supplied parsed page transcript, including whitespace and newlines. Empty text is valid.
+             */
+            text: string;
+        };
         /**
          * TranscriptReviewCategory
          * @enum {string}
@@ -1530,6 +1613,11 @@ export interface components {
          * @enum {string}
          */
         TranscriptReviewStatus: "AUTOMATED_UNREVIEWED";
+        /**
+         * TranscriptStatus
+         * @enum {string}
+         */
+        TranscriptStatus: "AUTOMATED_UNREVIEWED";
         /** UnassistedEquationProposalResponse */
         UnassistedEquationProposalResponse: {
             /** Attempt Id */
@@ -2475,6 +2563,120 @@ export interface operations {
                 };
             };
             /** @description No transcript review owner adapter is available. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    read_collection_transcripts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscriptCollectionResponse"];
+                };
+            };
+            /** @description The transcript provider failed unexpectedly. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description The transcript provider returned invalid data. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description The configured transcript owner is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    read_document_transcripts__document_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscriptDocumentResponse"];
+                };
+            };
+            /** @description The requested configured transcript was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The transcript provider failed unexpectedly. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description The transcript provider returned invalid data. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description The configured transcript owner is unavailable. */
             503: {
                 headers: {
                     [name: string]: unknown;
