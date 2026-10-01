@@ -74,6 +74,7 @@ npm run test:e2e
 
 - [Architecture](docs/architecture.md)
 - [User guide](docs/user-guide.md)
+- [Citation-document API contract](docs/citation-document-api-contract.md)
 - [GitHubTask CI sequence](docs/ci.md)
 
 Repository routing is documented in `projectkoios-bootstrap/maps/repositories.md`.

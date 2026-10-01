@@ -16,6 +16,7 @@ export default defineConfig({
       "/api/courses": apiTarget,
       "/api/projects": apiTarget,
       "/api/publications": apiTarget,
+      "/citation-documents": apiTarget,
       "/citation-reviews": apiTarget,
       "/equation-reviews": apiTarget,
       "/github/tasks": apiTarget,

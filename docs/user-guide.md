@@ -87,8 +87,8 @@ npm run dev:control
 ```
 
 Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/courses`,
-`/api/projects`, `/api/publications`, `/github/tasks`, `/search`, `/citation-reviews`,
-`/equation-reviews`, `/organizer`, `/transcripts`, `/transcript-reviews`,
+`/api/projects`, `/api/publications`, `/github/tasks`, `/search`, `/citation-documents`,
+`/citation-reviews`, `/equation-reviews`, `/organizer`, `/transcripts`, `/transcript-reviews`,
 `/literature-review`, `/docs`,
 and `/openapi.json` to the local API, avoiding a
 development CORS dependency.
@@ -196,6 +196,39 @@ Review dispositions remain browser-local and disappear when the page reloads. Th
 prototype cannot create, edit, approve, or apply a vault note. A future integration must
 consume the note-owning domain's catalog, keep review from apply, and revalidate the
 precondition hash immediately before any explicit materializer write.
+
+## Citation documents
+
+From **Control center**, open **Citation documents** to inspect every literal citekey in
+the owner-projected manuscript catalog. Rows stay in owner order and retain every
+occurrence identity. No-key source placeholders appear separately and are not treated as
+undefined bibliography entries.
+
+The page keeps bibliography membership, key resolution, every reference-identity item,
+document availability, private receipt, private-processing admission, terminal technical
+ingestion, transcript state, Search indexing, and human/scientific acceptance as separate
+text labels. Only `not-observed` means **Missing**. `not-evaluated`, ambiguous,
+inaccessible, unverified linkage, and attached documents remain distinct. Search and
+human/scientific acceptance stay **Not evaluated** in this slice.
+
+Only controls named by the API's exact allowed actions are shown:
+
+1. **Provide PDF** sends the selected bytes as one raw `application/pdf` body. It creates
+   an immutable private receipt only; it does not establish identity linkage, rights,
+   admission, processing, indexing, review, claim support, or acceptance.
+2. **Process privately** is a separate synchronous command using the exact current
+   projection, owner identity item, and receipt. The disabled pending button describes
+   only the browser request; there is no queue, running owner state, progress, polling,
+   automatic retry, overwrite, or repair.
+3. A terminal success may expose **Open automated transcript**. It uses the existing
+   encoded parsed-transcript route. Failed processing provides no transcript or automatic
+   retry. An indeterminate result says **Reconciliation required** and provides no
+   transcript, retry, overwrite, or repair action.
+
+This is a local/private single-operator surface backed by configured authority and
+admission decisions. It is not proof of an authenticated remote user and must not be
+exposed on an untrusted network. Owner text is escaped; the browser does not parse TeX,
+BibTeX, Markdown, filenames, or private paths.
 
 ## Parsed transcripts
 

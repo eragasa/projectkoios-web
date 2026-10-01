@@ -50,6 +50,14 @@ const workspaces = [
     to: "/control/equation-review",
   },
   {
+    eyebrow: "Citation sources",
+    title: "Manage citation documents",
+    description:
+      "Inspect every manuscript citation, receive missing PDFs privately, and run separately authorized technical processing.",
+    action: "Open citation documents",
+    to: "/control/citation-documents",
+  },
+  {
     eyebrow: "Human review",
     title: "Review citation claims",
     description:

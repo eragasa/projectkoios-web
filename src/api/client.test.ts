@@ -117,6 +117,101 @@ test("GitHub tasks request the live control projection", async () => {
   );
 });
 
+test("citation documents request the control-only owner catalog", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json({
+      request_id: "catalog-request:1",
+      result_id: "catalog-result:1",
+      processing_registry_projection_id: "processing-registry:1",
+      projection: { projection_id: "citation-projection:1", items: [] },
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await expect(client.citationDocuments()).resolves.toMatchObject({
+    projection: { projection_id: "citation-projection:1", items: [] },
+  });
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/citation-documents",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
+test("citation source receipt sends the PDF as the raw application/pdf body", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json({
+      receipt_id: "citation-document-receipt:1",
+      source_document: {
+        source_document_id: "citation-source-document:1",
+        sha256: "a".repeat(64),
+        byte_size: 12,
+        media_type: "application/pdf",
+        descriptor_id: "citation-source-document-descriptor:1",
+      },
+      allowed_actions: ["PROCESS_PRIVATELY"],
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+  const file = new File(["%PDF-private"], "private.pdf", {
+    type: "application/pdf",
+  });
+
+  await client.provideCitationDocumentSource("citation:item-1", file);
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/citation-documents/citation%3Aitem-1/source",
+    expect.objectContaining({
+      method: "POST",
+      headers: { "Content-Type": "application/pdf" },
+      body: file,
+    }),
+  );
+});
+
+test("private citation processing binds the exact projection, identity item, and receipt", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json({
+      request_id: "request:1",
+      intent_id: "intent:1",
+      link_result_id: "link-result:1",
+      source_document_link: {},
+      receipt_id: "receipt:1",
+      source_document_descriptor_id: "descriptor:1",
+      document_id: "document:1",
+      status: "FAILED",
+      failure_code: "EXTRACTION_FAILED",
+      result_id: "result:1",
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+  const request = {
+    expected_projection_id: "projection:1",
+    identity_item_id: "identity-item:1",
+    receipt: {
+      receipt_id: "receipt:1",
+      source_document: {
+        source_document_id: "source-document:1",
+        sha256: "b".repeat(64),
+        byte_size: 12,
+        media_type: "application/pdf",
+        descriptor_id: "descriptor:1",
+      },
+      allowed_actions: ["PROCESS_PRIVATELY" as const],
+    },
+  };
+
+  await client.processCitationDocumentPrivately("citation:item-1", request);
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/citation-documents/citation%3Aitem-1/process-private",
+    expect.objectContaining({
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    }),
+  );
+});
+
 test("transcripts request the control-only parsed-document catalog", async () => {
   fetchMock.mockResolvedValue(
     Response.json({
@@ -378,6 +473,29 @@ test("provided references send a PDF with bounded metadata", async () => {
   expect(body.get("claim_id")).toBe("C-001");
   expect(body.get("citation_label")).toBe("ExampleAuthor2024");
   expect(body.get("reference_pdf")).toBe(file);
+});
+
+test("nested typed API errors preserve citation-document status, code, and detail", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json(
+      {
+        detail: {
+          code: "CITATION_DOCUMENT_PROJECTION_CONFLICT",
+          detail: "the citation-document projection is stale",
+        },
+      },
+      { status: 409 },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await expect(client.citationDocuments()).rejects.toEqual(
+    new ApiError(
+      409,
+      "the citation-document projection is stale",
+      "CITATION_DOCUMENT_PROJECTION_CONFLICT",
+    ),
+  );
 });
 
 test("typed API errors preserve status, code, and detail", async () => {

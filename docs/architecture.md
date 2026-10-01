@@ -91,6 +91,7 @@ src/
 │   ├── KatexMarkup.tsx
 │   └── ReviewPageHeader.tsx
 ├── features/
+│   ├── citation-documents/
 │   ├── citation-review/
 │   ├── dashboard/
 │   ├── equation-review/
@@ -167,6 +168,26 @@ browser exposes no filesystem path, review disposition, acceptance, or evidence 
 A catalog can be empty; detail failures distinguish missing documents from malformed,
 unavailable, and unexpected provider failures.
 
+The citation-document control consumes the owner-ordered `GET /citation-documents`
+projection. Literal citekeys, every occurrence identity, bibliography membership, key and
+reference identity, document availability, private receipt/admission, terminal technical
+ingestion, transcript availability, deferred Search indexing, and deferred human/scientific
+acceptance remain separate browser labels. No-key source gaps remain a separate collection.
+Only `not-observed` is presented as a missing document, and controls are rendered only for
+exact server `allowed_actions` values.
+
+`POST /citation-documents/{item_id}/source` sends one raw `application/pdf` body and
+records a private custody receipt only. `POST /citation-documents/{item_id}/process-private`
+is a separate synchronous local-operator command bound to the current projection, exact
+identity item, and receipt. Local request-pending UI is not an owner queue or running state.
+Terminal `FAILED` and `INDETERMINATE` outcomes expose no transcript or automatic retry,
+overwrite, or repair; indeterminate publication is labeled as requiring reconciliation.
+Only `OPEN_TRANSCRIPT` with a nullable ready document identity links to the existing escaped
+`/control/transcripts/:id` reader. The feature performs no TeX, BibTeX, Markdown, filename,
+Search-index, path, rights, review, or acceptance interpretation. The adopted reviewed
+artifact is recorded in the
+[citation-document API contract](citation-document-api-contract.md).
+
 The equation-review workspace consumes the owner-backed schema-3 contract in the
 deterministic control OpenAPI document. Durable queue, region-image, decision, render
 confirmation, provenance, status, and typed failure DTOs come from
@@ -203,6 +224,7 @@ production fixture or filesystem fallback supplies corpus data.
 /control/transcripts         read-only parsed-document catalog
 /control/transcripts/:id     exact page-ordered transcript
 /control/equation-review     private equation-review API boundary
+/control/citation-documents  local/private citation-document control
 /control/citation-review     private citation-review workspace
 /control/literature-review   private literature-review workspace
 ```
@@ -225,6 +247,11 @@ The parsed-transcript routes are not fixture-backed in production: they request 
 API contract and render explicit loading, empty, not-found, malformed-provider,
 provider-unavailable, and unexpected-failure states. Sanitized fixtures are confined to
 tests. The public build omits both routes.
+
+The citation-document route is likewise not fixture-backed. It consumes generated types
+from the reviewed control OpenAPI, preserves owner item and occurrence ordering, escapes
+all owner text, and keeps its local/private configured-operator boundary visible. It never
+presents the control profile as authenticated remote-user proof. Search remains deferred.
 
 The equation-review route is not fixture-backed: it requests the typed API contract,
 renders explicit unconfigured, stale, concurrent, partial, queue-integrity, and

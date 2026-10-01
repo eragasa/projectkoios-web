@@ -19,6 +19,19 @@ export type PublicProjectRecord = components["schemas"]["PublicProjectRecord"];
 export type PublicationCatalog = components["schemas"]["PublicationCatalog"];
 export type PublicationRecord = components["schemas"]["PublicationRecord"];
 
+export type CitationDocumentCatalog =
+  paths["/citation-documents"]["get"]["responses"][200]["content"]["application/json"];
+export type CitationDocumentItem =
+  components["schemas"]["CitationDocumentItemResponse"];
+export type CitationDocumentReceipt =
+  components["schemas"]["CitationDocumentReceiptResponse"];
+export type CitationDocumentProcessRequest =
+  paths["/citation-documents/{item_id}/process-private"]["post"]["requestBody"]["content"]["application/json"];
+export type CitationDocumentProcessResponse =
+  paths["/citation-documents/{item_id}/process-private"]["post"]["responses"][200]["content"]["application/json"];
+export type CitationDocumentSourceGap =
+  components["schemas"]["CitationSourceGapResponse"];
+
 export type TranscriptCatalog =
   paths["/transcripts"]["get"]["responses"][200]["content"]["application/json"];
 export type TranscriptDocument =
@@ -107,6 +120,42 @@ export class ProjectKoiosApiClient {
 
   async githubTasks(signal?: AbortSignal): Promise<GitHubTaskDashboard> {
     return this.request<GitHubTaskDashboard>("/github/tasks", { signal });
+  }
+
+  async citationDocuments(signal?: AbortSignal): Promise<CitationDocumentCatalog> {
+    return this.request<CitationDocumentCatalog>("/citation-documents", { signal });
+  }
+
+  async provideCitationDocumentSource(
+    itemId: string,
+    file: File,
+    signal?: AbortSignal,
+  ): Promise<CitationDocumentReceipt> {
+    return this.request<CitationDocumentReceipt>(
+      `/citation-documents/${encodeURIComponent(itemId)}/source`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/pdf" },
+        body: file,
+        signal,
+      },
+    );
+  }
+
+  async processCitationDocumentPrivately(
+    itemId: string,
+    request: CitationDocumentProcessRequest,
+    signal?: AbortSignal,
+  ): Promise<CitationDocumentProcessResponse> {
+    return this.request<CitationDocumentProcessResponse>(
+      `/citation-documents/${encodeURIComponent(itemId)}/process-private`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+        signal,
+      },
+    );
   }
 
   async transcripts(signal?: AbortSignal): Promise<TranscriptCatalog> {
@@ -265,10 +314,22 @@ export class ProjectKoiosApiClient {
       try {
         const body = (await response.json()) as {
           code?: unknown;
-          detail?: unknown;
+          detail?:
+            | string
+            | {
+                code?: unknown;
+                detail?: unknown;
+              };
         };
         if (typeof body.detail === "string") {
           message = body.detail;
+        } else if (body.detail && typeof body.detail === "object") {
+          if (typeof body.detail.detail === "string") {
+            message = body.detail.detail;
+          }
+          if (typeof body.detail.code === "string") {
+            code = body.detail.code;
+          }
         }
         if (typeof body.code === "string") {
           code = body.code;

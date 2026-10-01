@@ -4710,6 +4710,490 @@ a {
   }
 }
 
+/* Citation-document control. */
+.citation-documents-page {
+  display: grid;
+  gap: 2rem;
+}
+
+.citation-document-authority {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.45fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid #dfc58f;
+  border-radius: 10px;
+  background: #fff9eb;
+}
+
+.citation-document-authority strong {
+  color: #6f4c16;
+}
+
+.citation-document-authority p {
+  margin: 0;
+  color: #65583f;
+  line-height: 1.55;
+}
+
+.citation-document-refresh-error {
+  padding: 0.9rem 1rem;
+  border: 1px solid #d4a9a1;
+  border-radius: 9px;
+  color: #7a3028;
+  background: #fff3f1;
+}
+
+.citation-document-provenance {
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.citation-document-provenance summary,
+.citation-document-evidence summary {
+  color: var(--green);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.citation-document-provenance dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.citation-document-provenance dl div {
+  min-width: 0;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgb(45 122 91 / 5%);
+}
+
+.citation-document-provenance dt,
+.citation-document-status-grid dt {
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.citation-document-provenance dd,
+.citation-document-status-grid dd {
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.citation-document-provenance code,
+.citation-document-evidence code,
+.citation-document-receipt code,
+.citation-source-gaps code {
+  overflow-wrap: anywhere;
+}
+
+.citation-document-filters {
+  display: grid;
+  gap: 1.1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.citation-document-filters h2,
+.citation-document-filters p {
+  margin: 0;
+}
+
+.citation-document-filters h2 {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.7rem;
+}
+
+.citation-document-filters p {
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.citation-document-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.citation-document-filter-grid label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.citation-document-filter-grid label > span {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.citation-document-filter-grid input,
+.citation-document-filter-grid select,
+.citation-document-upload input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  outline: 0;
+  color: var(--ink);
+  background: white;
+  font: inherit;
+}
+
+.citation-document-filter-grid input:focus,
+.citation-document-filter-grid select:focus,
+.citation-document-upload input:focus {
+  border-color: var(--green-bright);
+  box-shadow: 0 0 0 3px rgb(45 122 91 / 10%);
+}
+
+.citation-document-filter-summary {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.citation-document-list {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.citation-document-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgb(24 34 30 / 4%);
+}
+
+.citation-document-card > header {
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+  justify-content: space-between;
+  padding: 1.3rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.citation-document-card h2 {
+  margin: 0;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.7rem;
+}
+
+.citation-document-card > header > span {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.citation-document-status-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.citation-document-status-grid > div {
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.citation-document-status-grid > div:nth-child(5n) {
+  border-right: 0;
+}
+
+.citation-document-status-grid > div:nth-last-child(-n + 5) {
+  border-bottom: 0;
+}
+
+.citation-document-status-value,
+.citation-document-inline-statuses {
+  color: #35443c;
+  font-size: 0.73rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.citation-document-inline-statuses {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.citation-document-evidence {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+  background: rgb(45 122 91 / 2%);
+}
+
+.citation-document-evidence details {
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.citation-document-evidence details:last-child {
+  border-bottom: 0;
+}
+
+.citation-document-evidence ol,
+.citation-document-evidence dl {
+  margin: 0.75rem 0 0;
+}
+
+.citation-document-evidence ol {
+  display: grid;
+  gap: 0.4rem;
+  padding-left: 1.4rem;
+}
+
+.citation-document-identity-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.citation-document-identity-list div,
+.citation-document-processing-results li {
+  min-width: 0;
+  padding: 0.65rem;
+  border-radius: 7px;
+  background: white;
+}
+
+.citation-document-identity-list dd {
+  margin: 0.25rem 0 0;
+}
+
+.citation-document-processing-results li {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.citation-document-processing-results span,
+.citation-document-processing-results code {
+  color: var(--muted);
+  font-size: 0.69rem;
+}
+
+.citation-document-actions {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.citation-document-upload {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.citation-document-upload label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.citation-document-upload label > span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.citation-document-upload > div,
+.citation-document-process {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.citation-document-upload p,
+.citation-document-process p,
+.citation-document-receipt p,
+.citation-document-terminal p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.citation-document-receipt,
+.citation-document-process,
+.citation-document-terminal,
+.citation-document-local-pending {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.citation-document-receipt {
+  display: grid;
+  gap: 0.35rem;
+  border-color: rgb(45 122 91 / 34%);
+  background: rgb(45 122 91 / 6%);
+}
+
+.citation-document-process {
+  border-color: #dfc58f;
+  background: #fff9eb;
+}
+
+.citation-document-local-pending {
+  margin: 0;
+  color: #65583f;
+  background: #fff9eb;
+  font-size: 0.76rem;
+}
+
+.citation-document-transcript-link {
+  width: fit-content;
+}
+
+.citation-document-terminal {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.citation-document-terminal--success {
+  border-color: rgb(45 122 91 / 38%);
+  background: rgb(45 122 91 / 7%);
+}
+
+.citation-document-terminal--warning {
+  border-color: #dfc58f;
+  background: #fff9eb;
+}
+
+.citation-document-terminal--error {
+  border-color: #d4a9a1;
+  background: #fff3f1;
+}
+
+.citation-document-terminal > span {
+  color: var(--muted);
+  font-family: "DM Mono", monospace;
+  font-size: 0.68rem;
+}
+
+.citation-source-gaps {
+  padding: 1.4rem;
+  border: 1px solid #dfc58f;
+  border-radius: 14px;
+  background: #fff9eb;
+}
+
+.citation-source-gaps .review-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.citation-source-gaps h2 {
+  margin: 0;
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.8rem;
+}
+
+.citation-source-gaps > p {
+  color: #65583f;
+  line-height: 1.5;
+}
+
+.citation-source-gaps ol {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.citation-source-gaps li {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.35fr) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 64%);
+}
+
+.citation-source-gaps span {
+  color: #65583f;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 1000px) {
+  .citation-document-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .citation-document-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .citation-document-status-grid > div,
+  .citation-document-status-grid > div:nth-child(5n) {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .citation-document-status-grid > div:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .citation-document-status-grid > div:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .citation-document-authority,
+  .citation-document-provenance dl,
+  .citation-document-filter-grid,
+  .citation-document-status-grid,
+  .citation-source-gaps li {
+    grid-template-columns: 1fr;
+  }
+
+  .citation-document-card > header,
+  .citation-document-filter-summary,
+  .citation-document-upload > div,
+  .citation-document-process,
+  .citation-source-gaps .review-section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .citation-document-status-grid > div,
+  .citation-document-status-grid > div:nth-child(2n),
+  .citation-document-status-grid > div:nth-child(5n) {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .citation-document-status-grid > div:last-child {
+    border-bottom: 0;
+  }
+}
+
 /* Read-only parsed transcript display. */
 .transcript-page {
   display: grid;
