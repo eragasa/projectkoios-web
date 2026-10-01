@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 
+import { CitationDocumentsPage } from "../features/citation-documents/CitationDocumentsPage";
 import { CitationReviewPage } from "../features/citation-review/CitationReviewPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { EquationReviewPage } from "../features/equation-review/EquationReviewPage";
@@ -43,6 +44,10 @@ export function App({ profile = deploymentProfile }: { profile?: DeploymentProfi
               element={<TranscriptDocumentPage />}
             />
             <Route path="control/equation-review" element={<EquationReviewPage />} />
+            <Route
+              path="control/citation-documents"
+              element={<CitationDocumentsPage />}
+            />
             <Route path="control/citation-review" element={<CitationReviewPage />} />
             <Route
               path="control/literature-review"

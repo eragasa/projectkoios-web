@@ -72,6 +72,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/citation-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Catalog
+         * @description Local/private operator-only catalog. Do not expose this control surface on an untrusted network.
+         */
+        get: operations["read_catalog_citation_documents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/citation-documents/{item_id}/process-private": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Process Private
+         * @description Explicit local-operator private processing command. Execution is synchronous and returns one terminal result; no retry is implied.
+         */
+        post: operations["process_private_citation_documents__item_id__process_private_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/citation-documents/{item_id}/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive Source
+         * @description Local/private immutable raw PDF custody receipt only. Receipt does not authorize or start processing.
+         */
+        post: operations["receive_source_citation_documents__item_id__source_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/citation-reviews": {
         parameters: {
             query?: never;
@@ -475,6 +535,11 @@ export interface components {
             /** Reference Pdf */
             reference_pdf: string;
         };
+        /**
+         * CitationBibliographyMembershipStatus
+         * @enum {string}
+         */
+        CitationBibliographyMembershipStatus: "defined" | "undefined" | "not-evaluated";
         /** CitationCandidateResponse */
         CitationCandidateResponse: {
             /** Bibtex Entry Present */
@@ -495,6 +560,15 @@ export interface components {
             rank: number;
             /** Score */
             score: number;
+        };
+        /** CitationContentIdentityResponse */
+        CitationContentIdentityResponse: {
+            /** Algorithm */
+            algorithm: string;
+            /** Byte Count */
+            byte_count: number;
+            /** Digest */
+            digest: string;
         };
         /**
          * CitationDecisionDisposition
@@ -526,6 +600,238 @@ export interface components {
             /** Updated At Utc */
             updated_at_utc: string;
         };
+        /**
+         * CitationDocumentAllowedAction
+         * @enum {string}
+         */
+        CitationDocumentAllowedAction: "PROVIDE_PDF" | "PROCESS_PRIVATELY" | "OPEN_TRANSCRIPT";
+        /**
+         * CitationDocumentApiErrorCode
+         * @enum {string}
+         */
+        CitationDocumentApiErrorCode: "CITATION_DOCUMENT_INVALID_REQUEST" | "CITATION_DOCUMENT_ITEM_NOT_FOUND" | "CITATION_DOCUMENT_PROJECTION_CONFLICT" | "CITATION_DOCUMENT_PDF_TOO_LARGE" | "CITATION_DOCUMENT_UNSUPPORTED_MEDIA_TYPE" | "CITATION_DOCUMENT_OWNER_MALFORMED" | "CITATION_DOCUMENT_OWNER_UNAVAILABLE" | "CITATION_DOCUMENT_OWNER_FAILURE";
+        /**
+         * CitationDocumentApiErrorEnvelope
+         * @description FastAPI HTTPException envelope containing a stable feature error.
+         */
+        CitationDocumentApiErrorEnvelope: {
+            detail: components["schemas"]["CitationDocumentApiErrorResponse"];
+        };
+        /** CitationDocumentApiErrorResponse */
+        CitationDocumentApiErrorResponse: {
+            code: components["schemas"]["CitationDocumentApiErrorCode"];
+            /** Detail */
+            detail: string;
+        };
+        /**
+         * CitationDocumentAvailabilityStatus
+         * @enum {string}
+         */
+        CitationDocumentAvailabilityStatus: "not-evaluated" | "not-observed" | "available-unverified-linkage" | "available-linked" | "ambiguous" | "inaccessible";
+        /** CitationDocumentCatalogResponse */
+        CitationDocumentCatalogResponse: {
+            /** Processing Registry Projection Id */
+            processing_registry_projection_id: string;
+            projection: components["schemas"]["CitationDocumentProjectionResponse"];
+            /** Request Id */
+            request_id: string;
+            /** Result Id */
+            result_id: string;
+        };
+        /**
+         * CitationDocumentDeferredEvaluationStatus
+         * @enum {string}
+         */
+        CitationDocumentDeferredEvaluationStatus: "NOT_EVALUATED";
+        /**
+         * CitationDocumentFailureCode
+         * @enum {string}
+         */
+        CitationDocumentFailureCode: "EXTRACTION_FAILED" | "PACKAGE_BUILD_FAILED" | "PUBLICATION_FAILED" | "PUBLICATION_INDETERMINATE" | "TRANSCRIPT_VERIFICATION_FAILED";
+        /** CitationDocumentItemResponse */
+        CitationDocumentItemResponse: {
+            /** Allowed Actions */
+            allowed_actions: components["schemas"]["CitationDocumentAllowedAction"][];
+            bibliography_membership_status: components["schemas"]["CitationBibliographyMembershipStatus"];
+            document_status: components["schemas"]["CitationDocumentAvailabilityStatus"];
+            human_scientific_acceptance_status: components["schemas"]["CitationDocumentDeferredEvaluationStatus"];
+            /** Identity Items */
+            identity_items: components["schemas"]["CitationIdentityItemResponse"][];
+            /** Identity Projection Id */
+            identity_projection_id: string;
+            /** Item Id */
+            item_id: string;
+            key_resolution_status: components["schemas"]["CitationKeyResolutionStatus"];
+            /** Literal Citekey */
+            literal_citekey: string;
+            /** Occurrence Ids */
+            occurrence_ids: string[];
+            private_processing_admission_status: components["schemas"]["CitationDocumentProcessingAdmissionStatus"];
+            private_receipt_status: components["schemas"]["CitationDocumentPrivateReceiptStatus"];
+            /** Processing Results */
+            processing_results: components["schemas"]["CitationDocumentProcessingSummaryResponse"][];
+            search_indexing_status: components["schemas"]["CitationDocumentDeferredEvaluationStatus"];
+            /** Source Document Ids */
+            source_document_ids: string[];
+            /** Source Document Link Ids */
+            source_document_link_ids: string[];
+            /** Target Snapshot Id */
+            target_snapshot_id: string;
+            technical_ingestion_status: components["schemas"]["CitationDocumentTechnicalIngestionStatus"] | null;
+            /** Technical Ingestion Statuses */
+            technical_ingestion_statuses: components["schemas"]["CitationDocumentTechnicalIngestionStatus"][];
+            /** Transcript Document Id */
+            transcript_document_id?: string | null;
+            transcript_status: components["schemas"]["CitationDocumentTranscriptStatus"];
+        };
+        /**
+         * CitationDocumentPrivateReceiptStatus
+         * @enum {string}
+         */
+        CitationDocumentPrivateReceiptStatus: "NOT_RECEIVED" | "RECEIVED";
+        /** CitationDocumentProcessResponse */
+        CitationDocumentProcessResponse: {
+            /** Document Id */
+            document_id: string;
+            /** Extraction Bundle Id */
+            extraction_bundle_id?: string | null;
+            failure_code?: components["schemas"]["CitationDocumentFailureCode"] | null;
+            /** Intent Id */
+            intent_id: string;
+            /** Link Result Id */
+            link_result_id: string;
+            /** Package Id */
+            package_id?: string | null;
+            /** Physical Page Count */
+            physical_page_count?: number | null;
+            /** Publication Action */
+            publication_action?: string | null;
+            /** Receipt Id */
+            receipt_id: string;
+            /** Request Id */
+            request_id: string;
+            /** Result Id */
+            result_id: string;
+            /** Source Document Descriptor Id */
+            source_document_descriptor_id: string;
+            source_document_link: components["schemas"]["CitationSourceDocumentLinkResponse"];
+            status: components["schemas"]["CitationDocumentTerminalStatus"];
+            /** Transcript Projection Id */
+            transcript_projection_id?: string | null;
+        };
+        /**
+         * CitationDocumentProcessingAdmissionStatus
+         * @enum {string}
+         */
+        CitationDocumentProcessingAdmissionStatus: "NOT_AUTHORIZED" | "AUTHORIZED";
+        /**
+         * CitationDocumentProcessingSummaryResponse
+         * @description Path-free retained terminal evidence for one exact processing request.
+         */
+        CitationDocumentProcessingSummaryResponse: {
+            /** Document Id */
+            document_id: string;
+            failure_code?: components["schemas"]["CitationDocumentFailureCode"] | null;
+            /** Receipt Id */
+            receipt_id: string;
+            /** Request Id */
+            request_id: string;
+            /** Result Id */
+            result_id: string;
+            /** Source Document Descriptor Id */
+            source_document_descriptor_id: string;
+            /** Source Document Link Id */
+            source_document_link_id: string;
+            status: components["schemas"]["CitationDocumentTerminalStatus"];
+            /** Transcript Projection Id */
+            transcript_projection_id?: string | null;
+        };
+        /** CitationDocumentProjectionResponse */
+        CitationDocumentProjectionResponse: {
+            /** Bibliography Binding Ids */
+            bibliography_binding_ids: string[];
+            /** Contract Id */
+            contract_id: string;
+            /** Document Observation Ids */
+            document_observation_ids: string[];
+            /** Identity Projection Id */
+            identity_projection_id: string;
+            /** Items */
+            items: components["schemas"]["CitationDocumentItemResponse"][];
+            /** Limitations */
+            limitations: string[];
+            /** Projection Id */
+            projection_id: string;
+            /** Source Document Link Ids */
+            source_document_link_ids: string[];
+            /** Source Documents */
+            source_documents: components["schemas"]["CitationSourceDocumentResponse"][];
+            /** Source Gaps */
+            source_gaps: components["schemas"]["CitationSourceGapResponse"][];
+            /** Target Projection Id */
+            target_projection_id: string;
+            /** Target Snapshot Id */
+            target_snapshot_id: string;
+        };
+        /** CitationDocumentReceiptResponse */
+        CitationDocumentReceiptResponse: {
+            /**
+             * Allowed Actions
+             * @default [
+             *       "PROCESS_PRIVATELY"
+             *     ]
+             */
+            allowed_actions: components["schemas"]["CitationDocumentAllowedAction"][];
+            /** Receipt Id */
+            receipt_id: string;
+            source_document: components["schemas"]["CitationSourceDocumentResponse"];
+        };
+        /**
+         * CitationDocumentTechnicalIngestionStatus
+         * @enum {string}
+         */
+        CitationDocumentTechnicalIngestionStatus: "NOT_REQUESTED" | "SUCCEEDED" | "FAILED" | "INDETERMINATE";
+        /**
+         * CitationDocumentTerminalStatus
+         * @enum {string}
+         */
+        CitationDocumentTerminalStatus: "SUCCEEDED" | "FAILED" | "INDETERMINATE";
+        /**
+         * CitationDocumentTranscriptStatus
+         * @enum {string}
+         */
+        CitationDocumentTranscriptStatus: "NOT_AVAILABLE" | "AUTOMATED_UNREVIEWED";
+        /** CitationIdentityItemResponse */
+        CitationIdentityItemResponse: {
+            /** Canonical Citekey */
+            canonical_citekey?: string | null;
+            /** Item Id */
+            item_id: string;
+            /** Projection Id */
+            projection_id: string;
+            /** Proposed Citekey */
+            proposed_citekey?: string | null;
+            /** Reference Id */
+            reference_id?: string | null;
+            /** Requested Identity Id */
+            requested_identity_id: string;
+            status: components["schemas"]["CitationIdentityStatus"];
+            /**
+             * Successor Reference Ids
+             * @default []
+             */
+            successor_reference_ids: string[];
+        };
+        /**
+         * CitationIdentityStatus
+         * @enum {string}
+         */
+        CitationIdentityStatus: "accepted-active-canonical" | "accepted-without-active-citekey" | "candidate-proposed-noncanonical" | "inactive-superseded" | "unresolved";
+        /**
+         * CitationKeyResolutionStatus
+         * @enum {string}
+         */
+        CitationKeyResolutionStatus: "resolved" | "ambiguous" | "unresolved";
         /** CitationReviewDetailResponse */
         CitationReviewDetailResponse: {
             /** Candidates */
@@ -586,6 +892,77 @@ export interface components {
             recommendation_relationship: string;
             /** Recommended Keys */
             recommended_keys: string[];
+        };
+        /** CitationSourceDocumentLinkResponse */
+        CitationSourceDocumentLinkResponse: {
+            /** Availability Observation Ids */
+            availability_observation_ids: string[];
+            /** Creating Request Id */
+            creating_request_id: string;
+            /** Identity Item Id */
+            identity_item_id: string;
+            /** Identity Projection Id */
+            identity_projection_id: string;
+            /** Limitations */
+            limitations: string[];
+            /** Link Id */
+            link_id: string;
+            /** Linkage Basis */
+            linkage_basis: string;
+            /** Literal Citekey */
+            literal_citekey: string;
+            /** Pre Effect Intent Id */
+            pre_effect_intent_id: string;
+            /** Prior Item Id */
+            prior_item_id: string;
+            /** Prior Projection Id */
+            prior_projection_id: string;
+            /** Requested Identity Id */
+            requested_identity_id: string;
+            source_document: components["schemas"]["CitationSourceDocumentResponse"];
+            /** Target Snapshot Id */
+            target_snapshot_id: string;
+        };
+        /** CitationSourceDocumentResponse */
+        CitationSourceDocumentResponse: {
+            /** Byte Size */
+            byte_size: number;
+            /** Descriptor Id */
+            descriptor_id: string;
+            /** Media Type */
+            media_type: string;
+            /** Sha256 */
+            sha256: string;
+            /** Source Document Id */
+            source_document_id: string;
+        };
+        /** CitationSourceGapResponse */
+        CitationSourceGapResponse: {
+            locator: components["schemas"]["CitationSourceLocatorResponse"];
+            /** Placeholder Identifier */
+            placeholder_identifier: string;
+            /** Reason */
+            reason: string;
+            /** Source Gap Id */
+            source_gap_id: string;
+            /** Source Gap Index */
+            source_gap_index: number;
+        };
+        /** CitationSourceLocatorResponse */
+        CitationSourceLocatorResponse: {
+            /** Byte End */
+            byte_end: number;
+            /** Byte Start */
+            byte_start: number;
+            /** Column */
+            column: number;
+            /** Include Index */
+            include_index: number;
+            /** Line */
+            line: number;
+            source_content_identity: components["schemas"]["CitationContentIdentityResponse"];
+            /** Source Path */
+            source_path: string;
         };
         /**
          * CourseMaterialsStatus
@@ -1734,6 +2111,306 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicationCatalog"];
+                };
+            };
+        };
+    };
+    read_catalog_citation_documents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentCatalogResponse"];
+                };
+            };
+            /** @description Request validation failed without reflecting input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document owner failed unexpectedly. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document owner returned invalid data. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document owner is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    process_private_citation_documents__item_id__process_private_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Expected Projection Id */
+                    expected_projection_id: string;
+                    /** Identity Item Id */
+                    identity_item_id: string;
+                    /** CitationDocumentReceiptResponse */
+                    receipt: {
+                        /**
+                         * Allowed Actions
+                         * @default [
+                         *       "PROCESS_PRIVATELY"
+                         *     ]
+                         */
+                        allowed_actions?: ("PROVIDE_PDF" | "PROCESS_PRIVATELY" | "OPEN_TRANSCRIPT")[];
+                        /** Receipt Id */
+                        receipt_id: string;
+                        /** CitationSourceDocumentResponse */
+                        source_document: {
+                            /** Byte Size */
+                            byte_size: number;
+                            /** Descriptor Id */
+                            descriptor_id: string;
+                            /** Media Type */
+                            media_type: string;
+                            /** Sha256 */
+                            sha256: string;
+                            /** Source Document Id */
+                            source_document_id: string;
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentProcessResponse"];
+                };
+            };
+            /** @description The bounded request is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document item was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The request conflicts with the current owner projection. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The JSON request exceeds the exact 64,000-byte transport limit. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The body is not application/json. */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed without reflecting input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document owner failed unexpectedly. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document owner returned invalid data. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document owner is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    receive_source_citation_documents__item_id__source_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/pdf": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentReceiptResponse"];
+                };
+            };
+            /** @description The bounded request is invalid. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document item was not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The request conflicts with the current owner projection. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The PDF exceeds the exact 50,000,000-byte transport and custody limit. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The body is not application/pdf. */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed without reflecting input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document owner failed unexpectedly. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document owner returned invalid data. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
+                };
+            };
+            /** @description The citation-document owner is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitationDocumentApiErrorEnvelope"];
                 };
             };
         };

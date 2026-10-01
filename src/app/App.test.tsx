@@ -27,6 +27,29 @@ beforeEach(() => {
       if (path.includes("/equation-reviews?")) {
         return Promise.resolve(Response.json({ detail: "not found" }, { status: 404 }));
       }
+      if (path.endsWith("/citation-documents")) {
+        return Promise.resolve(
+          Response.json({
+            request_id: "catalog-request:empty",
+            result_id: "catalog-result:empty",
+            processing_registry_projection_id: "processing-registry:empty",
+            projection: {
+              contract_id: "projectkoios.references.citation-document-projection",
+              target_snapshot_id: "target-snapshot:empty",
+              target_projection_id: "target-projection:empty",
+              bibliography_binding_ids: [],
+              identity_projection_id: "identity-projection:empty",
+              document_observation_ids: [],
+              source_document_link_ids: [],
+              source_documents: [],
+              items: [],
+              source_gaps: [],
+              limitations: [],
+              projection_id: "citation-projection:empty",
+            },
+          }),
+        );
+      }
       const body = path.endsWith("/api/courses")
         ? {
             schema_version: "1",
@@ -139,6 +162,27 @@ test("control profile opens the single-operator dashboard", async () => {
     "href",
     "/control/transcripts",
   );
+  expect(screen.getByRole("link", { name: /Open citation documents/ })).toHaveAttribute(
+    "href",
+    "/control/citation-documents",
+  );
+});
+
+test("control profile exposes the citation-document catalog", async () => {
+  renderApp("control", "/control/citation-documents");
+
+  expect(
+    await screen.findByRole("heading", { name: "Citation documents" }),
+  ).toBeInTheDocument();
+  expect(
+    await screen.findByRole("heading", { name: "No citation keys in this catalog" }),
+  ).toBeInTheDocument();
+});
+
+test("public profile rejects the citation-document catalog", () => {
+  renderApp("public", "/control/citation-documents");
+
+  expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
 });
 
 test("control profile exposes the read-only parsed transcript catalog", async () => {
