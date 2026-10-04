@@ -361,12 +361,14 @@ stop_surface_fixture() {
     www | web) ;;
     *) fail "invalid smoke surface: $surface" ;;
   esac
+  shift 2
   env -u KOIOS_DEPLOYMENT_PROFILE -u VITE_KOIOS_DEPLOYMENT_PROFILE \
     PATH="$case_root/fake-bin:$PATH" \
     KOIOS_DEPLOYMENT_SURFACE="$surface" \
     KOIOS_API_REPO="$case_root/api repo" \
     KOIOS_SMOKE_API_CAPTURE="$case_root/$surface-api.capture" \
     KOIOS_SMOKE_WEB_CAPTURE="$case_root/$surface-web.capture" \
+    "$@" \
     "$case_root/web/scripts/shutdown.sh"
 }
 
@@ -406,6 +408,78 @@ run_surface_profile_refusal() {
     fail "Vite profile mismatch did not fail explicitly"
   test ! -e "$case_root/api.capture" || fail "surface refusal started API"
   test ! -e "$case_root/web.capture" || fail "surface refusal started Web"
+}
+
+run_runtime_root_isolation() {
+  local case_root="$SMOKE_ROOT/runtime-root-surfaces"
+  create_fixture "$case_root"
+  local runtime_root="$case_root/managed runtime"
+
+  start_surface_fixture "$case_root" www "KOIOS_RUNTIME_ROOT=$runtime_root"
+  start_surface_fixture "$case_root" web "KOIOS_RUNTIME_ROOT=$runtime_root"
+  wait_for_capture "$case_root/www-api.capture" "$case_root/www-web.capture"
+  wait_for_capture "$case_root/web-api.capture" "$case_root/web-web.capture"
+
+  for record in \
+    "$runtime_root/www/api.pid" \
+    "$runtime_root/www/web.pid" \
+    "$runtime_root/web/api.pid" \
+    "$runtime_root/web/web.pid"; do
+    test -f "$record" || fail "runtime root omitted surface record: $record"
+  done
+  [ "$(file_mode "$runtime_root/www")" = "700" ] ||
+    fail "www derived runtime directory was not mode 0700"
+  [ "$(file_mode "$runtime_root/web")" = "700" ] ||
+    fail "web derived runtime directory was not mode 0700"
+  local web_api_pid web_web_pid
+  web_api_pid="$(record_value pid "$runtime_root/web/api.pid")"
+  web_web_pid="$(record_value pid "$runtime_root/web/web.pid")"
+
+  stop_surface_fixture "$case_root" www "KOIOS_RUNTIME_ROOT=$runtime_root" \
+    >"$case_root/www-runtime-stop.stdout" 2>"$case_root/www-runtime-stop.stderr"
+  test ! -e "$runtime_root/www/api.pid" ||
+    fail "www runtime-root stop retained API record"
+  test ! -e "$runtime_root/www/web.pid" ||
+    fail "www runtime-root stop retained Web record"
+  kill -0 "$web_api_pid" 2>/dev/null || fail "www runtime-root stop killed web API"
+  kill -0 "$web_web_pid" 2>/dev/null || fail "www runtime-root stop killed web Web"
+
+  stop_surface_fixture "$case_root" web "KOIOS_RUNTIME_ROOT=$runtime_root" \
+    >"$case_root/web-runtime-stop.stdout" 2>"$case_root/web-runtime-stop.stderr"
+  local state_count
+  state_count="$(find "$(state_root_for_case "$case_root")" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+  [ "$state_count" = "0" ] || fail "runtime-root stops orphaned managed processes"
+
+  case_root="$SMOKE_ROOT/run-dir-priority"
+  create_fixture "$case_root"
+  runtime_root="$case_root/ignored runtime"
+  local explicit_run_dir="$case_root/explicit run"
+  start_surface_fixture "$case_root" web \
+    "KOIOS_RUNTIME_ROOT=$runtime_root" \
+    "KOIOS_RUN_DIR=$explicit_run_dir"
+  test -f "$explicit_run_dir/api.pid" || fail "explicit KOIOS_RUN_DIR lost API record"
+  test -f "$explicit_run_dir/web.pid" || fail "explicit KOIOS_RUN_DIR lost Web record"
+  test ! -e "$runtime_root/web" ||
+    fail "KOIOS_RUNTIME_ROOT overrode explicit KOIOS_RUN_DIR"
+  stop_surface_fixture "$case_root" web \
+    "KOIOS_RUNTIME_ROOT=$runtime_root" \
+    "KOIOS_RUN_DIR=$explicit_run_dir" \
+    >"$case_root/explicit-stop.stdout" 2>"$case_root/explicit-stop.stderr"
+  test ! -e "$explicit_run_dir/api.pid" || fail "explicit-run stop retained API record"
+  test ! -e "$explicit_run_dir/web.pid" || fail "explicit-run stop retained Web record"
+
+  case_root="$SMOKE_ROOT/invalid-runtime-root"
+  create_fixture "$case_root"
+  local status
+  set +e
+  start_surface_fixture "$case_root" www "KOIOS_RUNTIME_ROOT="
+  status=$?
+  set -e
+  [ "$status" -ne 0 ] || fail "empty KOIOS_RUNTIME_ROOT unexpectedly started"
+  grep -Fq "KOIOS_RUNTIME_ROOT must be a non-empty single-line path" \
+    "$case_root/www.stderr" || fail "empty runtime root did not fail explicitly"
+  state_count="$(find "$(state_root_for_case "$case_root")" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+  [ "$state_count" = "0" ] || fail "invalid runtime root started a process"
 }
 
 run_surface_openapi_refusal() {
@@ -1070,6 +1144,7 @@ run_api_only_restart() {
 }
 
 run_surface_profile_refusal
+run_runtime_root_isolation
 run_surface_openapi_refusal
 run_concurrent_deployment_surfaces
 run_without_owner_sources

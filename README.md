@@ -40,8 +40,11 @@ npm run stop:web
 private `web` surface only. Unknown surfaces and explicit API or Vite profiles that
 conflict with the selected surface fail closed. Caller-exported `KOIOS_*`,
 `PROJECTKOIOS_*`, and `VITE_KOIOS_*` values take precedence over optional ignored
-`.env.local` fallbacks. Port and run-directory overrides must be supplied to both the
-matching start and stop command.
+`.env.local` fallbacks. Set `KOIOS_RUNTIME_ROOT` to place both surfaces under one
+owner-managed root as `<root>/www` and `<root>/web`. An explicit `KOIOS_RUN_DIR`
+remains the highest-priority compatibility override for one exact invocation. The same
+runtime-root or run-directory override must be supplied to the matching start and stop
+command.
 
 If the optional default course or project catalog is absent, each surface creates an
 ignored empty runtime catalog in its own run directory; explicit catalogs are never
