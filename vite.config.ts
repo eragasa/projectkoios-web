@@ -23,6 +23,7 @@ export default defineConfig({
       "/literature-review/progress": apiTarget,
       "/literature-review/references": apiTarget,
       "/organizer": apiTarget,
+      "/project-reference-intake": apiTarget,
       "/transcripts": apiTarget,
       "/transcript-reviews": apiTarget,
       "/search": {

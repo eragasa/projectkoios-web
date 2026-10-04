@@ -27,6 +27,21 @@ beforeEach(() => {
       if (path.includes("/equation-reviews?")) {
         return Promise.resolve(Response.json({ detail: "not found" }, { status: 404 }));
       }
+      if (path.endsWith("/project-reference-intake/ksdft2effmass/missing-pdfs")) {
+        return Promise.resolve(
+          Response.json({
+            project_id: "ksdft2effmass",
+            total_references: 107,
+            required_pdf_count: 103,
+            bound_pdf_count: 23,
+            missing_pdf_count: 80,
+            not_applicable_count: 4,
+            max_pdf_bytes: 100_000_000,
+            media_type: "application/pdf",
+            items: [],
+          }),
+        );
+      }
       if (path.endsWith("/citation-documents")) {
         return Promise.resolve(
           Response.json({
@@ -146,6 +161,10 @@ test("control profile opens the single-operator dashboard", async () => {
     "href",
     "/control/github",
   );
+  expect(screen.getByRole("link", { name: /Open ksdft2effmass/ })).toHaveAttribute(
+    "href",
+    "/control/projects/ksdft2effmass",
+  );
   expect(screen.getByRole("link", { name: /Open search/ })).toHaveAttribute(
     "href",
     "/control/search",
@@ -166,6 +185,25 @@ test("control profile opens the single-operator dashboard", async () => {
     "href",
     "/control/citation-documents",
   );
+});
+
+test("control profile exposes the ksdft2effmass project workspace", async () => {
+  renderApp("control", "/control/projects/ksdft2effmass");
+
+  expect(screen.getByRole("heading", { name: "ksdft2effmass" })).toBeInTheDocument();
+  expect(
+    await screen.findByText("80 of 103 required PDFs remain missing."),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Open Missing PDFs/ })).toHaveAttribute(
+    "href",
+    "/control/projects/ksdft2effmass/missing-pdfs",
+  );
+});
+
+test("public profile rejects the ksdft2effmass control workspace", () => {
+  renderApp("public", "/control/projects/ksdft2effmass");
+
+  expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
 });
 
 test("control profile exposes the citation-document catalog", async () => {

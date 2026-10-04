@@ -18,6 +18,11 @@ export type PublicProjectCatalog = components["schemas"]["PublicProjectCatalog"]
 export type PublicProjectRecord = components["schemas"]["PublicProjectRecord"];
 export type PublicationCatalog = components["schemas"]["PublicationCatalog"];
 export type PublicationRecord = components["schemas"]["PublicationRecord"];
+export type ProjectMissingPdfList =
+  paths["/project-reference-intake/ksdft2effmass/missing-pdfs"]["get"]["responses"][200]["content"]["application/json"];
+export type ProjectMissingPdf = components["schemas"]["MissingPdfItemResponse"];
+export type ProjectProvidedPdf =
+  paths["/project-reference-intake/ksdft2effmass/missing-pdfs/{citekey}/document"]["post"]["responses"][200]["content"]["application/json"];
 
 export type CitationDocumentCatalog =
   paths["/citation-documents"]["get"]["responses"][200]["content"]["application/json"];
@@ -116,6 +121,29 @@ export class ProjectKoiosApiClient {
 
   async publications(signal?: AbortSignal): Promise<PublicationCatalog> {
     return this.request<PublicationCatalog>("/api/publications", { signal });
+  }
+
+  async projectMissingPdfs(signal?: AbortSignal): Promise<ProjectMissingPdfList> {
+    return this.request<ProjectMissingPdfList>(
+      "/project-reference-intake/ksdft2effmass/missing-pdfs",
+      { signal },
+    );
+  }
+
+  async provideProjectMissingPdf(
+    citekey: string,
+    file: File,
+    signal?: AbortSignal,
+  ): Promise<ProjectProvidedPdf> {
+    return this.request<ProjectProvidedPdf>(
+      `/project-reference-intake/ksdft2effmass/missing-pdfs/${encodeURIComponent(citekey)}/document`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/pdf" },
+        body: file,
+        signal,
+      },
+    );
   }
 
   async githubTasks(signal?: AbortSignal): Promise<GitHubTaskDashboard> {

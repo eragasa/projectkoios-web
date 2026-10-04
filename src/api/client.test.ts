@@ -98,6 +98,60 @@ test("publications request the public catalog", async () => {
   );
 });
 
+test("missing PDFs request the bounded project collection", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json({
+      project_id: "ksdft2effmass",
+      total_references: 1,
+      required_pdf_count: 1,
+      bound_pdf_count: 0,
+      missing_pdf_count: 1,
+      not_applicable_count: 0,
+      max_pdf_bytes: 1_000_000,
+      media_type: "application/pdf",
+      items: [],
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+
+  await expect(client.projectMissingPdfs()).resolves.toMatchObject({
+    project_id: "ksdft2effmass",
+    missing_pdf_count: 1,
+  });
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/project-reference-intake/ksdft2effmass/missing-pdfs",
+    expect.objectContaining({ signal: undefined }),
+  );
+});
+
+test("missing PDF receipt sends one encoded citekey and raw PDF body", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json({
+      project_id: "ksdft2effmass",
+      citekey: "example:key",
+      byte_size: 12,
+      receipt_disposition: "received",
+      binding_disposition: "bound",
+      document_status: "received-unreviewed",
+    }),
+  );
+  const client = new ProjectKoiosApiClient();
+  const file = new File(["%PDF-private"], "private.pdf", {
+    type: "application/pdf",
+  });
+
+  await client.provideProjectMissingPdf("example:key", file);
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/project-reference-intake/ksdft2effmass/missing-pdfs/example%3Akey/document",
+    expect.objectContaining({
+      method: "POST",
+      headers: { "Content-Type": "application/pdf" },
+      body: file,
+    }),
+  );
+});
+
 test("GitHub tasks request the live control projection", async () => {
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify({ source: "github-live", repositories: [] }), {

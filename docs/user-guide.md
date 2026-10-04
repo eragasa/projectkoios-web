@@ -151,6 +151,23 @@ deployment relies on loopback/private-network isolation and is not approved for
 direct public-internet exposure. The public build has no control routes, and the
 public API profile independently omits all control endpoints.
 
+## ksdft2effmass project and Missing PDFs
+
+From **Control center**, open **ksdft2effmass**. The project page links to the
+CONTROL-only **Missing PDFs** list and shows API-owned required, bound, and
+missing counts.
+
+Select one citekey, choose a local PDF, and choose **Review upload**. Review does
+not send bytes. The confirmation step displays the citekey, reference title,
+local browser filename, and size before **Upload PDF for …** sends one raw
+`application/pdf` body. The API response never exposes a document hash, private
+path, source link, or receipt identity.
+
+Receipt and binding remain automated, unreviewed evidence. They do not verify
+bibliographic identity, start Ingestion, add Search content, establish rights or
+scientific support, or publish the source. The PUBLIC build has neither project
+route.
+
 ## GitHub tasks
 
 From **Control center**, open **GitHub tasks** to inspect each configured repository's

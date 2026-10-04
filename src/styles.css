@@ -5432,3 +5432,108 @@ a {
     border-bottom: 0;
   }
 }
+
+/* Project reference intake */
+.project-intake-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.missing-pdf-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.missing-pdf-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.missing-pdf-option:has(input:checked) {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgb(45 122 91 / 12%);
+}
+
+.missing-pdf-option input {
+  margin-top: 0.25rem;
+}
+
+.missing-pdf-option > span {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.missing-pdf-option code,
+.missing-pdf-option span span {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.missing-pdf-upload,
+.missing-pdf-confirmation {
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.missing-pdf-upload label {
+  display: grid;
+  gap: 0.55rem;
+  font-weight: 700;
+}
+
+.missing-pdf-confirmation h2,
+.missing-pdf-confirmation p {
+  margin: 0;
+}
+
+.missing-pdf-confirmation dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.missing-pdf-confirmation dl div {
+  min-width: 0;
+  padding: 0.8rem;
+  border-radius: 8px;
+  background: var(--canvas);
+}
+
+.missing-pdf-confirmation dt {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.missing-pdf-confirmation dd {
+  margin: 0.3rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.missing-pdf-confirmation .button {
+  justify-self: start;
+}
+
+@media (max-width: 760px) {
+  .missing-pdf-list,
+  .missing-pdf-confirmation dl {
+    grid-template-columns: 1fr;
+  }
+}
