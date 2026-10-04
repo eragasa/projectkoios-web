@@ -106,6 +106,16 @@ for state_dir in "$state_root"/*; do
   [ -d "$state_dir" ] || continue
   pid="$(basename "$state_dir")"
   if kill -0 "$pid" 2>/dev/null && [ "$(cat "$state_dir/port")" = "$port" ]; then
+    if [[ "$url" == */openapi.json ]]; then
+      profile="${KOIOS_SMOKE_OPENAPI_PROFILE:-$(cat "$state_dir/profile")}"
+      case "$profile" in
+        public) printf '%s\n' '{"paths":{}}' ;;
+        control)
+          printf '%s\n' '{"paths":{"/project-reference-intake/ksdft2effmass/missing-pdfs":{}}}'
+          ;;
+        *) exit 1 ;;
+      esac
+    fi
     exit 0
   fi
 done
@@ -190,6 +200,7 @@ state_dir="$state_root/$$"
 mkdir -p "$state_dir"
 printf '%s\n' "$(pwd -P)" >"$state_dir/cwd"
 printf '%s\n' "$port" >"$state_dir/port"
+printf '%s\n' "${KOIOS_DEPLOYMENT_PROFILE:-<unset>}" >"$state_dir/profile"
 cleanup_state() {
   rm -rf "$state_dir"
   if [ -n "${child:-}" ]; then
@@ -206,7 +217,12 @@ trap cleanup_state EXIT TERM INT
   printf 'REFERENCE_PAGE_RESOLUTION_ROOT=%s\n' "${KOIOS_REFERENCE_PAGE_RESOLUTION_ROOT:-<unset>}"
   printf 'REFERENCE_MULTIMODAL_ROOT=%s\n' "${KOIOS_REFERENCE_MULTIMODAL_ROOT:-<unset>}"
   printf 'REFERENCE_CATALOG=%s\n' "${PROJECTKOIOS_REFERENCE_CATALOG:-<unset>}"
+  printf 'REFERENCE_DOCUMENT_REGISTRY=%s\n' "${PROJECTKOIOS_REFERENCE_DOCUMENT_REGISTRY:-<unset>}"
   printf 'SEARCH_INDEX=%s\n' "${PROJECTKOIOS_SEARCH_INDEX:-<unset>}"
+  printf 'PROJECT_REFERENCE_DATABASE_ROOT=%s\n' "${KOIOS_PROJECT_REFERENCE_DATABASE_ROOT:-<unset>}"
+  printf 'PROJECT_REFERENCE_OBJECT_ROOT=%s\n' "${KOIOS_PROJECT_REFERENCE_OBJECT_ROOT:-<unset>}"
+  printf 'PROJECT_REFERENCE_DATABASE_NAME=%s\n' "${KOIOS_PROJECT_REFERENCE_DATABASE_NAME:-<unset>}"
+  printf 'PROJECT_REFERENCE_MAX_PDF_BYTES=%s\n' "${KOIOS_PROJECT_REFERENCE_MAX_PDF_BYTES:-<unset>}"
   if [ "${KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT+x}" = x ]; then
     printf 'EQUATION_ROOT=%s\n' "$KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT"
   else
@@ -240,6 +256,7 @@ state_dir="$state_root/$$"
 mkdir -p "$state_dir"
 printf '%s\n' "$(pwd -P)" >"$state_dir/cwd"
 printf '%s\n' "$port" >"$state_dir/port"
+printf '%s\n' "${VITE_KOIOS_DEPLOYMENT_PROFILE:-<unset>}" >"$state_dir/profile"
 cleanup_state() {
   rm -rf "$state_dir"
   if [ -n "${child:-}" ]; then
@@ -249,6 +266,8 @@ cleanup_state() {
 trap cleanup_state EXIT TERM INT
 {
   printf 'DEPLOYMENT_PROFILE=%s\n' "${VITE_KOIOS_DEPLOYMENT_PROFILE:-<unset>}"
+  printf 'API_HOST=%s\n' "${KOIOS_API_HOST:-<unset>}"
+  printf 'API_PORT=%s\n' "${KOIOS_API_PORT:-<unset>}"
   printf 'ARGS='
   printf '%q ' "$@"
   printf '\n'
@@ -278,7 +297,9 @@ start_fixture() {
   local stdout_file="$2"
   local stderr_file="$3"
   shift 3
-  env -u KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT \
+  env -u KOIOS_DEPLOYMENT_SURFACE -u KOIOS_DEPLOYMENT_PROFILE \
+    -u VITE_KOIOS_DEPLOYMENT_PROFILE \
+    -u KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT \
     PATH="$case_root/fake-bin:$PATH" \
     KOIOS_RUN_DIR="$case_root/run" \
     KOIOS_API_REPO="$case_root/api repo" \
@@ -307,6 +328,250 @@ stop_fixture_service() {
     KOIOS_SMOKE_WEB_CAPTURE="$case_root/web.capture" \
     KOIOS_MANAGED_SERVICE="$service" \
     "$case_root/web/scripts/shutdown.sh"
+}
+
+start_surface_fixture() {
+  local case_root="$1"
+  local surface="$2"
+  case "$surface" in
+    www | web) ;;
+    *) fail "invalid smoke surface: $surface" ;;
+  esac
+  shift 2
+  env -u KOIOS_DEPLOYMENT_PROFILE -u VITE_KOIOS_DEPLOYMENT_PROFILE \
+    -u KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT \
+    PATH="$case_root/fake-bin:$PATH" \
+    KOIOS_DEPLOYMENT_SURFACE="$surface" \
+    KOIOS_API_REPO="$case_root/api repo" \
+    KOIOS_CORE_REPO="$case_root/core repo" \
+    KOIOS_SEARCH_REPO="$case_root/search repo" \
+    KOIOS_OBSIDIAN_REPO="$case_root/obsidian repo" \
+    KOIOS_REFERENCES_REPO="$case_root/projectkoios-references" \
+    KOIOS_SMOKE_API_CAPTURE="$case_root/$surface-api.capture" \
+    KOIOS_SMOKE_WEB_CAPTURE="$case_root/$surface-web.capture" \
+    "$@" \
+    "$case_root/web/scripts/startup.sh" \
+    >"$case_root/$surface.stdout" 2>"$case_root/$surface.stderr"
+}
+
+stop_surface_fixture() {
+  local case_root="$1"
+  local surface="$2"
+  case "$surface" in
+    www | web) ;;
+    *) fail "invalid smoke surface: $surface" ;;
+  esac
+  env -u KOIOS_DEPLOYMENT_PROFILE -u VITE_KOIOS_DEPLOYMENT_PROFILE \
+    PATH="$case_root/fake-bin:$PATH" \
+    KOIOS_DEPLOYMENT_SURFACE="$surface" \
+    KOIOS_API_REPO="$case_root/api repo" \
+    KOIOS_SMOKE_API_CAPTURE="$case_root/$surface-api.capture" \
+    KOIOS_SMOKE_WEB_CAPTURE="$case_root/$surface-web.capture" \
+    "$case_root/web/scripts/shutdown.sh"
+}
+
+run_surface_profile_refusal() {
+  local case_root="$SMOKE_ROOT/surface-profile-refusal"
+  create_fixture "$case_root"
+  local status
+
+  set +e
+  env KOIOS_DEPLOYMENT_SURFACE=unknown \
+    "$case_root/web/scripts/startup.sh" \
+    >"$case_root/unknown.stdout" 2>"$case_root/unknown.stderr"
+  status=$?
+  set -e
+  [ "$status" -ne 0 ] || fail "unknown deployment surface unexpectedly started"
+  grep -Fq "KOIOS_DEPLOYMENT_SURFACE must be one of" "$case_root/unknown.stderr" ||
+    fail "unknown deployment surface did not fail explicitly"
+
+  set +e
+  env KOIOS_DEPLOYMENT_SURFACE=www KOIOS_DEPLOYMENT_PROFILE=control \
+    "$case_root/web/scripts/startup.sh" \
+    >"$case_root/api-mismatch.stdout" 2>"$case_root/api-mismatch.stderr"
+  status=$?
+  set -e
+  [ "$status" -ne 0 ] || fail "www/control API profile mismatch unexpectedly started"
+  grep -Fq "conflicts with www surface profile public" "$case_root/api-mismatch.stderr" ||
+    fail "API profile mismatch did not fail explicitly"
+
+  set +e
+  env KOIOS_DEPLOYMENT_SURFACE=web VITE_KOIOS_DEPLOYMENT_PROFILE=public \
+    "$case_root/web/scripts/startup.sh" \
+    >"$case_root/vite-mismatch.stdout" 2>"$case_root/vite-mismatch.stderr"
+  status=$?
+  set -e
+  [ "$status" -ne 0 ] || fail "web/public Vite profile mismatch unexpectedly started"
+  grep -Fq "conflicts with web surface profile control" "$case_root/vite-mismatch.stderr" ||
+    fail "Vite profile mismatch did not fail explicitly"
+  test ! -e "$case_root/api.capture" || fail "surface refusal started API"
+  test ! -e "$case_root/web.capture" || fail "surface refusal started Web"
+}
+
+run_surface_openapi_refusal() {
+  local case_root="$SMOKE_ROOT/www-control-openapi"
+  create_fixture "$case_root"
+  local status state_count
+
+  set +e
+  start_surface_fixture "$case_root" www "KOIOS_SMOKE_OPENAPI_PROFILE=control"
+  status=$?
+  set -e
+  [ "$status" -ne 0 ] || fail "www accepted CONTROL project-reference OpenAPI"
+  grep -Fq "PUBLIC OpenAPI exposes CONTROL project-reference intake" \
+    "$case_root/www.stderr" || fail "www OpenAPI mismatch was not reported"
+  state_count="$(find "$(state_root_for_case "$case_root")" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+  [ "$state_count" = "0" ] || fail "www OpenAPI refusal orphaned a process"
+
+  case_root="$SMOKE_ROOT/web-public-openapi"
+  create_fixture "$case_root"
+  set +e
+  start_surface_fixture "$case_root" web "KOIOS_SMOKE_OPENAPI_PROFILE=public"
+  status=$?
+  set -e
+  [ "$status" -ne 0 ] || fail "web accepted PUBLIC OpenAPI without project-reference intake"
+  grep -Fq "CONTROL OpenAPI omits project-reference intake" \
+    "$case_root/web.stderr" || fail "web OpenAPI mismatch was not reported"
+  state_count="$(find "$(state_root_for_case "$case_root")" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+  [ "$state_count" = "0" ] || fail "web OpenAPI refusal orphaned a process"
+}
+
+run_concurrent_deployment_surfaces() {
+  local case_root="$SMOKE_ROOT/concurrent-surfaces"
+  create_fixture "$case_root"
+  local database_root="$case_root/private database"
+  local object_root="$case_root/private objects"
+  mkdir -p "$database_root" "$object_root"
+
+  start_surface_fixture "$case_root" www \
+    "KOIOS_PROJECT_REFERENCE_DATABASE_ROOT=$database_root" \
+    "KOIOS_PROJECT_REFERENCE_OBJECT_ROOT=$object_root" \
+    "KOIOS_PROJECT_REFERENCE_DATABASE_NAME=private.sqlite3" \
+    "KOIOS_PROJECT_REFERENCE_MAX_PDF_BYTES=12345" \
+    "KOIOS_REFERENCE_CORPUS_ROOT=$case_root/private corpus" \
+    "KOIOS_REFERENCE_PAGE_RESOLUTION_ROOT=$case_root/private resolution" \
+    "KOIOS_REFERENCE_MULTIMODAL_ROOT=$case_root/private multimodal" \
+    "PROJECTKOIOS_REFERENCE_CATALOG=$case_root/private catalog.sqlite3" \
+    "PROJECTKOIOS_REFERENCE_DOCUMENT_REGISTRY=$case_root/private registry.sqlite3" \
+    "PROJECTKOIOS_SEARCH_INDEX=$case_root/private search.sqlite3" \
+    "KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT=$case_root/private equation"
+  start_surface_fixture "$case_root" web \
+    "KOIOS_PROJECT_REFERENCE_DATABASE_ROOT=$database_root" \
+    "KOIOS_PROJECT_REFERENCE_OBJECT_ROOT=$object_root" \
+    "KOIOS_PROJECT_REFERENCE_DATABASE_NAME=private.sqlite3" \
+    "KOIOS_PROJECT_REFERENCE_MAX_PDF_BYTES=12345"
+  wait_for_capture "$case_root/www-api.capture" "$case_root/www-web.capture"
+  wait_for_capture "$case_root/web-api.capture" "$case_root/web-web.capture"
+
+  grep -Fqx "DEPLOYMENT_PROFILE=public" "$case_root/www-api.capture" ||
+    fail "www API did not use PUBLIC profile"
+  grep -Fqx "DEPLOYMENT_PROFILE=public" "$case_root/www-web.capture" ||
+    fail "www Web did not use PUBLIC profile"
+  grep -Fqx "DEPLOYMENT_PROFILE=control" "$case_root/web-api.capture" ||
+    fail "web API did not use CONTROL profile"
+  grep -Fqx "DEPLOYMENT_PROFILE=control" "$case_root/web-web.capture" ||
+    fail "web Web did not use CONTROL profile"
+  grep -Fq -- "--mode public" "$case_root/www-web.capture" ||
+    fail "www Vite did not use public mode"
+  grep -Fq -- "--mode control" "$case_root/web-web.capture" ||
+    fail "web Vite did not use control mode"
+  grep -Fqx "API_HOST=127.0.0.1" "$case_root/www-web.capture" ||
+    fail "www Web proxy lost API host"
+  grep -Fqx "API_PORT=8100" "$case_root/www-web.capture" ||
+    fail "www Web proxy lost surface API port"
+  grep -Fqx "API_HOST=127.0.0.1" "$case_root/web-web.capture" ||
+    fail "web Web proxy lost API host"
+  grep -Fqx "API_PORT=8000" "$case_root/web-web.capture" ||
+    fail "web Web proxy lost surface API port"
+
+  local resolved_case_root
+  resolved_case_root="$(cd "$case_root" && pwd -P)"
+  local public_pythonpath="$case_root/api repo/src/python:$case_root/core repo/src/python:$case_root/search repo/src/python:$case_root/obsidian repo/src/python"
+  local control_pythonpath="$public_pythonpath:$resolved_case_root/projectkoios-references/src/python"
+  grep -Fqx "PYTHONPATH=$public_pythonpath" "$case_root/www-api.capture" ||
+    fail "www API inherited CONTROL owner sources"
+  grep -Fqx "PYTHONPATH=$control_pythonpath" "$case_root/web-api.capture" ||
+    fail "web API omitted References owner source"
+  for variable_name in \
+    PROJECT_REFERENCE_DATABASE_ROOT \
+    PROJECT_REFERENCE_OBJECT_ROOT \
+    PROJECT_REFERENCE_DATABASE_NAME \
+    PROJECT_REFERENCE_MAX_PDF_BYTES \
+    REFERENCE_CORPUS_ROOT \
+    REFERENCE_PAGE_RESOLUTION_ROOT \
+    REFERENCE_MULTIMODAL_ROOT \
+    REFERENCE_CATALOG \
+    REFERENCE_DOCUMENT_REGISTRY \
+    SEARCH_INDEX \
+    EQUATION_ROOT; do
+    grep -Fqx "$variable_name=<unset>" "$case_root/www-api.capture" ||
+      fail "www API inherited $variable_name"
+  done
+  grep -Fqx "PROJECT_REFERENCE_DATABASE_ROOT=$database_root" "$case_root/web-api.capture" ||
+    fail "web API lost project-reference database root"
+  grep -Fqx "PROJECT_REFERENCE_OBJECT_ROOT=$object_root" "$case_root/web-api.capture" ||
+    fail "web API lost project-reference object root"
+  grep -Fqx "PROJECT_REFERENCE_DATABASE_NAME=private.sqlite3" "$case_root/web-api.capture" ||
+    fail "web API lost project-reference database name"
+  grep -Fqx "PROJECT_REFERENCE_MAX_PDF_BYTES=12345" "$case_root/web-api.capture" ||
+    fail "web API lost project-reference upload bound"
+
+  grep -Fqx "service=www-api" "$case_root/web/.run/www/api.pid" ||
+    fail "www API record identity is not surface-specific"
+  grep -Fqx "service=www-web" "$case_root/web/.run/www/web.pid" ||
+    fail "www Web record identity is not surface-specific"
+  grep -Fqx "port=8100" "$case_root/web/.run/www/api.pid" ||
+    fail "www API record has wrong default port"
+  grep -Fqx "port=4173" "$case_root/web/.run/www/web.pid" ||
+    fail "www Web record has wrong default port"
+  grep -Fqx "service=web-api" "$case_root/web/.run/web/api.pid" ||
+    fail "web API record identity is not surface-specific"
+  grep -Fqx "service=web-web" "$case_root/web/.run/web/web.pid" ||
+    fail "web Web record identity is not surface-specific"
+  grep -Fqx "port=8000" "$case_root/web/.run/web/api.pid" ||
+    fail "web API record has wrong default port"
+  grep -Fqx "port=5173" "$case_root/web/.run/web/web.pid" ||
+    fail "web Web record has wrong default port"
+
+  local www_api_pid www_web_pid web_api_pid web_web_pid status
+  www_api_pid="$(record_value pid "$case_root/web/.run/www/api.pid")"
+  www_web_pid="$(record_value pid "$case_root/web/.run/www/web.pid")"
+  web_api_pid="$(record_value pid "$case_root/web/.run/web/api.pid")"
+  web_web_pid="$(record_value pid "$case_root/web/.run/web/web.pid")"
+
+  set +e
+  env -u KOIOS_DEPLOYMENT_PROFILE -u VITE_KOIOS_DEPLOYMENT_PROFILE \
+    PATH="$case_root/fake-bin:$PATH" \
+    KOIOS_DEPLOYMENT_SURFACE=www \
+    KOIOS_RUN_DIR="$case_root/web/.run/web" \
+    KOIOS_API_REPO="$case_root/api repo" \
+    KOIOS_API_PORT=8000 \
+    KOIOS_WEB_PORT=5173 \
+    KOIOS_SMOKE_API_CAPTURE="$case_root/web-api.capture" \
+    KOIOS_SMOKE_WEB_CAPTURE="$case_root/web-web.capture" \
+    "$case_root/web/scripts/shutdown.sh" \
+    >"$case_root/wrong-stop.stdout" 2>"$case_root/wrong-stop.stderr"
+  status=$?
+  set -e
+  [ "$status" -ne 0 ] || fail "wrong-surface stop unexpectedly succeeded"
+  grep -Fq "metadata does not match the requested service configuration" \
+    "$case_root/wrong-stop.stderr" || fail "wrong-surface stop did not fail closed"
+  for pid in "$www_api_pid" "$www_web_pid" "$web_api_pid" "$web_web_pid"; do
+    kill -0 "$pid" 2>/dev/null || fail "wrong-surface stop killed PID $pid"
+  done
+
+  stop_surface_fixture "$case_root" www \
+    >"$case_root/www-stop.stdout" 2>"$case_root/www-stop.stderr"
+  kill -0 "$web_api_pid" 2>/dev/null || fail "www stop killed web API"
+  kill -0 "$web_web_pid" 2>/dev/null || fail "www stop killed web Web"
+  test ! -e "$case_root/web/.run/www/api.pid" || fail "www stop retained API record"
+  test ! -e "$case_root/web/.run/www/web.pid" || fail "www stop retained Web record"
+
+  stop_surface_fixture "$case_root" web \
+    >"$case_root/web-stop.stdout" 2>"$case_root/web-stop.stderr"
+  local state_count
+  state_count="$(find "$(state_root_for_case "$case_root")" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+  [ "$state_count" = "0" ] || fail "surface shutdown orphaned managed processes"
 }
 
 run_without_owner_sources() {
@@ -720,7 +985,7 @@ run_identity_publication_failure_cleanup() {
   set -e
 
   [ "$status" -ne 0 ] || fail "incomplete process identity unexpectedly published"
-  grep -Fq "Could not capture complete api process identity" "$case_root/stderr" ||
+  grep -Fq "Could not capture complete web-api process identity" "$case_root/stderr" ||
     fail "identity publication failure was not reported"
   test ! -e "$case_root/run/api.pid" ||
     fail "failed identity publication retained API metadata"
@@ -804,6 +1069,9 @@ run_api_only_restart() {
   stop_case_processes "$case_root"
 }
 
+run_surface_profile_refusal
+run_surface_openapi_refusal
+run_concurrent_deployment_surfaces
 run_without_owner_sources
 run_with_default_owner_sources
 run_with_explicit_owner_sources
