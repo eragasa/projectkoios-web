@@ -1882,6 +1882,38 @@ export interface components {
             /** Version */
             version?: string | null;
         };
+        /** ReceivedUnboundPdfResponse */
+        ReceivedUnboundPdfResponse: {
+            /**
+             * Binding Status
+             * @default received-unbound
+             * @constant
+             */
+            binding_status: "received-unbound";
+            /** Byte Size */
+            byte_size: number;
+            /** Citekey */
+            citekey: string;
+            /**
+             * Detail
+             * @default PDF was received but could not be bound
+             * @constant
+             */
+            detail: "PDF was received but could not be bound";
+            /**
+             * Document Status
+             * @default received-unreviewed
+             * @constant
+             */
+            document_status: "received-unreviewed";
+            /**
+             * Project Id
+             * @default ksdft2effmass
+             * @constant
+             */
+            project_id: "ksdft2effmass";
+            receipt_disposition: components["schemas"]["ProjectPdfReceiptDisposition"];
+        };
         /** SearchRequest */
         SearchRequest: {
             /**
@@ -3104,6 +3136,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProvideMissingPdfResponse"];
+                };
+            };
+            /** @description PDF custody succeeded but one-to-one binding conflicted. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceivedUnboundPdfResponse"];
                 };
             };
             /** @description Validation Error */

@@ -163,6 +163,11 @@ local browser filename, and size before **Upload PDF for …** sends one raw
 `application/pdf` body. The API response never exposes a document hash, private
 path, source link, or receipt identity.
 
+If private custody succeeds but the citekey cannot be bound, the page reports
+that the PDF was received but remains unbound and refreshes the owner-derived
+Missing PDFs list. It does not imply that the request was mutation-free, retry
+silently, expose the document digest, or claim successful binding.
+
 Receipt and binding remain automated, unreviewed evidence. They do not verify
 bibliographic identity, start Ingestion, add Search content, establish rights or
 scientific support, or publish the source. The PUBLIC build has neither project
@@ -362,17 +367,28 @@ browser bundle.
 
 ## Generate OpenAPI types
 
-Generate from the reviewed deterministic control OpenAPI document:
+The generator defaults to the immutable API revision and reviewed control-schema
+SHA-256 embedded in `scripts/generate-api.mjs`:
+
+```bash
+npm run generate:api
+npm run generate:api:check
+```
+
+For a local copy of that same reviewed artifact, provide both its location and
+expected digest:
 
 ```bash
 KOIOS_OPENAPI_URL=/path/to/projectkoios-api/openapi/control.openapi.json \
+KOIOS_OPENAPI_SHA256=bcff0368f68d03b005149b4ccb061ca470289488ff74c9af53962af5b1cbff2f \
   npm run generate:api
 ```
 
-This writes `src/api/schema.generated.ts`. Generated files must be reviewed when API
-contracts change. The API client consumes the generated publication and control
-contracts. Generate from a control-profile OpenAPI document so the schema contains the
-full typed superset.
+Generation fails closed on digest mismatch. The check command regenerates in
+temporary storage and requires byte equality with
+`src/api/schema.generated.ts`; CI runs it before browser checks. Generated files
+must still be reviewed when API contracts change. The API client consumes the
+control-profile schema's full typed superset.
 
 ## Run checks
 
@@ -471,5 +487,6 @@ browser security.
 
 ### Type generation fails
 
-Confirm `http://127.0.0.1:8000/openapi.json` is available or set
-`KOIOS_OPENAPI_URL` to the schema URL before running `npm run generate:api`.
+Confirm the pinned immutable API artifact is reachable. For a local reviewed
+artifact, set both `KOIOS_OPENAPI_URL` and `KOIOS_OPENAPI_SHA256` before running
+`npm run generate:api`.

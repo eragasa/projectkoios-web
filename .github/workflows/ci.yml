@@ -36,23 +36,26 @@ jobs:
       - name: GitHubTask 03 · Install locked dependencies
         run: npm ci
 
-      - name: GitHubTask 04 · Check formatting
+      - name: GitHubTask 04 · Verify pinned API types
+        run: npm run generate:api:check
+
+      - name: GitHubTask 05 · Check formatting
         run: npm run format:check
 
-      - name: GitHubTask 05 · Type-check application
+      - name: GitHubTask 06 · Type-check application
         run: npm run typecheck
 
-      - name: GitHubTask 06 · Run component tests
+      - name: GitHubTask 07 · Run component tests
         run: npm test
 
-      - name: GitHubTask 07 · Build public deployment
+      - name: GitHubTask 08 · Build public deployment
         run: npm run build:public
 
-      - name: GitHubTask 08 · Build control deployment
+      - name: GitHubTask 09 · Build control deployment
         run: npm run build:control
 
-      - name: GitHubTask 09 · Install Chromium runtime
+      - name: GitHubTask 10 · Install Chromium runtime
         run: npx playwright install --with-deps chromium
 
-      - name: GitHubTask 10 · Run browser acceptance tests
+      - name: GitHubTask 11 · Run browser acceptance tests
         run: npm run test:e2e

@@ -23,6 +23,30 @@ export type ProjectMissingPdfList =
 export type ProjectMissingPdf = components["schemas"]["MissingPdfItemResponse"];
 export type ProjectProvidedPdf =
   paths["/project-reference-intake/ksdft2effmass/missing-pdfs/{citekey}/document"]["post"]["responses"][200]["content"]["application/json"];
+export type ProjectReceivedUnboundPdf =
+  paths["/project-reference-intake/ksdft2effmass/missing-pdfs/{citekey}/document"]["post"]["responses"][409]["content"]["application/json"];
+export type ProjectPdfProvisionResult = ProjectProvidedPdf | ProjectReceivedUnboundPdf;
+
+function isProjectReceivedUnboundPdf(
+  value: unknown,
+): value is ProjectReceivedUnboundPdf {
+  if (typeof value !== "object" || value === null) return false;
+  const item = value as Record<string, unknown>;
+  return (
+    item.project_id === "ksdft2effmass" &&
+    typeof item.citekey === "string" &&
+    /^[A-Za-z0-9][A-Za-z0-9._:+-]{0,199}$/u.test(item.citekey) &&
+    Number.isInteger(item.byte_size) &&
+    Number(item.byte_size) >= 1 &&
+    Number(item.byte_size) <= 100_000_000 &&
+    ["received", "source-observation-added", "already-present"].includes(
+      String(item.receipt_disposition),
+    ) &&
+    item.binding_status === "received-unbound" &&
+    item.document_status === "received-unreviewed" &&
+    item.detail === "PDF was received but could not be bound"
+  );
+}
 
 export type CitationDocumentCatalog =
   paths["/citation-documents"]["get"]["responses"][200]["content"]["application/json"];
@@ -134,16 +158,24 @@ export class ProjectKoiosApiClient {
     citekey: string,
     file: File,
     signal?: AbortSignal,
-  ): Promise<ProjectProvidedPdf> {
-    return this.request<ProjectProvidedPdf>(
-      `/project-reference-intake/ksdft2effmass/missing-pdfs/${encodeURIComponent(citekey)}/document`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/pdf" },
-        body: file,
-        signal,
-      },
-    );
+  ): Promise<ProjectPdfProvisionResult> {
+    const path =
+      `/project-reference-intake/ksdft2effmass/missing-pdfs/` +
+      `${encodeURIComponent(citekey)}/document`;
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/pdf" },
+      body: file,
+      signal,
+    });
+    if (response.status === 409) {
+      const result: unknown = await response.json();
+      if (!isProjectReceivedUnboundPdf(result)) {
+        throw new ApiError(502, "Reference intake returned an invalid conflict result");
+      }
+      return result;
+    }
+    return this.response<ProjectProvidedPdf>(response);
   }
 
   async githubTasks(signal?: AbortSignal): Promise<GitHubTaskDashboard> {
@@ -336,6 +368,10 @@ export class ProjectKoiosApiClient {
 
   private async request<T>(path: string, init: RequestInit): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`, init);
+    return this.response<T>(response);
+  }
+
+  private async response<T>(response: Response): Promise<T> {
     if (!response.ok) {
       let message = `Project Koios API returned ${response.status}`;
       let code: string | undefined;
