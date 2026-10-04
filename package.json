@@ -20,7 +20,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "typecheck": "tsc -b --pretty false",
-    "generate:api": "node scripts/generate-api.mjs"
+    "generate:api": "node scripts/generate-api.mjs",
+    "generate:api:check": "node scripts/generate-api.mjs --check"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.0",

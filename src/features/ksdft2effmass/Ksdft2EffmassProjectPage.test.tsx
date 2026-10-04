@@ -75,6 +75,35 @@ test("reviews one selected PDF before sending the raw file", async () => {
   expect(await screen.findByText(/PDF received for example2026/)).toBeInTheDocument();
 });
 
+test("reports received-unbound custody and refreshes the missing list", async () => {
+  const user = userEvent.setup();
+  const list = vi.spyOn(apiClient, "projectMissingPdfs").mockResolvedValue(missing);
+  vi.spyOn(apiClient, "provideProjectMissingPdf").mockResolvedValue({
+    project_id: "ksdft2effmass",
+    citekey: "example2026",
+    byte_size: 27,
+    receipt_disposition: "received",
+    binding_status: "received-unbound",
+    document_status: "received-unreviewed",
+    detail: "PDF was received but could not be bound",
+  });
+  renderPage();
+
+  await user.click(await screen.findByRole("radio", { name: /Sanitized title/ }));
+  const file = new File(["%PDF-1.7\nsanitized\n%%EOF\n"], "example.pdf", {
+    type: "application/pdf",
+  });
+  await user.upload(screen.getByLabelText("PDF for example2026"), file);
+  await user.click(screen.getByRole("button", { name: "Review upload" }));
+  await user.click(screen.getByRole("button", { name: "Upload PDF for example2026" }));
+
+  expect(
+    await screen.findByText(/PDF received for example2026, but it could not be bound/),
+  ).toBeInTheDocument();
+  expect(screen.getByText(/Missing PDFs list was refreshed/)).toBeInTheDocument();
+  expect(list).toHaveBeenCalledTimes(2);
+});
+
 test("rejects a non-PDF locally without calling the API", async () => {
   const user = userEvent.setup();
   vi.spyOn(apiClient, "projectMissingPdfs").mockResolvedValue(missing);

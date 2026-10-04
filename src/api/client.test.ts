@@ -140,7 +140,9 @@ test("missing PDF receipt sends one encoded citekey and raw PDF body", async () 
     type: "application/pdf",
   });
 
-  await client.provideProjectMissingPdf("example:key", file);
+  await expect(
+    client.provideProjectMissingPdf("example:key", file),
+  ).resolves.toMatchObject({ binding_disposition: "bound" });
 
   expect(fetchMock).toHaveBeenCalledWith(
     "/project-reference-intake/ksdft2effmass/missing-pdfs/example%3Akey/document",
@@ -149,6 +151,58 @@ test("missing PDF receipt sends one encoded citekey and raw PDF body", async () 
       headers: { "Content-Type": "application/pdf" },
       body: file,
     }),
+  );
+});
+
+test("received-unbound PDF custody remains a typed result", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json(
+      {
+        project_id: "ksdft2effmass",
+        citekey: "example:key",
+        byte_size: 12,
+        receipt_disposition: "received",
+        binding_status: "received-unbound",
+        document_status: "received-unreviewed",
+        detail: "PDF was received but could not be bound",
+      },
+      { status: 409 },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+  const file = new File(["%PDF-private"], "private.pdf", {
+    type: "application/pdf",
+  });
+
+  await expect(client.provideProjectMissingPdf("example:key", file)).resolves.toEqual({
+    project_id: "ksdft2effmass",
+    citekey: "example:key",
+    byte_size: 12,
+    receipt_disposition: "received",
+    binding_status: "received-unbound",
+    document_status: "received-unreviewed",
+    detail: "PDF was received but could not be bound",
+  });
+});
+
+test("malformed received-unbound response fails closed", async () => {
+  fetchMock.mockResolvedValue(
+    Response.json(
+      {
+        citekey: "example:key",
+        binding_status: "received-unbound",
+        private_path: "/Users/example/private.pdf",
+      },
+      { status: 409 },
+    ),
+  );
+  const client = new ProjectKoiosApiClient();
+  const file = new File(["%PDF-private"], "private.pdf", {
+    type: "application/pdf",
+  });
+
+  await expect(client.provideProjectMissingPdf("example:key", file)).rejects.toEqual(
+    expect.objectContaining({ status: 502 }),
   );
 });
 

@@ -6,7 +6,7 @@ import {
   ApiError,
   apiClient,
   type ProjectMissingPdf,
-  type ProjectProvidedPdf,
+  type ProjectPdfProvisionResult,
 } from "../../api/client";
 import { usePageMetadata } from "../../app/usePageMetadata";
 
@@ -132,7 +132,7 @@ export function MissingPdfsPage() {
   const [file, setFile] = useState<File | null>(null);
   const [reviewing, setReviewing] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const [result, setResult] = useState<ProjectProvidedPdf | null>(null);
+  const [result, setResult] = useState<ProjectPdfProvisionResult | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
   const reviewRef = useRef<HTMLDivElement>(null);
   const missing = useQuery({
@@ -352,8 +352,18 @@ export function MissingPdfsPage() {
       ) : null}
       {result ? (
         <div className="publication-status" role="status">
-          PDF received for {result.citekey}. The document remains unreviewed and is not
-          automatically processed or published.
+          {"binding_status" in result ? (
+            <>
+              PDF received for {result.citekey}, but it could not be bound to this
+              reference. The Missing PDFs list was refreshed. The document remains
+              unreviewed and is not automatically processed or published.
+            </>
+          ) : (
+            <>
+              PDF received for {result.citekey}. The document remains unreviewed and is
+              not automatically processed or published.
+            </>
+          )}
         </div>
       ) : null}
     </div>
