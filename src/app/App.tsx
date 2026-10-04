@@ -5,6 +5,10 @@ import { CitationReviewPage } from "../features/citation-review/CitationReviewPa
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { EquationReviewPage } from "../features/equation-review/EquationReviewPage";
 import { GitHubTasksPage } from "../features/github-tasks/GitHubTasksPage";
+import {
+  Ksdft2EffmassProjectPage,
+  MissingPdfsPage,
+} from "../features/ksdft2effmass/Ksdft2EffmassProjectPage";
 import { LiteratureReviewPage } from "../features/literature-review/LiteratureReviewPage";
 import { NoteReviewPage } from "../features/note-review/NoteReviewPage";
 import { OrganizerPage } from "../features/organizer/OrganizerPage";
@@ -35,6 +39,14 @@ export function App({ profile = deploymentProfile }: { profile?: DeploymentProfi
           <>
             <Route path="control" element={<DashboardPage />} />
             <Route path="control/github" element={<GitHubTasksPage />} />
+            <Route
+              path="control/projects/ksdft2effmass"
+              element={<Ksdft2EffmassProjectPage />}
+            />
+            <Route
+              path="control/projects/ksdft2effmass/missing-pdfs"
+              element={<MissingPdfsPage />}
+            />
             <Route path="control/search" element={<SearchPage />} />
             <Route path="control/organizer" element={<OrganizerPage />} />
             <Route path="control/note-review" element={<NoteReviewPage />} />

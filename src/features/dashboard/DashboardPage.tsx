@@ -2,6 +2,14 @@ import { Link } from "react-router-dom";
 
 const workspaces = [
   {
+    eyebrow: "Research project",
+    title: "Write ksdft2effmass",
+    description:
+      "Open the local manuscript workspace, inspect required references, and provide missing PDFs by citekey.",
+    action: "Open ksdft2effmass",
+    to: "/control/projects/ksdft2effmass",
+  },
+  {
     eyebrow: "Repositories",
     title: "Inspect GitHub tasks",
     description:

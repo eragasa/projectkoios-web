@@ -388,6 +388,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/project-reference-intake/ksdft2effmass/missing-pdfs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Missing Pdfs */
+        get: operations["missing_pdfs_project_reference_intake_ksdft2effmass_missing_pdfs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/project-reference-intake/ksdft2effmass/missing-pdfs/{citekey}/document": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Provide Pdf */
+        post: operations["provide_pdf_project_reference_intake_ksdft2effmass_missing_pdfs__citekey__document_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/search": {
         parameters: {
             query?: never;
@@ -1418,6 +1452,48 @@ export interface components {
             /** Latex */
             latex: string;
         };
+        /** MissingPdfItemResponse */
+        MissingPdfItemResponse: {
+            /** Authors */
+            authors: string[];
+            /** Citekey */
+            citekey: string;
+            /** Entry Type */
+            entry_type: string;
+            /** Title */
+            title?: string | null;
+            /** Year */
+            year?: string | null;
+        };
+        /** MissingPdfListResponse */
+        MissingPdfListResponse: {
+            /** Bound Pdf Count */
+            bound_pdf_count: number;
+            /** Items */
+            items: components["schemas"]["MissingPdfItemResponse"][];
+            /** Max Pdf Bytes */
+            max_pdf_bytes: number;
+            /**
+             * Media Type
+             * @default application/pdf
+             * @constant
+             */
+            media_type: "application/pdf";
+            /** Missing Pdf Count */
+            missing_pdf_count: number;
+            /** Not Applicable Count */
+            not_applicable_count: number;
+            /**
+             * Project Id
+             * @default ksdft2effmass
+             * @constant
+             */
+            project_id: "ksdft2effmass";
+            /** Required Pdf Count */
+            required_pdf_count: number;
+            /** Total References */
+            total_references: number;
+        };
         /** OrganizerControlRequest */
         OrganizerControlRequest: {
             /**
@@ -1477,6 +1553,16 @@ export interface components {
             /** Proposed Files */
             proposed_files: number;
         };
+        /**
+         * ProjectPdfBindingDisposition
+         * @enum {string}
+         */
+        ProjectPdfBindingDisposition: "bound" | "already-bound";
+        /**
+         * ProjectPdfReceiptDisposition
+         * @enum {string}
+         */
+        ProjectPdfReceiptDisposition: "received" | "source-observation-added" | "already-present";
         /** ProposedEquationAssistanceResponse */
         ProposedEquationAssistanceResponse: {
             /** Attempt Id */
@@ -1492,6 +1578,27 @@ export interface components {
              * @enum {string}
              */
             status: "AUTOMATED_UNREVIEWED";
+        };
+        /** ProvideMissingPdfResponse */
+        ProvideMissingPdfResponse: {
+            binding_disposition: components["schemas"]["ProjectPdfBindingDisposition"];
+            /** Byte Size */
+            byte_size: number;
+            /** Citekey */
+            citekey: string;
+            /**
+             * Document Status
+             * @default received-unreviewed
+             * @constant
+             */
+            document_status: "received-unreviewed";
+            /**
+             * Project Id
+             * @default ksdft2effmass
+             * @constant
+             */
+            project_id: "ksdft2effmass";
+            receipt_disposition: components["schemas"]["ProjectPdfReceiptDisposition"];
         };
         /** ProvidedReferenceListResponse */
         ProvidedReferenceListResponse: {
@@ -2954,6 +3061,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrganizerStatusResponse"];
+                };
+            };
+        };
+    };
+    missing_pdfs_project_reference_intake_ksdft2effmass_missing_pdfs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MissingPdfListResponse"];
+                };
+            };
+        };
+    };
+    provide_pdf_project_reference_intake_ksdft2effmass_missing_pdfs__citekey__document_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description BibTeX citekey returned by the missing-PDF list. */
+                citekey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvideMissingPdfResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
