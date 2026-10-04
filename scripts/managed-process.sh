@@ -10,6 +10,40 @@ KOIOS_LIFECYCLE_LOCK_PID=""
 KOIOS_LIFECYCLE_LOCK_START=""
 KOIOS_VERIFY_REASON=""
 KOIOS_VERIFIED_PID=""
+KOIOS_RESOLVED_RUN_DIR=""
+
+koios_resolve_run_dir() {
+  local web_root="$1"
+  local surface="$2"
+  local value source
+  if [ "${KOIOS_RUN_DIR+x}" = x ]; then
+    value="$KOIOS_RUN_DIR"
+    source=KOIOS_RUN_DIR
+  elif [ "${KOIOS_RUNTIME_ROOT+x}" = x ]; then
+    if [ -z "$KOIOS_RUNTIME_ROOT" ] || [[ "$KOIOS_RUNTIME_ROOT" == *$'\n'* ]] ||
+      [[ "$KOIOS_RUNTIME_ROOT" == *$'\r'* ]]; then
+      echo "KOIOS_RUNTIME_ROOT must be a non-empty single-line path." >&2
+      return 1
+    fi
+    case "$surface" in
+      www | web) ;;
+      *)
+        echo "Cannot derive a runtime directory for unknown surface: $surface" >&2
+        return 1
+        ;;
+    esac
+    value="${KOIOS_RUNTIME_ROOT%/}/$surface"
+    source=KOIOS_RUNTIME_ROOT
+  else
+    value="$web_root/.run/$surface"
+    source=default
+  fi
+  if [ -z "$value" ] || [[ "$value" == *$'\n'* ]] || [[ "$value" == *$'\r'* ]]; then
+    echo "$source must resolve to a non-empty single-line run directory." >&2
+    return 1
+  fi
+  KOIOS_RESOLVED_RUN_DIR="$value"
+}
 
 koios_trim_whitespace() {
   printf '%s' "$1" | awk '{$1=$1; print}'
