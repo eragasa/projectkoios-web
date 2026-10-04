@@ -4,54 +4,67 @@ set -euo pipefail
 
 REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STARTUP_SOURCE="$REPOSITORY_ROOT/scripts/startup.sh"
+SHUTDOWN_SOURCE="$REPOSITORY_ROOT/scripts/shutdown.sh"
+LIFECYCLE_SOURCE="$REPOSITORY_ROOT/scripts/managed-process.sh"
 SMOKE_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/projectkoios-web-startup-smoke.XXXXXX")"
-MANAGED_PIDS=()
+SMOKE_ROOT="$(cd "$SMOKE_ROOT" && pwd -P)"
 
 fail() {
   echo "startup smoke failure: $*" >&2
   exit 1
 }
 
+file_mode() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    *) stat -c '%a' "$1" ;;
+  esac
+}
+
+record_value() {
+  local key="$1"
+  local file="$2"
+  awk -v prefix="$key=" 'index($0, prefix) == 1 { print substr($0, length(prefix) + 1); exit }' "$file"
+}
+
+state_root_for_case() {
+  printf '%s/lsof-state' "$1"
+}
+
 stop_case_processes() {
   local case_root="$1"
-  local pid_file
-  for pid_file in "$case_root/run/web.pid" "$case_root/run/api.pid"; do
-    if [ -f "$pid_file" ]; then
-      local pid
-      pid="$(cat "$pid_file")"
-      if [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null; then
-        MANAGED_PIDS+=("$pid")
-        kill "$pid" 2>/dev/null || true
-        local attempt
-        for attempt in $(seq 1 100); do
-          if ! kill -0 "$pid" 2>/dev/null; then
-            break
-          fi
-          sleep 0.01
-        done
-        if kill -0 "$pid" 2>/dev/null; then
-          kill -9 "$pid" 2>/dev/null || true
+  local state_root
+  state_root="$(state_root_for_case "$case_root")"
+  local state_dir pid attempt
+  for state_dir in "$state_root"/*; do
+    [ -d "$state_dir" ] || continue
+    pid="$(basename "$state_dir")"
+    if [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null; then
+      kill "$pid" 2>/dev/null || true
+      for attempt in $(seq 1 100); do
+        if ! kill -0 "$pid" 2>/dev/null; then
+          break
         fi
+        sleep 0.01
+      done
+      if kill -0 "$pid" 2>/dev/null; then
+        kill -9 "$pid" 2>/dev/null || true
       fi
     fi
   done
 }
 
 cleanup() {
-  local pid
-  local pid_file
-  while IFS= read -r pid_file; do
-    pid="$(cat "$pid_file" 2>/dev/null || true)"
-    if [[ "$pid" =~ ^[0-9]+$ ]]; then
-      kill "$pid" 2>/dev/null || true
-      kill -9 "$pid" 2>/dev/null || true
-    fi
-  done < <(find "$SMOKE_ROOT" -type f -path '*/run/*.pid' 2>/dev/null)
-  for pid in "${MANAGED_PIDS[@]:-}"; do
-    kill "$pid" 2>/dev/null || true
-    kill -9 "$pid" 2>/dev/null || true
+  local case_root
+  for case_root in "$SMOKE_ROOT"/*; do
+    [ -d "$case_root" ] || continue
+    stop_case_processes "$case_root"
   done
-  rm -rf "$SMOKE_ROOT"
+  if [ "${KOIOS_KEEP_SMOKE:-0}" = "1" ]; then
+    echo "retained startup smoke root: $SMOKE_ROOT" >&2
+  else
+    rm -rf "$SMOKE_ROOT"
+  fi
 }
 trap cleanup EXIT
 
@@ -65,16 +78,96 @@ create_fixture() {
     "$case_root/core repo/src/python" \
     "$case_root/search repo/src/python" \
     "$case_root/obsidian repo/src/python" \
-    "$case_root/fake-bin"
+    "$case_root/projectkoios-references/src/python" \
+    "$case_root/fake-bin" \
+    "$(state_root_for_case "$case_root")"
   cp "$STARTUP_SOURCE" "$case_root/web/scripts/startup.sh"
-  chmod +x "$case_root/web/scripts/startup.sh"
+  cp "$SHUTDOWN_SOURCE" "$case_root/web/scripts/shutdown.sh"
+  cp "$LIFECYCLE_SOURCE" "$case_root/web/scripts/managed-process.sh"
+  chmod +x "$case_root/web/scripts/startup.sh" "$case_root/web/scripts/shutdown.sh"
 
   cat >"$case_root/fake-bin/curl" <<'EOF'
 #!/usr/bin/env bash
-exit 0
+set -euo pipefail
+state_root="${KOIOS_SMOKE_LSOF_STATE:-$(dirname "${KOIOS_SMOKE_API_CAPTURE:?}")/lsof-state}"
+url="${!#}"
+port=""
+if [[ "$url" =~ :([0-9]+)/ ]]; then
+  port="${BASH_REMATCH[1]}"
+fi
+if [ -n "${KOIOS_SMOKE_CURL_DELAY:-}" ]; then
+  sleep "$KOIOS_SMOKE_CURL_DELAY"
+fi
+if [ "${KOIOS_SMOKE_CURL_FAIL_PORT:-}" = "$port" ] ||
+  [ "${KOIOS_SMOKE_NO_LISTEN_PORT:-}" = "$port" ]; then
+  exit 1
+fi
+for state_dir in "$state_root"/*; do
+  [ -d "$state_dir" ] || continue
+  pid="$(basename "$state_dir")"
+  if kill -0 "$pid" 2>/dev/null && [ "$(cat "$state_dir/port")" = "$port" ]; then
+    exit 0
+  fi
+done
+exit 1
 EOF
   cat >"$case_root/fake-bin/lsof" <<'EOF'
 #!/usr/bin/env bash
+set -euo pipefail
+state_root="${KOIOS_SMOKE_LSOF_STATE:-$(dirname "${KOIOS_SMOKE_API_CAPTURE:?}")/lsof-state}"
+pid=""
+port=""
+descriptor=""
+args=("$@")
+index=0
+while [ "$index" -lt "${#args[@]}" ]; do
+  argument="${args[$index]}"
+  case "$argument" in
+    -p)
+      index=$((index + 1))
+      pid="${args[$index]}"
+      ;;
+    -d)
+      index=$((index + 1))
+      descriptor="${args[$index]}"
+      ;;
+    -iTCP:*) port="${argument#-iTCP:}" ;;
+  esac
+  index=$((index + 1))
+done
+if [ -n "$pid" ] && [ -d "$state_root/$pid" ] && kill -0 "$pid" 2>/dev/null; then
+  if [ -n "$descriptor" ] &&
+    [ "$(cat "$state_root/$pid/port")" = "${KOIOS_SMOKE_PUBLISH_FAIL_PORT:-<unset>}" ]; then
+    exit 1
+  fi
+  case "$descriptor" in
+    cwd)
+      printf 'p%s\nfcwd\nn%s\n' "$pid" "$(cat "$state_root/$pid/cwd")"
+      exit 0
+      ;;
+    txt)
+      printf 'p%s\nftxt\nn/bin/bash\n' "$pid"
+      exit 0
+      ;;
+  esac
+  if [ -n "$port" ] && [ "${KOIOS_SMOKE_NO_LISTEN_PORT:-}" != "$port" ] &&
+    [ "$(cat "$state_root/$pid/port")" = "$port" ]; then
+    printf '%s\n' "$pid"
+    exit 0
+  fi
+fi
+if [ -z "$pid" ] && [ -n "$port" ]; then
+  for state_dir in "$state_root"/*; do
+    [ -d "$state_dir" ] || continue
+    candidate="$(basename "$state_dir")"
+    if kill -0 "$candidate" 2>/dev/null &&
+      [ "${KOIOS_SMOKE_NO_LISTEN_PORT:-}" != "$port" ] &&
+      [ "$(cat "$state_dir/port")" = "$port" ]; then
+      printf '%s\n' "$candidate"
+      exit 0
+    fi
+  done
+fi
 exit 1
 EOF
   chmod +x "$case_root/fake-bin/curl" "$case_root/fake-bin/lsof"
@@ -82,11 +175,38 @@ EOF
   cat >"$case_root/api repo/.venv/bin/python" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+state_root="${KOIOS_SMOKE_LSOF_STATE:-$(dirname "${KOIOS_SMOKE_API_CAPTURE:?}")/lsof-state}"
+port=""
+args=("$@")
+index=0
+while [ "$index" -lt "${#args[@]}" ]; do
+  if [ "${args[$index]}" = "--port" ]; then
+    index=$((index + 1))
+    port="${args[$index]}"
+  fi
+  index=$((index + 1))
+done
+state_dir="$state_root/$$"
+mkdir -p "$state_dir"
+printf '%s\n' "$(pwd -P)" >"$state_dir/cwd"
+printf '%s\n' "$port" >"$state_dir/port"
+cleanup_state() {
+  rm -rf "$state_dir"
+  if [ -n "${child:-}" ]; then
+    kill "$child" 2>/dev/null || true
+  fi
+}
+trap cleanup_state EXIT TERM INT
 {
   printf 'PYTHONPATH=%s\n' "${PYTHONPATH:-}"
   printf 'DEPLOYMENT_PROFILE=%s\n' "${KOIOS_DEPLOYMENT_PROFILE:-<unset>}"
   printf 'COURSE_CATALOG=%s\n' "${KOIOS_COURSE_CATALOG:-<unset>}"
   printf 'PROJECT_CATALOG=%s\n' "${KOIOS_PROJECT_CATALOG:-<unset>}"
+  printf 'REFERENCE_CORPUS_ROOT=%s\n' "${KOIOS_REFERENCE_CORPUS_ROOT:-<unset>}"
+  printf 'REFERENCE_PAGE_RESOLUTION_ROOT=%s\n' "${KOIOS_REFERENCE_PAGE_RESOLUTION_ROOT:-<unset>}"
+  printf 'REFERENCE_MULTIMODAL_ROOT=%s\n' "${KOIOS_REFERENCE_MULTIMODAL_ROOT:-<unset>}"
+  printf 'REFERENCE_CATALOG=%s\n' "${PROJECTKOIOS_REFERENCE_CATALOG:-<unset>}"
+  printf 'SEARCH_INDEX=%s\n' "${PROJECTKOIOS_SEARCH_INDEX:-<unset>}"
   if [ "${KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT+x}" = x ]; then
     printf 'EQUATION_ROOT=%s\n' "$KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT"
   else
@@ -96,20 +216,46 @@ set -euo pipefail
   printf '%q ' "$@"
   printf '\n'
 } >"$KOIOS_SMOKE_API_CAPTURE"
-exec sleep 300
+sleep 300 &
+child=$!
+wait "$child"
 EOF
   chmod +x "$case_root/api repo/.venv/bin/python"
 
   cat >"$case_root/web/node_modules/.bin/vite" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+state_root="${KOIOS_SMOKE_LSOF_STATE:-$(dirname "${KOIOS_SMOKE_API_CAPTURE:?}")/lsof-state}"
+port=""
+args=("$@")
+index=0
+while [ "$index" -lt "${#args[@]}" ]; do
+  if [ "${args[$index]}" = "--port" ]; then
+    index=$((index + 1))
+    port="${args[$index]}"
+  fi
+  index=$((index + 1))
+done
+state_dir="$state_root/$$"
+mkdir -p "$state_dir"
+printf '%s\n' "$(pwd -P)" >"$state_dir/cwd"
+printf '%s\n' "$port" >"$state_dir/port"
+cleanup_state() {
+  rm -rf "$state_dir"
+  if [ -n "${child:-}" ]; then
+    kill "$child" 2>/dev/null || true
+  fi
+}
+trap cleanup_state EXIT TERM INT
 {
   printf 'DEPLOYMENT_PROFILE=%s\n' "${VITE_KOIOS_DEPLOYMENT_PROFILE:-<unset>}"
   printf 'ARGS='
   printf '%q ' "$@"
   printf '\n'
 } >"$KOIOS_SMOKE_WEB_CAPTURE"
-exec sleep 300
+sleep 300 &
+child=$!
+wait "$child"
 EOF
   chmod +x "$case_root/web/node_modules/.bin/vite"
 }
@@ -127,9 +273,46 @@ wait_for_capture() {
   fail "managed commands did not capture their environments"
 }
 
+start_fixture() {
+  local case_root="$1"
+  local stdout_file="$2"
+  local stderr_file="$3"
+  shift 3
+  env -u KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT \
+    PATH="$case_root/fake-bin:$PATH" \
+    KOIOS_RUN_DIR="$case_root/run" \
+    KOIOS_API_REPO="$case_root/api repo" \
+    KOIOS_CORE_REPO="$case_root/core repo" \
+    KOIOS_SEARCH_REPO="$case_root/search repo" \
+    KOIOS_OBSIDIAN_REPO="$case_root/obsidian repo" \
+    KOIOS_API_PORT="${KOIOS_TEST_API_PORT:-18080}" \
+    KOIOS_WEB_PORT="${KOIOS_TEST_WEB_PORT:-15173}" \
+    KOIOS_SMOKE_API_CAPTURE="$case_root/api.capture" \
+    KOIOS_SMOKE_WEB_CAPTURE="$case_root/web.capture" \
+    "$@" \
+    "$case_root/web/scripts/startup.sh" \
+    >"$stdout_file" 2>"$stderr_file"
+}
+
+stop_fixture_service() {
+  local case_root="$1"
+  local service="$2"
+  env \
+    PATH="$case_root/fake-bin:$PATH" \
+    KOIOS_RUN_DIR="$case_root/run" \
+    KOIOS_API_REPO="$case_root/api repo" \
+    KOIOS_API_PORT="${KOIOS_TEST_API_PORT:-18080}" \
+    KOIOS_WEB_PORT="${KOIOS_TEST_WEB_PORT:-15173}" \
+    KOIOS_SMOKE_API_CAPTURE="$case_root/api.capture" \
+    KOIOS_SMOKE_WEB_CAPTURE="$case_root/web.capture" \
+    KOIOS_MANAGED_SERVICE="$service" \
+    "$case_root/web/scripts/shutdown.sh"
+}
+
 run_without_owner_sources() {
   local case_root="$SMOKE_ROOT/no-owner"
   create_fixture "$case_root"
+  test ! -e "$case_root/web/.env.local" || fail "absent .env.local fixture changed"
   local api_capture="$case_root/api.capture"
   local web_capture="$case_root/web.capture"
 
@@ -146,9 +329,14 @@ run_without_owner_sources() {
     >"$case_root/stdout" 2>"$case_root/stderr"
 
   wait_for_capture "$api_capture" "$web_capture"
-  local expected_pythonpath="$case_root/api repo/src/python:$case_root/core repo/src/python:$case_root/search repo/src/python:$case_root/obsidian repo/src/python"
-  grep -Fqx "PYTHONPATH=$expected_pythonpath" "$api_capture" ||
-    fail "default PYTHONPATH included unexpected owner sources"
+  local resolved_case_root
+  resolved_case_root="$(cd "$case_root" && pwd)"
+  local expected_pythonpath="$case_root/api repo/src/python:$case_root/core repo/src/python:$case_root/search repo/src/python:$case_root/obsidian repo/src/python:$resolved_case_root/projectkoios-references/src/python"
+  if ! grep -Fqx "PYTHONPATH=$expected_pythonpath" "$api_capture"; then
+    cat "$api_capture" >&2
+    printf 'expected PYTHONPATH=%s\n' "$expected_pythonpath" >&2
+    fail "default PYTHONPATH omitted the API-required References owner"
+  fi
   grep -Fqx "EQUATION_ROOT=<unset>" "$api_capture" ||
     fail "equation root was passed without explicit opt-in"
   grep -Fqx "DEPLOYMENT_PROFILE=control" "$api_capture" ||
@@ -163,6 +351,16 @@ run_without_owner_sources() {
     fail "course catalog fallback changed"
   grep -Fqx '{"schema_version":"1","projects":[]}' "$case_root/run/empty-projects.json" ||
     fail "project catalog fallback changed"
+  [ "$(file_mode "$case_root/run")" = "700" ] ||
+    fail "managed run directory was not mode 0700"
+  for record in "$case_root/run/api.pid" "$case_root/run/web.pid"; do
+    grep -Fqx "version=1" "$record" || fail "managed PID metadata version missing"
+    [ -n "$(record_value start_token "$record")" ] || fail "start token missing"
+    [ -n "$(record_value executable "$record")" ] || fail "executable missing"
+    [ -n "$(record_value cwd "$record")" ] || fail "cwd missing"
+    [ -n "$(record_value port "$record")" ] || fail "port missing"
+    [ "$(file_mode "$record")" = "600" ] || fail "PID metadata was not mode 0600"
+  done
   stop_case_processes "$case_root"
 }
 
@@ -197,7 +395,7 @@ run_with_default_owner_sources() {
     >"$case_root/stdout" 2>"$case_root/stderr"
 
   wait_for_capture "$api_capture" "$web_capture"
-  local expected_pythonpath="$case_root/api repo/src/python:$case_root/core repo/src/python:$case_root/search repo/src/python:$case_root/obsidian repo/src/python:$applications_repo/src/python:$ingestion_repo/src/python:$references_repo/src/python"
+  local expected_pythonpath="$case_root/api repo/src/python:$case_root/core repo/src/python:$case_root/search repo/src/python:$case_root/obsidian repo/src/python:$references_repo/src/python:$applications_repo/src/python:$ingestion_repo/src/python"
   if ! grep -Fqx "PYTHONPATH=$expected_pythonpath" "$api_capture"; then
     cat "$api_capture" >&2
     printf 'expected PYTHONPATH=%s\n' "$expected_pythonpath" >&2
@@ -215,13 +413,25 @@ run_with_explicit_owner_sources() {
   local ingestion_repo="$case_root/ingestion repo"
   local references_repo="$case_root/references repo"
   local document_root="$case_root/pizzi document root"
+  local reference_corpus_root="$case_root/reference corpus"
+  local resolution_root="$case_root/resolution artifacts"
+  local multimodal_root="$case_root/multimodal artifacts"
   local catalogs="$case_root/explicit catalogs"
   mkdir -p \
     "$applications_repo/src/python" \
     "$ingestion_repo/src/python" \
     "$references_repo/src/python" \
     "$document_root" \
+    "$reference_corpus_root" \
+    "$resolution_root" \
+    "$multimodal_root" \
     "$catalogs"
+  printf 'KOIOS_REFERENCE_CORPUS_ROOT=%q\n' "$reference_corpus_root" \
+    >"$case_root/web/.env.local"
+  printf 'KOIOS_REFERENCE_PAGE_RESOLUTION_ROOT=%q\n' "$resolution_root" \
+    >>"$case_root/web/.env.local"
+  printf 'KOIOS_REFERENCE_MULTIMODAL_ROOT=%q\n' "$multimodal_root" \
+    >>"$case_root/web/.env.local"
   local course_catalog="$catalogs/course catalog.json"
   local project_catalog="$catalogs/project catalog.json"
   printf '%s\n' '{"owner":"course"}' >"$course_catalog"
@@ -248,7 +458,7 @@ run_with_explicit_owner_sources() {
     >"$case_root/stdout" 2>"$case_root/stderr"
 
   wait_for_capture "$api_capture" "$web_capture"
-  local expected_pythonpath="$case_root/api repo/src/python:$case_root/core repo/src/python:$case_root/search repo/src/python:$case_root/obsidian repo/src/python:$applications_repo/src/python:$ingestion_repo/src/python:$references_repo/src/python"
+  local expected_pythonpath="$case_root/api repo/src/python:$case_root/core repo/src/python:$case_root/search repo/src/python:$case_root/obsidian repo/src/python:$references_repo/src/python:$applications_repo/src/python:$ingestion_repo/src/python"
   grep -Fqx "PYTHONPATH=$expected_pythonpath" "$api_capture" ||
     fail "owner PYTHONPATH composition or ordering changed"
   grep -Fqx "EQUATION_ROOT=$document_root" "$api_capture" ||
@@ -257,6 +467,12 @@ run_with_explicit_owner_sources() {
     fail "explicit course catalog was replaced"
   grep -Fqx "PROJECT_CATALOG=$project_catalog" "$api_capture" ||
     fail "explicit project catalog was replaced"
+  grep -Fqx "REFERENCE_CORPUS_ROOT=$reference_corpus_root" "$api_capture" ||
+    fail "local reference corpus root was not passed to the API"
+  grep -Fqx "REFERENCE_PAGE_RESOLUTION_ROOT=$resolution_root" "$api_capture" ||
+    fail "local resolution root was not passed to the API"
+  grep -Fqx "REFERENCE_MULTIMODAL_ROOT=$multimodal_root" "$api_capture" ||
+    fail "local multimodal root was not passed to the API"
   grep -Fqx '{"owner":"course"}' "$course_catalog" ||
     fail "explicit course catalog was overwritten"
   grep -Fqx '{"owner":"project"}' "$project_catalog" ||
@@ -265,6 +481,49 @@ run_with_explicit_owner_sources() {
     fail "course fallback was created over an explicit catalog"
   test ! -e "$case_root/run/empty-projects.json" ||
     fail "project fallback was created over an explicit catalog"
+  stop_case_processes "$case_root"
+}
+
+run_with_reference_library_owner() {
+  local case_root="$SMOKE_ROOT/reference library owner"
+  create_fixture "$case_root"
+  local references_repo="$case_root/reference feature worktree"
+  local catalog="$case_root/private catalog/references.sqlite3"
+  local search_index="$case_root/private index/search.sqlite3"
+  mkdir -p \
+    "$references_repo/src/python" \
+    "$(dirname "$catalog")" \
+    "$(dirname "$search_index")"
+  : >"$catalog"
+  : >"$search_index"
+  local api_capture="$case_root/api.capture"
+  local web_capture="$case_root/web.capture"
+
+  env -u KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT \
+    PATH="$case_root/fake-bin:$PATH" \
+    KOIOS_RUN_DIR="$case_root/run" \
+    KOIOS_API_REPO="$case_root/api repo" \
+    KOIOS_CORE_REPO="$case_root/core repo" \
+    KOIOS_SEARCH_REPO="$case_root/search repo" \
+    KOIOS_OBSIDIAN_REPO="$case_root/obsidian repo" \
+    KOIOS_REFERENCES_REPO="$references_repo" \
+    PROJECTKOIOS_REFERENCE_CATALOG="$catalog" \
+    PROJECTKOIOS_SEARCH_INDEX="$search_index" \
+    KOIOS_SMOKE_API_CAPTURE="$api_capture" \
+    KOIOS_SMOKE_WEB_CAPTURE="$web_capture" \
+    "$case_root/web/scripts/startup.sh" \
+    >"$case_root/stdout" 2>"$case_root/stderr"
+
+  wait_for_capture "$api_capture" "$web_capture"
+  local expected_pythonpath="$case_root/api repo/src/python:$case_root/core repo/src/python:$case_root/search repo/src/python:$case_root/obsidian repo/src/python:$references_repo/src/python"
+  grep -Fqx "PYTHONPATH=$expected_pythonpath" "$api_capture" ||
+    fail "reference feature worktree was not added to API PYTHONPATH"
+  grep -Fqx "REFERENCE_CATALOG=$catalog" "$api_capture" ||
+    fail "reference catalog was not passed exactly"
+  grep -Fqx "SEARCH_INDEX=$search_index" "$api_capture" ||
+    fail "search index was not passed exactly"
+  grep -Fqx "EQUATION_ROOT=<unset>" "$api_capture" ||
+    fail "reference library incorrectly enabled equation review"
   stop_case_processes "$case_root"
 }
 
@@ -329,15 +588,234 @@ assert_missing_owner_source_fails() {
   set -e
 
   [ "$status" -ne 0 ] || fail "missing owner source unexpectedly succeeded"
-  grep -Fq "Equation-review owner source tree not found" "$case_root/stderr" ||
+  grep -Fq "Required Project Koios source tree not found" "$case_root/stderr" ||
     fail "missing owner source did not produce the bounded validation error"
   test ! -e "$case_root/api.capture" || fail "missing owner source started the API"
   test ! -e "$case_root/web.capture" || fail "missing owner source started the Web process"
 }
 
+run_with_caller_env_precedence() {
+  local case_root="$SMOKE_ROOT/caller-env-precedence"
+  create_fixture "$case_root"
+  local local_root="$case_root/local root"
+  local caller_root="$case_root/caller root"
+  mkdir -p "$local_root" "$caller_root"
+  printf 'KOIOS_REFERENCE_CORPUS_ROOT=%q\n' "$local_root" >"$case_root/web/.env.local"
+
+  start_fixture "$case_root" "$case_root/stdout" "$case_root/stderr" \
+    "KOIOS_REFERENCE_CORPUS_ROOT=$caller_root"
+
+  grep -Fqx "REFERENCE_CORPUS_ROOT=$caller_root" "$case_root/api.capture" ||
+    fail "caller environment did not override .env.local"
+  grep -Fq ".env.local value ignored for caller-provided KOIOS_REFERENCE_CORPUS_ROOT" \
+    "$case_root/stderr" || fail "caller precedence was not reported"
+  stop_case_processes "$case_root"
+}
+
+run_concurrent_start() {
+  local case_root="$SMOKE_ROOT/concurrent-start"
+  create_fixture "$case_root"
+  mkdir -p "$case_root/run"
+  : >"$case_root/run/api.pid.tmp.interrupted"
+
+  start_fixture "$case_root" "$case_root/first.stdout" "$case_root/first.stderr" \
+    "KOIOS_SMOKE_CURL_DELAY=0.20" &
+  local first_start=$!
+  local attempt
+  for attempt in $(seq 1 100); do
+    [ -d "$case_root/run/lifecycle.lock" ] && break
+    sleep 0.01
+  done
+  [ -d "$case_root/run/lifecycle.lock" ] || fail "first start did not acquire lock"
+
+  start_fixture "$case_root" "$case_root/second.stdout" "$case_root/second.stderr"
+  wait "$first_start" || fail "first concurrent start failed"
+
+  grep -Fq "already running and healthy" "$case_root/second.stdout" ||
+    fail "serialized second start did not reuse healthy services"
+  local state_count
+  state_count="$(find "$(state_root_for_case "$case_root")" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+  [ "$state_count" = "2" ] || fail "concurrent start launched duplicate services"
+  grep -Fqx "version=1" "$case_root/run/api.pid" ||
+    fail "interrupted temporary record displaced atomic metadata"
+  stop_case_processes "$case_root"
+}
+
+run_stale_pid_refusal() {
+  local case_root="$SMOKE_ROOT/stale-pid"
+  create_fixture "$case_root"
+  start_fixture "$case_root" "$case_root/first.stdout" "$case_root/first.stderr"
+  local api_pid
+  api_pid="$(record_value pid "$case_root/run/api.pid")"
+  kill "$api_pid"
+  local attempt
+  for attempt in $(seq 1 100); do
+    [ -z "$(ps -p "$api_pid" -o uid= 2>/dev/null || true)" ] && break
+    sleep 0.02
+  done
+
+  (
+    cd "$case_root/api repo"
+    bash -c 'while :; do sleep 1; done' projectkoios.api.main:app --host 127.0.0.1 --port 18080
+  ) &
+  local unrelated_pid=$!
+  local unrelated_state="$(state_root_for_case "$case_root")/$unrelated_pid"
+  mkdir -p "$unrelated_state"
+  printf '%s\n' "$(cd "$case_root/api repo" && pwd -P)" >"$unrelated_state/cwd"
+  printf '%s\n' "18080" >"$unrelated_state/port"
+  awk -v replacement="pid=$unrelated_pid" \
+    'index($0, "pid=") == 1 { print replacement; next } { print }' \
+    "$case_root/run/api.pid" >"$case_root/run/api.pid.reused"
+  chmod 600 "$case_root/run/api.pid.reused"
+  mv "$case_root/run/api.pid.reused" "$case_root/run/api.pid"
+
+  local status
+  set +e
+  start_fixture "$case_root" "$case_root/retry.stdout" "$case_root/retry.stderr"
+  status=$?
+  set -e
+  [ "$status" -ne 0 ] || fail "reused stale PID unexpectedly succeeded"
+  grep -Eq "PID start identity or owner changed|process command, executable, or cwd changed" \
+    "$case_root/retry.stderr" || fail "stale PID did not fail with identity evidence"
+  kill -0 "$unrelated_pid" 2>/dev/null || fail "stale PID handling killed unrelated process"
+  test -f "$case_root/run/api.pid" || fail "stale PID evidence was removed"
+  kill "$unrelated_pid"
+  wait "$unrelated_pid" 2>/dev/null || true
+  rm -rf "$unrelated_state"
+  stop_case_processes "$case_root"
+}
+
+run_unhealthy_reuse_refusal() {
+  local case_root="$SMOKE_ROOT/unhealthy-reuse"
+  create_fixture "$case_root"
+  start_fixture "$case_root" "$case_root/first.stdout" "$case_root/first.stderr"
+  local api_pid web_pid status
+  api_pid="$(record_value pid "$case_root/run/api.pid")"
+  web_pid="$(record_value pid "$case_root/run/web.pid")"
+
+  set +e
+  start_fixture "$case_root" "$case_root/retry.stdout" "$case_root/retry.stderr" \
+    "KOIOS_SMOKE_CURL_FAIL_PORT=18080"
+  status=$?
+  set -e
+  [ "$status" -ne 0 ] || fail "unhealthy managed API was reused"
+  grep -Fq "health check failed" "$case_root/retry.stderr" ||
+    fail "unhealthy reuse did not report health failure"
+  kill -0 "$api_pid" 2>/dev/null || fail "health refusal killed API"
+  kill -0 "$web_pid" 2>/dev/null || fail "health refusal killed Web"
+  stop_case_processes "$case_root"
+}
+
+run_identity_publication_failure_cleanup() {
+  local case_root="$SMOKE_ROOT/identity-publication-failure"
+  create_fixture "$case_root"
+  local status
+
+  set +e
+  start_fixture "$case_root" "$case_root/stdout" "$case_root/stderr" \
+    "KOIOS_SMOKE_PUBLISH_FAIL_PORT=18080" \
+    "KOIOS_PROCESS_IDENTITY_ATTEMPTS=2" \
+    "KOIOS_PROCESS_IDENTITY_DELAY=0.01"
+  status=$?
+  set -e
+
+  [ "$status" -ne 0 ] || fail "incomplete process identity unexpectedly published"
+  grep -Fq "Could not capture complete api process identity" "$case_root/stderr" ||
+    fail "identity publication failure was not reported"
+  test ! -e "$case_root/run/api.pid" ||
+    fail "failed identity publication retained API metadata"
+  test ! -e "$case_root/web.capture" ||
+    fail "Web started after API identity publication failed"
+  local state_count
+  state_count="$(find "$(state_root_for_case "$case_root")" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+  [ "$state_count" = "0" ] ||
+    fail "failed identity publication orphaned the invocation-owned API child"
+}
+
+run_unbound_start_cleanup() {
+  local case_root="$SMOKE_ROOT/unbound-start-cleanup"
+  create_fixture "$case_root"
+  local status
+
+  set +e
+  start_fixture "$case_root" "$case_root/stdout" "$case_root/stderr" \
+    "KOIOS_SMOKE_NO_LISTEN_PORT=18080" \
+    "KOIOS_STARTUP_READY_ATTEMPTS=2" \
+    "KOIOS_STARTUP_READY_DELAY=0.01"
+  status=$?
+  set -e
+
+  [ "$status" -ne 0 ] || fail "unbound managed process unexpectedly became ready"
+  grep -Fq "Timed out waiting for Project Koios API" "$case_root/stderr" ||
+    fail "unbound startup did not reach bounded readiness failure"
+  test ! -e "$case_root/run/api.pid" ||
+    fail "cleanup retained metadata for the invocation-owned unbound process"
+  test ! -e "$case_root/web.capture" ||
+    fail "Web started after the API failed to bind"
+  local state_count
+  state_count="$(find "$(state_root_for_case "$case_root")" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+  [ "$state_count" = "0" ] ||
+    fail "cleanup orphaned an invocation-owned process that never listened"
+}
+
+run_stale_lock_recovery() {
+  local case_root="$SMOKE_ROOT/stale-lock"
+  create_fixture "$case_root"
+  mkdir -p "$case_root/run/lifecycle.lock"
+  cat >"$case_root/run/lifecycle.lock/owner" <<EOF
+version=1
+pid=999999
+uid=$(id -u)
+start_token=Mon Jan 1 00:00:00 2001
+cwd=$case_root
+action=start
+command=stale
+EOF
+  chmod 600 "$case_root/run/lifecycle.lock/owner"
+
+  start_fixture "$case_root" "$case_root/stdout" "$case_root/stderr"
+  find "$case_root/run" -maxdepth 1 -type d -name 'lifecycle.lock.stale.*' -print -quit |
+    grep -q . || fail "verified stale lock evidence was not retained"
+  grep -Fq "Recovered verified stale lifecycle lock" "$case_root/stderr" ||
+    fail "stale lock recovery was not reported"
+  stop_case_processes "$case_root"
+}
+
+run_api_only_restart() {
+  local case_root="$SMOKE_ROOT/api-only-restart"
+  create_fixture "$case_root"
+  start_fixture "$case_root" "$case_root/first.stdout" "$case_root/first.stderr"
+  local first_api_pid web_pid
+  first_api_pid="$(record_value pid "$case_root/run/api.pid")"
+  web_pid="$(record_value pid "$case_root/run/web.pid")"
+
+  stop_fixture_service "$case_root" api >"$case_root/stop.stdout" 2>"$case_root/stop.stderr"
+  test ! -e "$case_root/run/api.pid" || fail "API-only stop retained API metadata"
+  kill -0 "$web_pid" 2>/dev/null || fail "API-only stop killed Web"
+
+  start_fixture "$case_root" "$case_root/restart.stdout" "$case_root/restart.stderr"
+  local second_api_pid
+  second_api_pid="$(record_value pid "$case_root/run/api.pid")"
+  [ "$second_api_pid" != "$first_api_pid" ] || fail "API-only restart reused stopped PID"
+  [ "$(record_value pid "$case_root/run/web.pid")" = "$web_pid" ] ||
+    fail "API-only restart replaced Web"
+  grep -Fq "Project Koios web already running and healthy" "$case_root/restart.stdout" ||
+    fail "API-only restart did not verify and reuse Web"
+  stop_case_processes "$case_root"
+}
+
 run_without_owner_sources
 run_with_default_owner_sources
 run_with_explicit_owner_sources
+run_with_reference_library_owner
+run_with_caller_env_precedence
+run_concurrent_start
+run_stale_pid_refusal
+run_unhealthy_reuse_refusal
+run_identity_publication_failure_cleanup
+run_unbound_start_cleanup
+run_stale_lock_recovery
+run_api_only_restart
 assert_invalid_root_fails "relative-root" "relative/pizzi2020"
 assert_invalid_root_fails "missing-root" "$SMOKE_ROOT/does not exist"
 assert_missing_owner_source_fails

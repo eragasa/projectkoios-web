@@ -2,9 +2,14 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WEB_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-REPOS_ROOT="$(cd "$WEB_ROOT/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+WEB_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
+REPOS_ROOT="$(cd "$WEB_ROOT/.." && pwd -P)"
+
+# shellcheck source=managed-process.sh
+. "$SCRIPT_DIR/managed-process.sh"
+koios_load_local_env_preserving_caller "$WEB_ROOT/.env.local"
+
 RUN_DIR="${KOIOS_RUN_DIR:-$WEB_ROOT/.run}"
 API_REPO="${KOIOS_API_REPO:-$REPOS_ROOT/projectkoios-api}"
 CORE_REPO="${KOIOS_CORE_REPO:-$REPOS_ROOT/projectkoios}"
@@ -23,39 +28,44 @@ API_PID_FILE="$RUN_DIR/api.pid"
 WEB_PID_FILE="$RUN_DIR/web.pid"
 API_LOG="$RUN_DIR/api.log"
 WEB_LOG="$RUN_DIR/web.log"
+API_HEALTH_URL="http://$API_HOST:$API_PORT/health"
+WEB_HEALTH_URL="http://$WEB_HOST:$WEB_PORT/"
+API_COMMAND_MARKER="projectkoios.api.main:app"
+WEB_COMMAND_MARKER="node_modules/.bin/vite"
 STARTED_API=0
 STARTED_WEB=0
-
-is_running() {
-  local pid_file="$1"
-  [ -f "$pid_file" ] || return 1
-  local pid
-  pid="$(cat "$pid_file")"
-  [[ "$pid" =~ ^[0-9]+$ ]] || return 1
-  kill -0 "$pid" 2>/dev/null
-}
-
-port_is_listening() {
-  local port="$1"
-  lsof -n -P -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1
-}
+API_SPAWNED_PID=""
+WEB_SPAWNED_PID=""
 
 wait_for_url() {
   local name="$1"
   local url="$2"
-  local pid_file="$3"
-  local attempts=60
+  local record_file="$3"
+  local service="$4"
+  local cwd="$5"
+  local host="$6"
+  local port="$7"
+  local marker="$8"
+  local attempts="${KOIOS_STARTUP_READY_ATTEMPTS:-60}"
+  local delay="${KOIOS_STARTUP_READY_DELAY:-0.25}"
   local attempt=1
 
   while [ "$attempt" -le "$attempts" ]; do
-    if curl --fail --silent --show-error "$url" >/dev/null 2>&1; then
-      return 0
-    fi
-    if ! is_running "$pid_file"; then
-      echo "$name stopped before becoming ready." >&2
+    if curl --fail --silent --show-error --connect-timeout 1 --max-time 3 \
+      "$url" >/dev/null 2>&1; then
+      if koios_verify_process_record "$record_file" "$service" "$cwd" \
+        "$host" "$port" "$marker" 1; then
+        return 0
+      fi
+      echo "$name reached its URL but failed managed identity verification: $KOIOS_VERIFY_REASON." >&2
       return 1
     fi
-    sleep 0.25
+    if ! koios_verify_process_record "$record_file" "$service" "$cwd" \
+      "$host" "$port" "$marker" 0; then
+      echo "$name stopped or changed identity before becoming ready: $KOIOS_VERIFY_REASON." >&2
+      return 1
+    fi
+    sleep "$delay"
     attempt=$((attempt + 1))
   done
 
@@ -63,27 +73,35 @@ wait_for_url() {
   return 1
 }
 
-cleanup_on_error() {
+cleanup_on_exit() {
   local status=$?
-  if [ "$status" -eq 0 ]; then
-    return
+  trap - EXIT
+  if [ "$status" -ne 0 ]; then
+    echo "Startup failed. See logs in $RUN_DIR." >&2
+    if [ "$STARTED_WEB" -eq 1 ]; then
+      if [ -e "$WEB_PID_FILE" ]; then
+        koios_stop_recorded_process "Project Koios web" "$WEB_PID_FILE" web \
+          "$WEB_ROOT" "$WEB_HOST" "$WEB_PORT" "$WEB_COMMAND_MARKER" 0 ||
+          koios_stop_invocation_child "Project Koios web" "$WEB_SPAWNED_PID" || true
+      else
+        koios_stop_invocation_child "Project Koios web" "$WEB_SPAWNED_PID" || true
+      fi
+    fi
+    if [ "$STARTED_API" -eq 1 ]; then
+      if [ -e "$API_PID_FILE" ]; then
+        koios_stop_recorded_process "Project Koios API" "$API_PID_FILE" api \
+          "$API_REPO" "$API_HOST" "$API_PORT" "$API_COMMAND_MARKER" 0 ||
+          koios_stop_invocation_child "Project Koios API" "$API_SPAWNED_PID" || true
+      else
+        koios_stop_invocation_child "Project Koios API" "$API_SPAWNED_PID" || true
+      fi
+    fi
   fi
-
-  echo "Startup failed. See logs in $RUN_DIR." >&2
-  if [ "$STARTED_WEB" -eq 1 ] && is_running "$WEB_PID_FILE"; then
-    kill "$(cat "$WEB_PID_FILE")" 2>/dev/null || true
-    rm -f "$WEB_PID_FILE"
-  fi
-  if [ "$STARTED_API" -eq 1 ] && is_running "$API_PID_FILE"; then
-    kill "$(cat "$API_PID_FILE")" 2>/dev/null || true
-    rm -f "$API_PID_FILE"
-  fi
+  koios_release_lifecycle_lock || status=1
   exit "$status"
 }
 
-trap cleanup_on_error EXIT
-
-for command in curl lsof; do
+for command in curl lsof ps; do
   if ! command -v "$command" >/dev/null 2>&1; then
     echo "Required command not found: $command" >&2
     exit 1
@@ -98,16 +116,49 @@ if [ ! -x "$API_PYTHON" ]; then
   echo "Create the projectkoios-api virtual environment first." >&2
   exit 1
 fi
-
 if [ ! -x "$VITE" ]; then
   echo "Web dependencies are missing. Run 'npm install' in $WEB_ROOT." >&2
   exit 1
 fi
 
-for directory in "$CORE_REPO" "$SEARCH_REPO" "$OBSIDIAN_REPO"; do
+for directory in "$CORE_REPO" "$SEARCH_REPO" "$OBSIDIAN_REPO" "$REFERENCES_REPO"; do
   if [ ! -d "$directory/src/python" ]; then
     echo "Required Project Koios source tree not found: $directory" >&2
     exit 1
+  fi
+done
+
+for variable_name in KOIOS_REFERENCE_CORPUS_ROOT KOIOS_REFERENCE_PAGE_RESOLUTION_ROOT KOIOS_REFERENCE_MULTIMODAL_ROOT; do
+  if [ "${!variable_name+x}" = x ]; then
+    configured_root="${!variable_name}"
+    case "$configured_root" in
+      /*) ;;
+      *)
+        echo "$variable_name must be an absolute existing directory." >&2
+        exit 1
+        ;;
+    esac
+    if [ ! -d "$configured_root" ]; then
+      echo "$variable_name must be an absolute existing directory: $configured_root" >&2
+      exit 1
+    fi
+  fi
+done
+
+for variable_name in PROJECTKOIOS_REFERENCE_CATALOG PROJECTKOIOS_SEARCH_INDEX; do
+  if [ "${!variable_name+x}" = x ]; then
+    configured_file="${!variable_name}"
+    case "$configured_file" in
+      /*) ;;
+      *)
+        echo "$variable_name must be an absolute existing file." >&2
+        exit 1
+        ;;
+    esac
+    if [ ! -f "$configured_file" ]; then
+      echo "$variable_name must be an absolute existing file: $configured_file" >&2
+      exit 1
+    fi
   fi
 done
 
@@ -133,7 +184,22 @@ if [ "${KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT+x}" = x ]; then
   EQUATION_REVIEW_OWNER_ENABLED=1
 fi
 
-mkdir -p "$RUN_DIR"
+# Canonical working directories are part of managed process identity.
+API_REPO="$(cd "$API_REPO" && pwd -P)"
+CORE_REPO="$(cd "$CORE_REPO" && pwd -P)"
+SEARCH_REPO="$(cd "$SEARCH_REPO" && pwd -P)"
+OBSIDIAN_REPO="$(cd "$OBSIDIAN_REPO" && pwd -P)"
+REFERENCES_REPO="$(cd "$REFERENCES_REPO" && pwd -P)"
+if [ "$EQUATION_REVIEW_OWNER_ENABLED" -eq 1 ]; then
+  APPLICATIONS_REPO="$(cd "$APPLICATIONS_REPO" && pwd -P)"
+  INGESTION_REPO="$(cd "$INGESTION_REPO" && pwd -P)"
+fi
+API_PYTHON="$API_REPO/.venv/bin/python"
+
+koios_acquire_lifecycle_lock "$RUN_DIR" start
+trap cleanup_on_exit EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 if [ "${KOIOS_COURSE_CATALOG+x}" = x ]; then
   COURSE_CATALOG="$KOIOS_COURSE_CATALOG"
@@ -161,75 +227,119 @@ else
   fi
 fi
 
-if is_running "$API_PID_FILE"; then
-  echo "Project Koios API already running (PID $(cat "$API_PID_FILE"))."
+api_record_state=0
+if koios_prepare_process_record "$API_PID_FILE" api "$API_REPO" "$API_HOST" \
+  "$API_PORT" "$API_COMMAND_MARKER" "$API_HEALTH_URL"; then
+  api_record_state=0
 else
-  rm -f "$API_PID_FILE"
-  if port_is_listening "$API_PORT"; then
-    echo "API port $API_PORT is already in use by an unmanaged process." >&2
-    exit 1
-  fi
-
-  API_PYTHONPATH="$API_REPO/src/python:$CORE_REPO/src/python:$SEARCH_REPO/src/python:$OBSIDIAN_REPO/src/python"
-  API_ENV=(
-    "PYTHONPATH=$API_PYTHONPATH"
-    "KOIOS_DEPLOYMENT_PROFILE=control"
-    "KOIOS_COURSE_CATALOG=$COURSE_CATALOG"
-    "KOIOS_PROJECT_CATALOG=$PROJECT_CATALOG"
-    "KOIOS_GITHUB_REPOSITORIES=${KOIOS_GITHUB_REPOSITORIES:-eragasa/projectkoios-api,eragasa/projectkoios-web}"
-  )
-  if [ "$EQUATION_REVIEW_OWNER_ENABLED" -eq 1 ]; then
-    API_PYTHONPATH="$API_PYTHONPATH:$APPLICATIONS_REPO/src/python:$INGESTION_REPO/src/python:$REFERENCES_REPO/src/python"
-    API_ENV[0]="PYTHONPATH=$API_PYTHONPATH"
-    API_ENV+=(
-      "KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT=$EQUATION_REVIEW_DOCUMENT_ROOT"
+  api_record_state=$?
+fi
+case "$api_record_state" in
+  0)
+    if ! curl --fail --silent --show-error --connect-timeout 1 --max-time 3 \
+      "$API_HEALTH_URL" >/dev/null 2>&1; then
+      echo "Refusing to reuse managed Project Koios API: health check failed at $API_HEALTH_URL." >&2
+      exit 1
+    fi
+    echo "Project Koios API already running and healthy (PID $KOIOS_VERIFIED_PID)."
+    ;;
+  1)
+    if lsof -n -P -iTCP:"$API_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+      echo "API port $API_PORT is already in use by an unmanaged process." >&2
+      exit 1
+    fi
+    API_PYTHONPATH="$API_REPO/src/python:$CORE_REPO/src/python:$SEARCH_REPO/src/python:$OBSIDIAN_REPO/src/python:$REFERENCES_REPO/src/python"
+    API_ENV=(
+      "PYTHONPATH=$API_PYTHONPATH"
+      "KOIOS_DEPLOYMENT_PROFILE=control"
+      "KOIOS_COURSE_CATALOG=$COURSE_CATALOG"
+      "KOIOS_PROJECT_CATALOG=$PROJECT_CATALOG"
+      "KOIOS_GITHUB_REPOSITORIES=${KOIOS_GITHUB_REPOSITORIES:-eragasa/projectkoios-api,eragasa/projectkoios-web}"
     )
-  fi
-  (
+    if [ "${KOIOS_REFERENCE_CORPUS_ROOT+x}" = x ]; then
+      API_ENV+=("KOIOS_REFERENCE_CORPUS_ROOT=$KOIOS_REFERENCE_CORPUS_ROOT")
+    fi
+    if [ "${KOIOS_REFERENCE_PAGE_RESOLUTION_ROOT+x}" = x ]; then
+      API_ENV+=("KOIOS_REFERENCE_PAGE_RESOLUTION_ROOT=$KOIOS_REFERENCE_PAGE_RESOLUTION_ROOT")
+    fi
+    if [ "${KOIOS_REFERENCE_MULTIMODAL_ROOT+x}" = x ]; then
+      API_ENV+=("KOIOS_REFERENCE_MULTIMODAL_ROOT=$KOIOS_REFERENCE_MULTIMODAL_ROOT")
+    fi
+    if [ "${PROJECTKOIOS_REFERENCE_CATALOG+x}" = x ]; then
+      API_ENV+=("PROJECTKOIOS_REFERENCE_CATALOG=$PROJECTKOIOS_REFERENCE_CATALOG")
+    fi
+    if [ "${PROJECTKOIOS_SEARCH_INDEX+x}" = x ]; then
+      API_ENV+=("PROJECTKOIOS_SEARCH_INDEX=$PROJECTKOIOS_SEARCH_INDEX")
+    fi
+    if [ "$EQUATION_REVIEW_OWNER_ENABLED" -eq 1 ]; then
+      API_PYTHONPATH="$API_PYTHONPATH:$APPLICATIONS_REPO/src/python:$INGESTION_REPO/src/python"
+      API_ENV[0]="PYTHONPATH=$API_PYTHONPATH"
+      API_ENV+=(
+        "KOIOS_EQUATION_REVIEW_PIZZI2020_DOCUMENT_ROOT=$EQUATION_REVIEW_DOCUMENT_ROOT"
+      )
+    fi
     cd "$API_REPO"
     nohup env "${API_ENV[@]}" \
       "$API_PYTHON" -m uvicorn projectkoios.api.main:app \
       --host "$API_HOST" --port "$API_PORT" \
       >>"$API_LOG" 2>&1 </dev/null &
-    echo $! >"$API_PID_FILE"
-  )
-  STARTED_API=1
-  wait_for_url "Project Koios API" \
-    "http://$API_HOST:$API_PORT/health" "$API_PID_FILE"
-  echo "Project Koios API started (PID $(cat "$API_PID_FILE"))."
-fi
+    api_pid=$!
+    API_SPAWNED_PID="$api_pid"
+    STARTED_API=1
+    cd "$WEB_ROOT"
+    koios_publish_process_record "$API_PID_FILE" api "$api_pid" "$API_REPO" \
+      "$API_HOST" "$API_PORT" "$API_COMMAND_MARKER" "$API_HEALTH_URL"
+    wait_for_url "Project Koios API" "$API_HEALTH_URL" "$API_PID_FILE" api \
+      "$API_REPO" "$API_HOST" "$API_PORT" "$API_COMMAND_MARKER"
+    echo "Project Koios API started (PID $api_pid)."
+    ;;
+  *) exit 1 ;;
+esac
 
-if is_running "$WEB_PID_FILE"; then
-  echo "Project Koios web already running (PID $(cat "$WEB_PID_FILE"))."
+web_record_state=0
+if koios_prepare_process_record "$WEB_PID_FILE" web "$WEB_ROOT" "$WEB_HOST" \
+  "$WEB_PORT" "$WEB_COMMAND_MARKER" "$WEB_HEALTH_URL"; then
+  web_record_state=0
 else
-  rm -f "$WEB_PID_FILE"
-  if port_is_listening "$WEB_PORT"; then
-    echo "Web port $WEB_PORT is already in use by an unmanaged process." >&2
-    exit 1
-  fi
-
-  (
+  web_record_state=$?
+fi
+case "$web_record_state" in
+  0)
+    if ! curl --fail --silent --show-error --connect-timeout 1 --max-time 3 \
+      "$WEB_HEALTH_URL" >/dev/null 2>&1; then
+      echo "Refusing to reuse managed Project Koios web: health check failed at $WEB_HEALTH_URL." >&2
+      exit 1
+    fi
+    echo "Project Koios web already running and healthy (PID $KOIOS_VERIFIED_PID)."
+    ;;
+  1)
+    if lsof -n -P -iTCP:"$WEB_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+      echo "Web port $WEB_PORT is already in use by an unmanaged process." >&2
+      exit 1
+    fi
     cd "$WEB_ROOT"
     nohup env VITE_KOIOS_DEPLOYMENT_PROFILE=control \
       "$VITE" --host "$WEB_HOST" --port "$WEB_PORT" \
       >>"$WEB_LOG" 2>&1 </dev/null &
-    echo $! >"$WEB_PID_FILE"
-  )
-  STARTED_WEB=1
-  wait_for_url "Project Koios web" \
-    "http://$WEB_HOST:$WEB_PORT/" "$WEB_PID_FILE"
-  echo "Project Koios web started (PID $(cat "$WEB_PID_FILE"))."
-fi
-
-trap - EXIT
+    web_pid=$!
+    WEB_SPAWNED_PID="$web_pid"
+    STARTED_WEB=1
+    koios_publish_process_record "$WEB_PID_FILE" web "$web_pid" "$WEB_ROOT" \
+      "$WEB_HOST" "$WEB_PORT" "$WEB_COMMAND_MARKER" "$WEB_HEALTH_URL"
+    wait_for_url "Project Koios web" "$WEB_HEALTH_URL" "$WEB_PID_FILE" web \
+      "$WEB_ROOT" "$WEB_HOST" "$WEB_PORT" "$WEB_COMMAND_MARKER"
+    echo "Project Koios web started (PID $web_pid)."
+    ;;
+  *) exit 1 ;;
+esac
 
 echo
 echo "Project Koios is ready:"
-echo "  Web:  http://$WEB_HOST:$WEB_PORT"
+echo "  Web:  $WEB_HEALTH_URL"
 echo "  API:  http://$API_HOST:$API_PORT"
 echo "  Docs: http://$API_HOST:$API_PORT/docs"
 echo "  Logs: $RUN_DIR"
 
 if [ "${KOIOS_OPEN_BROWSER:-0}" = "1" ] && command -v open >/dev/null 2>&1; then
-  open "http://$WEB_HOST:$WEB_PORT"
+  open "$WEB_HEALTH_URL"
 fi

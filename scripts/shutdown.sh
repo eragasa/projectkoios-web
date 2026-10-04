@@ -2,65 +2,57 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WEB_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+WEB_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
+REPOS_ROOT="$(cd "$WEB_ROOT/.." && pwd -P)"
+
+# shellcheck source=managed-process.sh
+. "$SCRIPT_DIR/managed-process.sh"
+koios_load_local_env_preserving_caller "$WEB_ROOT/.env.local"
+
 RUN_DIR="${KOIOS_RUN_DIR:-$WEB_ROOT/.run}"
+API_REPO="${KOIOS_API_REPO:-$REPOS_ROOT/projectkoios-api}"
+API_HOST="${KOIOS_API_HOST:-127.0.0.1}"
+API_PORT="${KOIOS_API_PORT:-8000}"
+WEB_HOST="${KOIOS_WEB_HOST:-127.0.0.1}"
+WEB_PORT="${KOIOS_WEB_PORT:-5173}"
+MANAGED_SERVICE="${KOIOS_MANAGED_SERVICE:-all}"
 API_PID_FILE="$RUN_DIR/api.pid"
 WEB_PID_FILE="$RUN_DIR/web.pid"
+API_COMMAND_MARKER="projectkoios.api.main:app"
+WEB_COMMAND_MARKER="node_modules/.bin/vite"
 
-stop_process() {
-  local name="$1"
-  local pid_file="$2"
-  local expected_command="$3"
+case "$MANAGED_SERVICE" in
+  all | api | web) ;;
+  *)
+    echo "KOIOS_MANAGED_SERVICE must be one of: all, api, web." >&2
+    exit 1
+    ;;
+esac
 
-  if [ ! -f "$pid_file" ]; then
-    echo "$name is not managed by this workspace."
-    return
-  fi
+if [ ! -d "$API_REPO" ]; then
+  echo "API repository not found: $API_REPO" >&2
+  exit 1
+fi
+API_REPO="$(cd "$API_REPO" && pwd -P)"
 
-  local pid
-  pid="$(cat "$pid_file")"
-  if [[ ! "$pid" =~ ^[0-9]+$ ]]; then
-    echo "$name has an invalid PID file; removing it." >&2
-    rm -f "$pid_file"
-    return
-  fi
-
-  if ! kill -0 "$pid" 2>/dev/null; then
-    echo "$name is already stopped."
-    rm -f "$pid_file"
-    return
-  fi
-
-  local command
-  command="$(ps -p "$pid" -o command= 2>/dev/null || true)"
-  if [[ "$command" != *"$expected_command"* ]]; then
-    echo "Refusing to stop PID $pid: it is not the managed $name process." >&2
-    echo "Observed command: $command" >&2
-    return 1
-  fi
-
-  kill "$pid"
-
-  local attempts=40
-  local attempt=1
-  while kill -0 "$pid" 2>/dev/null && [ "$attempt" -le "$attempts" ]; do
-    sleep 0.25
-    attempt=$((attempt + 1))
-  done
-
-  if kill -0 "$pid" 2>/dev/null; then
-    echo "$name did not stop after 10 seconds; sending SIGKILL." >&2
-    kill -9 "$pid"
-  fi
-
-  rm -f "$pid_file"
-  echo "$name stopped."
+release_lock_on_exit() {
+  local status=$?
+  trap - EXIT
+  koios_release_lifecycle_lock || status=1
+  exit "$status"
 }
 
-stop_process "Project Koios web" "$WEB_PID_FILE" "vite"
-stop_process "Project Koios API" "$API_PID_FILE" "uvicorn"
+koios_acquire_lifecycle_lock "$RUN_DIR" "stop:$MANAGED_SERVICE"
+trap release_lock_on_exit EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-if [ -d "$RUN_DIR" ] && ! find "$RUN_DIR" -mindepth 1 -print -quit | grep -q .; then
-  rmdir "$RUN_DIR"
+if [ "$MANAGED_SERVICE" = all ] || [ "$MANAGED_SERVICE" = web ]; then
+  koios_stop_recorded_process "Project Koios web" "$WEB_PID_FILE" web \
+    "$WEB_ROOT" "$WEB_HOST" "$WEB_PORT" "$WEB_COMMAND_MARKER" 1
+fi
+if [ "$MANAGED_SERVICE" = all ] || [ "$MANAGED_SERVICE" = api ]; then
+  koios_stop_recorded_process "Project Koios API" "$API_PID_FILE" api \
+    "$API_REPO" "$API_HOST" "$API_PORT" "$API_COMMAND_MARKER" 1
 fi
