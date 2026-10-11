@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-const apiRevision = "cee214ab2207e47e7b7696d772b3f3d5c0fc6bff";
+const apiRevision = "a4c73e23aa291be89b86254ac173fbb8f3a06f89";
 const apiSchemaSha256 =
   "a8128d46b62651aec77510a66309022b842668b6c5c76c0bc874db474a06eb09";
 const defaultSchemaUrl =
