@@ -141,6 +141,37 @@ test("public profile exposes public-safe course metadata", async () => {
   expect(
     await screen.findByRole("heading", { name: "No public course metadata yet" }),
   ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("link", { name: /Open course references/ }),
+  ).not.toBeInTheDocument();
+  expect(
+    vi
+      .mocked(fetch)
+      .mock.calls.some(([request]) =>
+        String(request).includes("/courses/dlsu.phy627m.gs1/references"),
+      ),
+  ).toBe(false);
+});
+
+test("control course navigation exposes the dedicated reference workspace", async () => {
+  renderApp("control", "/courses");
+
+  expect(
+    await screen.findByRole("link", { name: /Open course references/ }),
+  ).toHaveAttribute("href", "/control/courses/references");
+});
+
+test("public profile rejects the course-reference authority route without fetching it", () => {
+  renderApp("public", "/control/courses/references");
+
+  expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
+  expect(
+    vi
+      .mocked(fetch)
+      .mock.calls.some(([request]) =>
+        String(request).includes("/courses/dlsu.phy627m.gs1/references"),
+      ),
+  ).toBe(false);
 });
 
 test("public profile rejects a control-center route", () => {

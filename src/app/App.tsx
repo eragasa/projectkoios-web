@@ -18,6 +18,7 @@ import { CoursesPage } from "../features/publishing/CoursesPage";
 import { ProjectsPage } from "../features/publishing/ProjectsPage";
 import { PublicationsPage } from "../features/publishing/PublicationsPage";
 import { SearchPage } from "../features/search/SearchPage";
+import { ReferenceAuthorityPage } from "../features/courses/ReferenceAuthorityPage";
 import {
   TranscriptCatalogPage,
   TranscriptDocumentPage,
@@ -32,13 +33,20 @@ export function App({ profile = deploymentProfile }: { profile?: DeploymentProfi
     <Routes>
       <Route element={<AppShell profile={profile} />}>
         <Route index element={<PublicHomePage />} />
-        <Route path="courses" element={<CoursesPage />} />
+        <Route
+          path="courses"
+          element={<CoursesPage showReferenceControl={isControl} />}
+        />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="publications" element={<PublicationsPage />} />
         {isControl ? (
           <>
             <Route path="control" element={<DashboardPage />} />
             <Route path="control/github" element={<GitHubTasksPage />} />
+            <Route
+              path="control/courses/references"
+              element={<ReferenceAuthorityPage />}
+            />
             <Route
               path="control/projects/ksdft2effmass"
               element={<Ksdft2EffmassProjectPage />}

@@ -14,6 +14,28 @@ export type GitHubTaskSequence = components["schemas"]["GitHubTaskSequence"];
 export type PublicCourseCatalog = components["schemas"]["PublicCourseCatalog"];
 export type PublicCourseInstitution = components["schemas"]["PublicCourseInstitution"];
 export type PublicCourseRecord = components["schemas"]["PublicCourseRecord"];
+export type CourseReferenceQueue =
+  paths["/courses/{course_id}/references"]["get"]["responses"][200]["content"]["application/json"];
+export type CourseReferenceItem = CourseReferenceQueue["items"][number];
+export type CourseReferenceIdentityDisposition =
+  components["schemas"]["IdentityDisposition"];
+export type CourseReferenceAssetDisposition = components["schemas"]["AssetDisposition"];
+export type CourseReferenceIdentityPreviewRequest =
+  paths["/courses/{course_id}/references/{item_id}/decision-preview"]["post"]["requestBody"]["content"]["application/json"];
+export type CourseReferenceIdentityPreview =
+  paths["/courses/{course_id}/references/{item_id}/decision-preview"]["post"]["responses"][200]["content"]["application/json"];
+export type CourseReferenceIdentityDecisionRequest =
+  paths["/courses/{course_id}/references/{item_id}/decision"]["put"]["requestBody"]["content"]["application/json"];
+export type CourseReferenceAssetPreviewRequest =
+  paths["/courses/{course_id}/references/{item_id}/asset-decision-preview"]["post"]["requestBody"]["content"]["application/json"];
+export type CourseReferenceAssetPreview =
+  paths["/courses/{course_id}/references/{item_id}/asset-decision-preview"]["post"]["responses"][200]["content"]["application/json"];
+export type CourseReferenceAssetDecisionRequest =
+  paths["/courses/{course_id}/references/{item_id}/asset-decision"]["put"]["requestBody"]["content"]["application/json"];
+export type CourseReferenceDecisionReceipt =
+  components["schemas"]["CourseReferenceDecisionReceiptResponse"];
+export type CourseReferenceFailureCode =
+  components["schemas"]["CourseReferenceFailureCode"];
 export type PublicProjectCatalog = components["schemas"]["PublicProjectCatalog"];
 export type PublicProjectRecord = components["schemas"]["PublicProjectRecord"];
 export type PublicationCatalog = components["schemas"]["PublicationCatalog"];
@@ -137,6 +159,84 @@ export class ProjectKoiosApiClient {
 
   async courses(signal?: AbortSignal): Promise<PublicCourseCatalog> {
     return this.request<PublicCourseCatalog>("/api/courses", { signal });
+  }
+
+  async courseReferences(
+    courseId: string,
+    signal?: AbortSignal,
+  ): Promise<CourseReferenceQueue> {
+    return this.request<CourseReferenceQueue>(
+      `/courses/${encodeURIComponent(courseId)}/references`,
+      { signal },
+    );
+  }
+
+  async previewCourseReferenceIdentity(
+    courseId: string,
+    itemId: string,
+    request: CourseReferenceIdentityPreviewRequest,
+    signal?: AbortSignal,
+  ): Promise<CourseReferenceIdentityPreview> {
+    return this.request<CourseReferenceIdentityPreview>(
+      `/courses/${encodeURIComponent(courseId)}/references/${encodeURIComponent(itemId)}/decision-preview`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+        signal,
+      },
+    );
+  }
+
+  async decideCourseReferenceIdentity(
+    courseId: string,
+    itemId: string,
+    request: CourseReferenceIdentityDecisionRequest,
+    signal?: AbortSignal,
+  ): Promise<CourseReferenceDecisionReceipt> {
+    return this.request<CourseReferenceDecisionReceipt>(
+      `/courses/${encodeURIComponent(courseId)}/references/${encodeURIComponent(itemId)}/decision`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+        signal,
+      },
+    );
+  }
+
+  async previewCourseReferenceAsset(
+    courseId: string,
+    itemId: string,
+    request: CourseReferenceAssetPreviewRequest,
+    signal?: AbortSignal,
+  ): Promise<CourseReferenceAssetPreview> {
+    return this.request<CourseReferenceAssetPreview>(
+      `/courses/${encodeURIComponent(courseId)}/references/${encodeURIComponent(itemId)}/asset-decision-preview`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+        signal,
+      },
+    );
+  }
+
+  async decideCourseReferenceAsset(
+    courseId: string,
+    itemId: string,
+    request: CourseReferenceAssetDecisionRequest,
+    signal?: AbortSignal,
+  ): Promise<CourseReferenceDecisionReceipt> {
+    return this.request<CourseReferenceDecisionReceipt>(
+      `/courses/${encodeURIComponent(courseId)}/references/${encodeURIComponent(itemId)}/asset-decision`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+        signal,
+      },
+    );
   }
 
   async projects(signal?: AbortSignal): Promise<PublicProjectCatalog> {

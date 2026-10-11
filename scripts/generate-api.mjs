@@ -4,9 +4,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-const apiRevision = "08721d089f67eee8d4393e28c560c25a33ac6c10";
+const apiRevision = "a4c73e23aa291be89b86254ac173fbb8f3a06f89";
 const apiSchemaSha256 =
-  "bcff0368f68d03b005149b4ccb061ca470289488ff74c9af53962af5b1cbff2f";
+  "a8128d46b62651aec77510a66309022b842668b6c5c76c0bc874db474a06eb09";
 const defaultSchemaUrl =
   `https://raw.githubusercontent.com/eragasa/projectkoios-api/${apiRevision}/` +
   "openapi/control.openapi.json";

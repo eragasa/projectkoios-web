@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 
 import { CoursesPage } from "./CoursesPage";
 
@@ -48,13 +49,15 @@ const catalog = {
   unresolved_collections: ["Historical collections without course codes."],
 };
 
-function renderPage() {
+function renderPage(showReferenceControl = false) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <CoursesPage />
+      <MemoryRouter>
+        <CoursesPage showReferenceControl={showReferenceControl} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -88,6 +91,33 @@ test("renders course identities without claiming materials are published", async
   expect(
     screen.getByRole("link", { name: /Inspect the source inventory/ }),
   ).toHaveAttribute("href", catalog.source.url);
+});
+
+test("exposes the course reference workspace only when CONTROL enables it", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() =>
+      Promise.resolve(
+        new Response(JSON.stringify(catalog), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    ),
+  );
+
+  const publicView = renderPage();
+  await screen.findByText("ENGR219");
+  expect(
+    screen.queryByRole("link", { name: /Open course references/ }),
+  ).not.toBeInTheDocument();
+  publicView.unmount();
+
+  renderPage(true);
+  expect(screen.getByRole("link", { name: /Open course references/ })).toHaveAttribute(
+    "href",
+    "/control/courses/references",
+  );
 });
 
 test("filters courses by search text and institution", async () => {

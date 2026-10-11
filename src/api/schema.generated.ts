@@ -200,6 +200,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/courses/{course_id}/references": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Queue */
+        get: operations["queue_courses__course_id__references_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{course_id}/references/{item_id}/asset-decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Decide Asset */
+        put: operations["decide_asset_courses__course_id__references__item_id__asset_decision_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{course_id}/references/{item_id}/asset-decision-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Asset */
+        post: operations["preview_asset_courses__course_id__references__item_id__asset_decision_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{course_id}/references/{item_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Decide Identity */
+        put: operations["decide_identity_courses__course_id__references__item_id__decision_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{course_id}/references/{item_id}/decision-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Identity */
+        post: operations["preview_identity_courses__course_id__references__item_id__decision_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/equation-reviews": {
         parameters: {
             query?: never;
@@ -545,6 +630,27 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ActiveReferenceAuthorityResponse */
+        ActiveReferenceAuthorityResponse: {
+            /** Active Citekey */
+            active_citekey: string;
+            /** Alias Citekeys */
+            alias_citekeys: string[];
+            /** Authority Binding Id */
+            authority_binding_id: string | null;
+            /** Bibliographic Work Id */
+            bibliographic_work_id: string;
+            /** Candidate Id */
+            candidate_id: string;
+            /** Canonical Asset Decision Id */
+            canonical_asset_decision_id: string | null;
+            /** Identity Decision Id */
+            identity_decision_id: string;
+            /** Source Asset Id */
+            source_asset_id: string | null;
+            /** State Projection Id */
+            state_projection_id: string;
+        };
         /**
          * ApiErrorResponse
          * @description Stable HTTP error envelope exposed by API-owned routes.
@@ -553,6 +659,93 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /** AssetCompetitorDecisionRequest */
+        AssetCompetitorDecisionRequest: {
+            /** Asset Observation Id */
+            asset_observation_id: string;
+            disposition: components["schemas"]["AssetDisposition"];
+            /** Rationale */
+            rationale: string;
+        };
+        /** AssetCompetitorDecisionResponse */
+        AssetCompetitorDecisionResponse: {
+            /** Asset Observation Id */
+            asset_observation_id: string;
+            disposition: components["schemas"]["AssetDisposition"];
+            /** Rationale */
+            rationale: string;
+        };
+        /** AssetDecisionPreviewRequest */
+        AssetDecisionPreviewRequest: {
+            /** Competitors */
+            competitors: components["schemas"]["AssetCompetitorDecisionRequest"][];
+            disposition: components["schemas"]["AssetDisposition"];
+            /** Expected Current Decision Id */
+            expected_current_decision_id?: string | null;
+            /** Expected Identity State Projection Id */
+            expected_identity_state_projection_id: string;
+            /** Expected Item Revision Id */
+            expected_item_revision_id: string;
+            /** Expected Queue Id */
+            expected_queue_id: string;
+        };
+        /** AssetDecisionPreviewResponse */
+        AssetDecisionPreviewResponse: {
+            /** Competitors */
+            competitors: components["schemas"]["AssetCompetitorDecisionResponse"][];
+            disposition: components["schemas"]["AssetDisposition"];
+            /** Expected Current Decision Id */
+            expected_current_decision_id: string | null;
+            /** Identity State Projection Id */
+            identity_state_projection_id: string;
+            /** Item Revision Id */
+            item_revision_id: string;
+            /** Plan Id */
+            plan_id: string;
+            /** Preview Id */
+            preview_id: string;
+            /** Queue Id */
+            queue_id: string;
+            /** Request Id */
+            request_id: string;
+            /** Result Id */
+            result_id: string;
+            /** Selected Asset Observation Id */
+            selected_asset_observation_id: string | null;
+            /** Selection Id */
+            selection_id: string;
+        };
+        /** AssetDecisionRequest */
+        AssetDecisionRequest: {
+            /** Competitors */
+            competitors: components["schemas"]["AssetCompetitorDecisionRequest"][];
+            /** Decided At */
+            decided_at: string;
+            disposition: components["schemas"]["AssetDisposition"];
+            /** Expected Asset Plan Id */
+            expected_asset_plan_id: string;
+            /** Expected Current Decision Id */
+            expected_current_decision_id?: string | null;
+            /** Expected Identity State Projection Id */
+            expected_identity_state_projection_id: string;
+            /** Expected Item Revision Id */
+            expected_item_revision_id: string;
+            /** Expected Preview Id */
+            expected_preview_id: string;
+            /** Expected Preview Result Id */
+            expected_preview_result_id: string;
+            /** Expected Queue Id */
+            expected_queue_id: string;
+            /** Idempotency Key */
+            idempotency_key: string;
+            /** Rationale */
+            rationale: string;
+        };
+        /**
+         * AssetDisposition
+         * @enum {string}
+         */
+        AssetDisposition: "AUTHORIZE" | "REJECT" | "DEFER";
         /** Body_provide_reference_literature_review_references_post */
         Body_provide_reference_literature_review_references_post: {
             /** Citation Label */
@@ -1003,6 +1196,194 @@ export interface components {
          * @enum {string}
          */
         CourseMaterialsStatus: "inventory-only" | "review-candidate" | "published";
+        /** CourseReferenceDecisionReceiptResponse */
+        CourseReferenceDecisionReceiptResponse: {
+            /** Current Decision Id */
+            current_decision_id: string;
+            /** Current State Projection Id */
+            current_state_projection_id: string | null;
+            /** Decision Append Request Id */
+            decision_append_request_id: string;
+            /** Decision Id */
+            decision_id: string;
+            /**
+             * Dimension
+             * @enum {string}
+             */
+            dimension: "reference-identity" | "canonical-asset";
+            /** Disposition */
+            disposition: string;
+            /** Preview Id */
+            preview_id: string;
+            /** Put Request Id */
+            put_request_id: string;
+            /** Receipt Id */
+            receipt_id: string;
+            /** Refreshed Item Revision Id */
+            refreshed_item_revision_id: string;
+            /** Refreshed Queue Id */
+            refreshed_queue_id: string;
+            /** Result Id */
+            result_id: string;
+            /** State Projection Id */
+            state_projection_id: string | null;
+        };
+        /**
+         * CourseReferenceFailureCode
+         * @enum {string}
+         */
+        CourseReferenceFailureCode: "COURSE_NOT_FOUND" | "ITEM_NOT_FOUND" | "EVIDENCE_STALE" | "REVISION_STALE" | "TARGET_STALE" | "CONCURRENT_DECISION" | "IDEMPOTENCY_CONFLICT" | "INVALID_DISPOSITION" | "OWNER_MALFORMED" | "OWNER_UNAVAILABLE";
+        /** CourseReferenceFailureResponse */
+        CourseReferenceFailureResponse: {
+            code: components["schemas"]["CourseReferenceFailureCode"];
+            /** Detail */
+            detail: string;
+        };
+        /** CourseReferenceQueueItemResponse */
+        CourseReferenceQueueItemResponse: {
+            active_authority: components["schemas"]["ActiveReferenceAuthorityResponse"] | null;
+            /** Allowed Asset Actions */
+            allowed_asset_actions: components["schemas"]["AssetDisposition"][];
+            /** Allowed Identity Actions */
+            allowed_identity_actions: components["schemas"]["IdentityDisposition"][];
+            /** Assets */
+            assets: components["schemas"]["ReferenceAssetResponse"][];
+            candidate: components["schemas"]["ReferenceCandidateResponse"] | null;
+            current_asset_decision: components["schemas"]["CurrentDecisionHeadResponse"] | null;
+            /** Current Identity Decisions */
+            current_identity_decisions: components["schemas"]["CurrentDecisionHeadResponse"][];
+            /** Item Revision Id */
+            item_revision_id: string;
+            /** Observations */
+            observations: components["schemas"]["ObservedCandidateEntryResponse"][];
+            /** Record Matches */
+            record_matches: components["schemas"]["ReferenceRecordMatchResponse"][];
+            rendered_entry: components["schemas"]["RenderedCandidateEntryResponse"] | null;
+            /**
+             * Resolution
+             * @enum {string}
+             */
+            resolution: "ready" | "rendered-locator-unavailable" | "display-guard-mismatch" | "candidate-unavailable" | "candidate-ambiguous" | "candidate-display-guard-mismatch" | "owner-evidence-malformed";
+            selection: components["schemas"]["CourseReferenceSelectionResponse"];
+        };
+        /** CourseReferenceQueueResponse */
+        CourseReferenceQueueResponse: {
+            /** Active Authorities */
+            active_authorities: components["schemas"]["ActiveReferenceAuthorityResponse"][];
+            /**
+             * Contract Id
+             * @default projectkoios.references.course-reference-authority@0.1.0
+             * @constant
+             */
+            contract_id: "projectkoios.references.course-reference-authority@0.1.0";
+            /**
+             * Control Class
+             * @default CONTROL
+             * @constant
+             */
+            control_class: "CONTROL";
+            /** Items */
+            items: components["schemas"]["CourseReferenceQueueItemResponse"][];
+            /** Queue Id */
+            queue_id: string;
+            /** Render Result Id */
+            render_result_id: string;
+            /** Request Id */
+            request_id: string;
+            /** Review Projection Id */
+            review_projection_id: string;
+            scope: components["schemas"]["CourseReferenceScopeResponse"];
+            /** Source Export Result Id */
+            source_export_result_id: string;
+            /** State Projection Ids */
+            state_projection_ids: string[];
+        };
+        /** CourseReferenceScopeResponse */
+        CourseReferenceScopeResponse: {
+            /** Course Id */
+            course_id: string;
+            /** Course Title */
+            course_title: string;
+            /** Inventory Id */
+            inventory_id: string;
+            /** Manifest Id */
+            manifest_id: string;
+            /** Manifest Sha256 */
+            manifest_sha256: string;
+            /** Ordered Selection Ids */
+            ordered_selection_ids: string[];
+            /** Scope Id */
+            scope_id: string;
+            /** Total */
+            total: number;
+        };
+        /** CourseReferenceSelectionResponse */
+        CourseReferenceSelectionResponse: {
+            /** Course Id */
+            course_id: string;
+            /** Display Citekey */
+            display_citekey: string;
+            /**
+             * Display Citekey Status
+             * @enum {string}
+             */
+            display_citekey_status: "observed" | "proposed-noncanonical";
+            /** Inventory Id */
+            inventory_id: string;
+            /** Locator Binding Id */
+            locator_binding_id: string;
+            /** Manifest Id */
+            manifest_id: string;
+            /** Next Selection Id */
+            next_selection_id: string | null;
+            /** Ordinal */
+            ordinal: number;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "preserved-manuscript" | "directed-reference-scope";
+            /** Previous Selection Id */
+            previous_selection_id: string | null;
+            /** Reference Locator */
+            reference_locator: string;
+            /**
+             * Role
+             * @constant
+             */
+            role: "manuscript-bibliography";
+            /** Scope Id */
+            scope_id: string;
+            /** Selection Id */
+            selection_id: string;
+        };
+        /** CurrentDecisionHeadResponse */
+        CurrentDecisionHeadResponse: {
+            /** Actor Id */
+            actor_id: string;
+            /** Actor Verification Record Id */
+            actor_verification_record_id: string;
+            /**
+             * Authority Scope
+             * @enum {string}
+             */
+            authority_scope: "reference-identity-curator" | "canonical-asset-curator";
+            /** Context Id */
+            context_id: string;
+            /** Decided At */
+            decided_at: string;
+            /** Decision */
+            decision: string;
+            /** Decision Id */
+            decision_id: string;
+            /**
+             * Dimension
+             * @enum {string}
+             */
+            dimension: "reference-identity" | "canonical-asset";
+            /** Subject Id */
+            subject_id: string;
+        };
         /** DeterministicEquationEvidenceResponse */
         DeterministicEquationEvidenceResponse: {
             /** Candidate Sha256 */
@@ -1341,6 +1722,96 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** IdentityDecisionPreviewRequest */
+        IdentityDecisionPreviewRequest: {
+            /** Alias Citekeys */
+            alias_citekeys: string[];
+            /** Canonical Citekey */
+            canonical_citekey?: string | null;
+            disposition: components["schemas"]["IdentityDisposition"];
+            /** Expected Current Decision Id */
+            expected_current_decision_id?: string | null;
+            /** Expected Item Revision Id */
+            expected_item_revision_id: string;
+            /** Expected Queue Id */
+            expected_queue_id: string;
+            /** Selected Record Match Ids */
+            selected_record_match_ids: string[];
+            /** Target State Projection Id */
+            target_state_projection_id?: string | null;
+        };
+        /** IdentityDecisionPreviewResponse */
+        IdentityDecisionPreviewResponse: {
+            /** Alias Citekeys */
+            alias_citekeys: string[];
+            /** Canonical Citekey */
+            canonical_citekey: string | null;
+            disposition: components["schemas"]["IdentityDisposition"];
+            /** Expected Current Decision Id */
+            expected_current_decision_id: string | null;
+            /** Item Revision Id */
+            item_revision_id: string;
+            /** Preview Id */
+            preview_id: string;
+            /** Queue Id */
+            queue_id: string;
+            /** Request Id */
+            request_id: string;
+            /** Result Id */
+            result_id: string;
+            /** Selected Record Match Ids */
+            selected_record_match_ids: string[];
+            /** Selection Id */
+            selection_id: string;
+            /** Target State Projection Id */
+            target_state_projection_id: string | null;
+        };
+        /** IdentityDecisionRequest */
+        IdentityDecisionRequest: {
+            /** Alias Citekeys */
+            alias_citekeys: string[];
+            /** Canonical Citekey */
+            canonical_citekey?: string | null;
+            /** Decided At */
+            decided_at: string;
+            disposition: components["schemas"]["IdentityDisposition"];
+            /** Expected Current Decision Id */
+            expected_current_decision_id?: string | null;
+            /** Expected Item Revision Id */
+            expected_item_revision_id: string;
+            /** Expected Preview Id */
+            expected_preview_id: string;
+            /** Expected Preview Result Id */
+            expected_preview_result_id: string;
+            /** Expected Queue Id */
+            expected_queue_id: string;
+            /** Idempotency Key */
+            idempotency_key: string;
+            /** Rationale */
+            rationale: string;
+            /** Selected Record Match Ids */
+            selected_record_match_ids: string[];
+            /** Target State Projection Id */
+            target_state_projection_id?: string | null;
+        };
+        /**
+         * IdentityDisposition
+         * @enum {string}
+         */
+        IdentityDisposition: "ACCEPT_EXISTING" | "ACCEPT_NEW" | "MERGE" | "REJECT" | "DEFER";
+        /** IngestionArtifactLinkResponse */
+        IngestionArtifactLinkResponse: {
+            /** Artifact Verification Result Id */
+            artifact_verification_result_id: string;
+            /** Asset Observation Id */
+            asset_observation_id: string;
+            /** Document Id */
+            document_id: string;
+            /** Link Id */
+            link_id: string;
+            /** Source Id */
+            source_id: string;
+        };
         /** LiteratureClaimProgressResponse */
         LiteratureClaimProgressResponse: {
             /** Assumptions */
@@ -1493,6 +1964,27 @@ export interface components {
             required_pdf_count: number;
             /** Total References */
             total_references: number;
+        };
+        /** ObservedCandidateEntryResponse */
+        ObservedCandidateEntryResponse: {
+            /** Asserted Source Revision */
+            asserted_source_revision?: string | null;
+            /** Bibliography Byte Size */
+            bibliography_byte_size: number;
+            /** Bibliography Sha256 */
+            bibliography_sha256: string;
+            /** Entry Byte Size */
+            entry_byte_size: number;
+            /** Entry Index */
+            entry_index: number;
+            /** Entry Sha256 */
+            entry_sha256: string;
+            /** Observation Id */
+            observation_id: string;
+            /** Observed Citekey */
+            observed_citekey: string;
+            /** Source Id */
+            source_id: string;
         };
         /** OrganizerControlRequest */
         OrganizerControlRequest: {
@@ -1913,6 +2405,104 @@ export interface components {
              */
             project_id: "ksdft2effmass";
             receipt_disposition: components["schemas"]["ProjectPdfReceiptDisposition"];
+        };
+        /** ReferenceAssetResponse */
+        ReferenceAssetResponse: {
+            /** Asset Observation Id */
+            asset_observation_id: string;
+            /** Asset Status */
+            asset_status: string;
+            /** Byte Size */
+            byte_size: number;
+            /** Candidate Id */
+            candidate_id: string;
+            /** Document Binding Ids */
+            document_binding_ids: string[];
+            /** Ingestion Artifact Links */
+            ingestion_artifact_links: components["schemas"]["IngestionArtifactLinkResponse"][];
+            /** Ingestion Evidence Ids */
+            ingestion_evidence_ids: string[];
+            /** Rights Status */
+            rights_status: string;
+            /**
+             * Runtime Availability
+             * @enum {string}
+             */
+            runtime_availability: "available" | "unavailable" | "unknown";
+            /** Runtime Evidence Id */
+            runtime_evidence_id: string | null;
+            /** Sha256 */
+            sha256: string;
+        };
+        /** ReferenceCandidateResponse */
+        ReferenceCandidateResponse: {
+            /** Authors */
+            authors: string[];
+            /** Candidate Id */
+            candidate_id: string;
+            /** Citekey Status */
+            citekey_status: string;
+            /** Doi */
+            doi?: string | null;
+            /** Entry Type */
+            entry_type: string;
+            /** Eprint */
+            eprint?: string | null;
+            /** Identity Status */
+            identity_status: string;
+            /** Isbn */
+            isbn?: string | null;
+            /** Proposed Citekey */
+            proposed_citekey: string;
+            /** Source Observation Ids */
+            source_observation_ids: string[];
+            /** Title */
+            title?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Year */
+            year?: string | null;
+        };
+        /** ReferenceRecordMatchResponse */
+        ReferenceRecordMatchResponse: {
+            /**
+             * Authority Status
+             * @constant
+             */
+            authority_status: "non-authoritative-discrepancy-observation";
+            /** Bibtex Byte Size */
+            bibtex_byte_size: number;
+            /** Bibtex Sha256 */
+            bibtex_sha256: string;
+            /** Citekey */
+            citekey: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "exact-observed-key-and-bytes" | "exact-rendered-key-and-bytes" | "same-key-different-bytes" | "same-observed-bytes-different-key" | "same-rendered-bytes-different-key";
+            /** Record Id */
+            record_id: string;
+        };
+        /** RenderedCandidateEntryResponse */
+        RenderedCandidateEntryResponse: {
+            /** Citekey */
+            citekey: string;
+            /** Entry Id */
+            entry_id: string;
+            /** Entry Type */
+            entry_type: string;
+            /** Normalized Fields */
+            normalized_fields: [
+                string,
+                string
+            ][];
+            /** Rendered Byte Size */
+            rendered_byte_size: number;
+            /** Rendered Sha256 */
+            rendered_sha256: string;
+            /** Source Observation Ids */
+            source_observation_ids: string[];
         };
         /** SearchRequest */
         SearchRequest: {
@@ -2665,6 +3255,361 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_courses__course_id__references_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceQueueResponse"];
+                };
+            };
+            /** @description The course or exact Courses-owned item is absent. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description The requested evidence, revision, target, disposition, or append position is stale or invalid. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The owner returned malformed authority evidence. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description The owner authority service is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+        };
+    };
+    decide_asset_courses__course_id__references__item_id__asset_decision_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceDecisionReceiptResponse"];
+                };
+            };
+            /** @description The course or exact Courses-owned item is absent. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description The requested evidence, revision, target, disposition, or append position is stale or invalid. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The owner returned malformed authority evidence. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description The owner authority service is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+        };
+    };
+    preview_asset_courses__course_id__references__item_id__asset_decision_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetDecisionPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDecisionPreviewResponse"];
+                };
+            };
+            /** @description The course or exact Courses-owned item is absent. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description The requested evidence, revision, target, disposition, or append position is stale or invalid. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The owner returned malformed authority evidence. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description The owner authority service is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+        };
+    };
+    decide_identity_courses__course_id__references__item_id__decision_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdentityDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceDecisionReceiptResponse"];
+                };
+            };
+            /** @description The course or exact Courses-owned item is absent. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description The requested evidence, revision, target, disposition, or append position is stale or invalid. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The owner returned malformed authority evidence. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description The owner authority service is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+        };
+    };
+    preview_identity_courses__course_id__references__item_id__decision_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdentityDecisionPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityDecisionPreviewResponse"];
+                };
+            };
+            /** @description The course or exact Courses-owned item is absent. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description The requested evidence, revision, target, disposition, or append position is stale or invalid. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The owner returned malformed authority evidence. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
+                };
+            };
+            /** @description The owner authority service is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseReferenceFailureResponse"];
                 };
             };
         };
