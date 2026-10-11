@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { apiClient, type PublicCourseInstitution } from "../../api/client";
 import { usePageMetadata } from "../../app/usePageMetadata";
@@ -10,7 +11,11 @@ function statusLabel(status: string): string {
   return "Inventory only";
 }
 
-export function CoursesPage() {
+export function CoursesPage({
+  showReferenceControl = false,
+}: {
+  showReferenceControl?: boolean;
+}) {
   usePageMetadata(
     "Courses",
     "A public-safe inventory of identified Project Koios course collections and their review status.",
@@ -82,6 +87,27 @@ export function CoursesPage() {
           </dl>
         ) : null}
       </header>
+
+      {showReferenceControl ? (
+        <section
+          className="course-control-entry"
+          aria-labelledby="course-reference-control-heading"
+        >
+          <div>
+            <p className="eyebrow">CONTROL course workspace</p>
+            <h2 id="course-reference-control-heading">
+              Solid State Physics II references
+            </h2>
+            <p>
+              Review the exact 14-item Courses-owned reference scope, then preview and
+              record References-owned identity and canonical-asset decisions.
+            </p>
+          </div>
+          <Link className="button button--primary" to="/control/courses/references">
+            Open course references →
+          </Link>
+        </section>
+      ) : null}
 
       {courses.isPending ? (
         <div className="publication-status" role="status">

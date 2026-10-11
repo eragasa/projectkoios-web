@@ -26,6 +26,14 @@ export default defineConfig({
       "/project-reference-intake": apiTarget,
       "/transcripts": apiTarget,
       "/transcript-reviews": apiTarget,
+      "/courses": {
+        target: apiTarget,
+        bypass: (request) =>
+          request.method === "GET" &&
+          (request.url === "/courses" || request.url?.startsWith("/courses?"))
+            ? "/index.html"
+            : undefined,
+      },
       "/search": {
         target: apiTarget,
         bypass: (request) => (request.method === "GET" ? "/index.html" : undefined),

@@ -88,7 +88,7 @@ npm run dev:control
 
 Open <http://127.0.0.1:5173>. Vite proxies `/health`, `/api/courses`,
 `/api/projects`, `/api/publications`, `/github/tasks`, `/search`, `/citation-documents`,
-`/citation-reviews`, `/equation-reviews`, `/organizer`, `/transcripts`, `/transcript-reviews`,
+`/citation-reviews`, `/courses/{course_id}/references`, `/equation-reviews`, `/organizer`, `/transcripts`, `/transcript-reviews`,
 `/literature-review`, `/docs`,
 and `/openapi.json` to the local API, avoiding a
 development CORS dependency.
@@ -150,6 +150,36 @@ The control profile adds `/control` routes for the single operator. The first lo
 deployment relies on loopback/private-network isolation and is not approved for
 direct public-internet exposure. The public build has no control routes, and the
 public API profile independently omits all control endpoints.
+
+## Solid State Physics II course references
+
+In the CONTROL profile, open **Courses**, then **Open course references**. The dedicated
+`/control/courses/references` workspace loads the exact 14-item
+`dlsu.phy627m.gs1` queue. The left queue preserves owner order and retains unresolved
+selections rather than hiding them. Select a reference to inspect candidate metadata,
+source and rendered provenance, exact record matches or conflicts, asset evidence,
+current decision heads, and active authority.
+
+Reference review has two sequential steps:
+
+1. Choose an owner-allowed identity action: accept existing, accept new, merge, reject,
+   or defer. Select the exact existing authority and record observations where required,
+   enter citekey fields and a rationale, then request **Preview identity consequences**.
+2. After identity authority is established and the refreshed queue allows asset review,
+   choose the overall action and give every asset competitor an explicit disposition and
+   rationale. Request **Preview asset consequences**.
+
+Only the bordered **Owner-generated preview** is authoritative. Any field edit discards
+it. Confirm only after checking its complete consequence fields and identities. A stale,
+concurrent, target, or idempotency conflict discards the preview and requires a refreshed
+one. An availability/transport failure offers a retry of the exact frozen request; do not
+edit fields if you intend to retry it. Successful decisions show an owner receipt and a
+**Next queue item** action.
+
+Identity acceptance does not authorize an asset. Asset availability does not establish
+identity, rights, or scientific support. The browser stores neither decisions nor a
+retry queue. Leaving with an unsaved draft requires explicit discard. This route and its
+Courses link do not exist in PUBLIC.
 
 ## ksdft2effmass project and Missing PDFs
 

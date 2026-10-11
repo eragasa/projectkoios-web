@@ -60,6 +60,103 @@ test("courses request the public-safe course catalog", async () => {
   );
 });
 
+test("course-reference authority uses encoded course and item routes", async () => {
+  fetchMock.mockImplementation(() => Promise.resolve(Response.json({ ok: true })));
+  const client = new ProjectKoiosApiClient();
+  const identityPreview = {
+    expected_queue_id: "queue:1",
+    expected_item_revision_id: "revision:1",
+    disposition: "ACCEPT_NEW" as const,
+    target_state_projection_id: null,
+    canonical_citekey: "SolidStateExample",
+    alias_citekeys: [],
+    selected_record_match_ids: [],
+    expected_current_decision_id: null,
+  };
+  const identityDecision = {
+    ...identityPreview,
+    idempotency_key: "intent-1",
+    expected_preview_id: "preview:1",
+    expected_preview_result_id: "preview-result:1",
+    rationale: "Reviewed exact candidate evidence.",
+    decided_at: "2026-10-11T08:00:00Z",
+  };
+  const assetPreview = {
+    expected_queue_id: "queue:2",
+    expected_item_revision_id: "revision:2",
+    expected_identity_state_projection_id: "state:2",
+    disposition: "AUTHORIZE" as const,
+    competitors: [
+      {
+        asset_observation_id: "asset:1",
+        disposition: "AUTHORIZE" as const,
+        rationale: "Verified available asset.",
+      },
+    ],
+    expected_current_decision_id: null,
+  };
+  const assetDecision = {
+    ...assetPreview,
+    idempotency_key: "intent-2",
+    expected_preview_id: "preview:2",
+    expected_preview_result_id: "preview-result:2",
+    expected_asset_plan_id: "plan:2",
+    rationale: "Authorize the reviewed canonical asset.",
+    decided_at: "2026-10-11T08:01:00Z",
+  };
+
+  await client.courseReferences("dlsu.phy627m.gs1");
+  await client.previewCourseReferenceIdentity(
+    "dlsu.phy627m.gs1",
+    "selection:id/1",
+    identityPreview,
+  );
+  await client.decideCourseReferenceIdentity(
+    "dlsu.phy627m.gs1",
+    "selection:id/1",
+    identityDecision,
+  );
+  await client.previewCourseReferenceAsset(
+    "dlsu.phy627m.gs1",
+    "selection:id/1",
+    assetPreview,
+  );
+  await client.decideCourseReferenceAsset(
+    "dlsu.phy627m.gs1",
+    "selection:id/1",
+    assetDecision,
+  );
+
+  expect(fetchMock.mock.calls).toEqual([
+    [
+      "/courses/dlsu.phy627m.gs1/references",
+      expect.objectContaining({ signal: undefined }),
+    ],
+    [
+      "/courses/dlsu.phy627m.gs1/references/selection%3Aid%2F1/decision-preview",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify(identityPreview),
+      }),
+    ],
+    [
+      "/courses/dlsu.phy627m.gs1/references/selection%3Aid%2F1/decision",
+      expect.objectContaining({
+        method: "PUT",
+        body: JSON.stringify(identityDecision),
+      }),
+    ],
+    [
+      "/courses/dlsu.phy627m.gs1/references/selection%3Aid%2F1/asset-decision-preview",
+      expect.objectContaining({ method: "POST", body: JSON.stringify(assetPreview) }),
+    ],
+    [
+      "/courses/dlsu.phy627m.gs1/references/selection%3Aid%2F1/asset-decision",
+      expect.objectContaining({ method: "PUT", body: JSON.stringify(assetDecision) }),
+    ],
+  ]);
+});
+
 test("projects request the public project catalog", async () => {
   fetchMock.mockResolvedValue(
     new Response(JSON.stringify({ schema_version: "1", projects: [] }), {

@@ -93,6 +93,7 @@ src/
 ├── features/
 │   ├── citation-documents/
 │   ├── citation-review/
+│   ├── courses/
 │   ├── dashboard/
 │   ├── equation-review/
 │   ├── literature-review/
@@ -188,6 +189,23 @@ Search-index, path, rights, review, or acceptance interpretation. The adopted re
 artifact is recorded in the
 [citation-document API contract](citation-document-api-contract.md).
 
+The course reference-authority workspace consumes a dedicated five-route CONTROL
+contract and remains separate from citation-document custody. `GET
+/courses/{course_id}/references` provides one complete Courses-owned left projection;
+the initial `dlsu.phy627m.gs1` scope must contain exactly 14 selections in its supplied
+order, including typed unresolved items. Candidate identity, record observations,
+active authorities, source assets, allowed actions, preview consequences, decisions,
+and receipts remain References-owned.
+
+Identity and canonical-asset review are sequential. Both dimensions use owner preview
+POSTs followed by idempotent PUTs that bind the exact preview and preview-result IDs,
+queue/item CAS identities, and current authority projections. Asset PUTs also bind the
+owner-returned plan. The browser generates one UUID and UTC-second timestamp per intent
+and freezes the complete request for byte-identical transport retries. Edits and every
+409 discard the preview. Trusted actor fields are absent from browser requests and are
+injected by the CONTROL API. See the adopted
+[course reference-authority API contract](course-reference-authority-api-contract.md).
+
 The equation-review workspace consumes the owner-backed schema-3 contract in the
 deterministic control OpenAPI document. Durable queue, region-image, decision, render
 confirmation, provenance, status, and typed failure DTOs come from
@@ -225,6 +243,7 @@ production fixture or filesystem fallback supplies corpus data.
 /control/transcripts/:id     exact page-ordered transcript
 /control/equation-review     private equation-review API boundary
 /control/citation-documents  local/private citation-document control
+/control/courses/references  course-scoped reference-authority workspace
 /control/citation-review     private citation-review workspace
 /control/literature-review   private literature-review workspace
 ```
@@ -252,6 +271,12 @@ The citation-document route is likewise not fixture-backed. It consumes generate
 from the reviewed control OpenAPI, preserves owner item and occurrence ordering, escapes
 all owner text, and keeps its local/private configured-operator boundary visible. It never
 presents the control profile as authenticated remote-user proof. Search remains deferred.
+
+The course reference-authority route is not fixture-backed and is present only in the
+CONTROL profile. Its navigation is owned by the Courses page. It preserves the exact
+owner queue, exposes no generic reference-authority route, presents no locally inferred
+consequence preview, and writes no browser persistence. The PUBLIC route table and
+Courses page omit the workspace and never fetch its authority projection.
 
 The equation-review route is not fixture-backed: it requests the typed API contract,
 renders explicit unconfigured, stale, concurrent, partial, queue-integrity, and
